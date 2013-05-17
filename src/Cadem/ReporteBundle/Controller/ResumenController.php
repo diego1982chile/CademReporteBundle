@@ -164,7 +164,7 @@ class ResumenController extends Controller
 		
 		//CONSULTA
 		
-		$sql = "SELECT (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre, ni.NOMBRE as CATEGORIA, ni2.NOMBRE as SEGMENTO, cad.NOMBRE as CADENA FROM QUIEBRE q
+		$sql = "SELECT (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre, ni.NOMBRE as SEGMENTO, ni2.NOMBRE as CATEGORIA, cad.NOMBRE as CADENA FROM QUIEBRE q
 		INNER JOIN SALAMEDICION sm on sm.ID = q.SALAMEDICION_ID
 		INNER JOIN MEDICION m on m.ID = sm.MEDICION_ID
 		INNER JOIN SALACLIENTE sc on sc.ID = sm.SALACLIENTE_ID
@@ -294,7 +294,7 @@ class ResumenController extends Controller
 		// $agregaciones=$session->get("agregaciones");
 		// print_r($resumen_quiebre);	
 			
-		$body=array();				
+		$body=array();			
 		
 		/* Recorrer vector de cadenas, y resultado de la consulta de forma sincrona; cada vez que se encuentre coincidencia hacer 
 		fetch en resultado consulta, si no, asignar vacio */
@@ -303,43 +303,32 @@ class ResumenController extends Controller
 		$cont_cads=0;
 		$cont_regs=0;
 		$num_cads=count($cadenas);		
-		// Estructura que almacena los sumarizados		
+		// Estructura que almacena los sumarizados				
 		
 		while($cont_regs<$num_regs)
-		{			
-			$fila=array();			
-			
-			$fila[0]=$resumen_quiebre[$cont_regs]['CATEGORIA'];		
-			$fila[1]=$resumen_quiebre[$cont_regs]['SEGMENTO'];					
+		{												
+			$fila=array_fill(0,$num_cads+3,'-');
+			$fila[0]=$resumen_quiebre[$cont_regs]['SEGMENTO'];					
+			$fila[1]=$resumen_quiebre[$cont_regs]['CATEGORIA'];										
 			
 			while($cont_cads<$num_cads)
-			{
-				// Si el contador de registros excede su numero de elementos, aun pueden haber cadenas que no hagan match
+			{	
 				if($cont_regs>=$num_regs)
-				{
-					$fila[$cont_cads+2]='-';										
-					$cont_cads++;
-				}	
-				else
-				{
-					if($cadenas[$cont_cads]==$resumen_quiebre[$cont_regs]['CADENA'])
-					{
-						$fila[$cont_cads+2]=round($resumen_quiebre[$cont_regs]['quiebre'],1);								
-						$cont_cads++;
-						$cont_regs++;
-					}
-					else
-					{
-						$fila[$cont_cads+2]='-';	
-						$cont_cads++;					
-					}
-				}
+					break;
+				$columna_quiebre=array_search($resumen_quiebre[$cont_regs]['CADENA'],$cadenas);				
+				// Si el contador de registros excede su numero de elementos, aun pueden haber cadenas que no hagan match
+				$fila[$columna_quiebre+2]=round($resumen_quiebre[$cont_regs]['quiebre'],1);				
+				$cont_cads++;
+				$cont_regs++;
 			}			
-			$fila[$cont_cads+2]=0;
+			$fila[$cont_cads+2]=0;						
 			// Si se recorrieron todas las cadenas, agrego la fila al body y reseteo el contador de cadenas
 			$cont_cads=0;
 			array_push($body,(object)$fila);
-		}									
+		}		
+		// print_r($cadenas);		
+		// print_r($resumen_quiebre);
+		// print_r($body);
 		/*
 		 * Output
 		 */
