@@ -164,7 +164,7 @@ class ResumenController extends Controller
 		
 		//CONSULTA
 		
-		$sql = "SELECT (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre, ni.NOMBRE as CATEGORIA, ni2.NOMBRE as SEGMENTO, cad.NOMBRE as CADENA FROM QUIEBRE q
+		$sql = "SELECT (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre, ni.NOMBRE as SEGMENTO, ni2.NOMBRE as CATEGORIA, cad.NOMBRE as CADENA FROM QUIEBRE q
 		INNER JOIN SALAMEDICION sm on sm.ID = q.SALAMEDICION_ID
 		INNER JOIN MEDICION m on m.ID = sm.MEDICION_ID
 		INNER JOIN SALACLIENTE sc on sc.ID = sm.SALACLIENTE_ID
@@ -294,7 +294,7 @@ class ResumenController extends Controller
 		// $agregaciones=$session->get("agregaciones");
 		// print_r($resumen_quiebre);	
 			
-		$body=array();				
+		$body=array();			
 		
 		/* Recorrer vector de cadenas, y resultado de la consulta de forma sincrona; cada vez que se encuentre coincidencia hacer 
 		fetch en resultado consulta, si no, asignar vacio */
@@ -303,43 +303,39 @@ class ResumenController extends Controller
 		$cont_cads=0;
 		$cont_regs=0;
 		$num_cads=count($cadenas);		
-		// Estructura que almacena los sumarizados		
+		// Estructura que almacena los sumarizados	
+		// Para llevar los cambios del 1er nivel de agregacion
+		$nivel1=$resumen_quiebre[$cont_regs]['SEGMENTO'];
+		// echo "NUM_REGS=".$num_regs;
+		$fila=array_fill(0,$num_cads+3,'-');
+		$total=0;
 		
 		while($cont_regs<$num_regs)
-		{			
-			$fila=array();			
-			
-			$fila[0]=$resumen_quiebre[$cont_regs]['CATEGORIA'];		
-			$fila[1]=$resumen_quiebre[$cont_regs]['SEGMENTO'];					
-			
-			while($cont_cads<$num_cads)
-			{
-				// Si el contador de registros excede su numero de elementos, aun pueden haber cadenas que no hagan match
-				if($cont_regs>=$num_regs)
-				{
-					$fila[$cont_cads+2]='-';										
-					$cont_cads++;
-				}	
-				else
-				{
-					if($cadenas[$cont_cads]==$resumen_quiebre[$cont_regs]['CADENA'])
-					{
-						$fila[$cont_cads+2]=round($resumen_quiebre[$cont_regs]['quiebre'],1);								
-						$cont_cads++;
-						$cont_regs++;
-					}
-					else
-					{
-						$fila[$cont_cads+2]='-';	
-						$cont_cads++;					
-					}
-				}
-			}			
-			$fila[$cont_cads+2]=0;
-			// Si se recorrieron todas las cadenas, agrego la fila al body y reseteo el contador de cadenas
-			$cont_cads=0;
-			array_push($body,(object)$fila);
-		}									
+		{	// Lleno la fila con vacios, le agrego 3 posiciones, correspondientes a los niveles de agregación y al total												
+			// Mientras el primer nivel de agregación no cambie
+			if($nivel1==$resumen_quiebre[$cont_regs]['SEGMENTO'])
+			{					
+				$fila[0]=$resumen_quiebre[$cont_regs]['SEGMENTO'];					
+				$fila[1]=$resumen_quiebre[$cont_regs]['CATEGORIA'];	
+				$columna_quiebre=array_search($resumen_quiebre[$cont_regs]['CADENA'],$cadenas);								
+				$fila[$columna_quiebre+2]=round($resumen_quiebre[$cont_regs]['quiebre'],1);						
+				$total+=$resumen_quiebre[$cont_regs]['quiebre'];	
+				$cont_regs++;
+			}	
+			else
+			{		
+				$fila[$num_cads+2]=round($total/$num_cads,1);
+				$total=0;
+				// Si el primer nivel de agregacion cambió, lo actualizo y agrego la fila al body y reseteo el contador de cadenas
+				$nivel1=$resumen_quiebre[$cont_regs]['SEGMENTO'];
+				array_push($body,(object)$fila);
+				$fila=array_fill(0,$num_cads+3,'-');
+				// $cont_regs--;
+			}
+		}		
+		// print_r($cadenas);		
+		// print_r($resumen_quiebre);
+		// print_r($body);
 		/*
 		 * Output
 		 */

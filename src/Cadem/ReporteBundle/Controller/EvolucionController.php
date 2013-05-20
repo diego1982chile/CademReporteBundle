@@ -128,47 +128,55 @@ class EvolucionController extends Controller
 		
 		//CONSULTA
 		
-		$sql = "SELECT (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre, i.NOMBRE as PRODUCTO,  ni.NOMBRE as SEGMENTO, m.NOMBRE FROM QUIEBRE q
+		$sql = "SELECT (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre, i.NOMBRE as PRODUCTO,  ni.NOMBRE as SEGMENTO, m.NOMBRE, m.FECHAINICIO FROM QUIEBRE q
 				INNER JOIN SALAMEDICION sm on sm.ID = q.SALAMEDICION_ID
 				INNER JOIN MEDICION m on m.ID = sm.MEDICION_ID AND m.ID IN (SELECT TOP(12) m2.ID FROM MEDICION m2 WHERE m2.ID = sm.MEDICION_ID ORDER BY m2.FECHAINICIO ASC)
 				INNER JOIN SALACLIENTE sc on sc.ID = sm.SALACLIENTE_ID
 				INNER JOIN ITEMCLIENTE ic on ic.ID = q.ITEMCLIENTE_ID AND ic.CLIENTE_ID = 12
 				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
 				INNER JOIN ITEM i on i.ID = ic.ITEM_ID
-				GROUP BY  ni.NOMBRE,i.NOMBRE,m.NOMBRE";
+				GROUP BY  ni.NOMBRE,i.NOMBRE,m.NOMBRE,m.FECHAINICIO
+				ORDER BY i.NOMBRE";
 		
 		$evolucion_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();
 		$niveles=2;
+				
+		$head=array();
+		$mediciones=array();
+		$mediciones2=array();
 		
+		// Generamos el head de la tabla, y las mediciones
+		foreach($evolucion_quiebre as $registro)
+		{
+			$fila=array();
+			// print_r($resumen_quiebre);
+			if(!in_array($registro['NOMBRE'],$head))
+			{
+				array_push($head,$registro['NOMBRE']);
+				$fila['nombre']=$registro['NOMBRE'];
+				$fila['fecha']=$registro['FECHAINICIO'];
+				array_push($mediciones,$fila);
+			}		
+		}						
+				
+		usort($mediciones, array($this,"sortFunction"));
 		// CONSTRUIR EL ENCABEZADO DE LA TABLA
 		
 		if($niveles==1)
 			$head=array('SKU/MEDICIÓN');
 		else
-			$head=array('SKU/MEDICIÓN','CATEGORIA');			
+			$head=array('SKU/MEDICIÓN','CATEGORIA');	
 		
-		$mediciones=array();
-		
-		// Generamos el head de la tabla, y las mediciones
-		foreach($evolucion_quiebre as $registro)
+		foreach($mediciones as $medicion)
 		{
-			// print_r($resumen_quiebre);
-			if(!in_array($registro['NOMBRE'],$head))
-			{
-				array_push($head,$registro['NOMBRE']);
-				array_push($mediciones,$registro['NOMBRE']);
-			}		
-		}						
-		
-		// usort($mediciones, array($this,"sortFunction"));
-		
-		// print_r($mediciones);		
-		
-		array_merge($head,$mediciones);					
+			array_push($mediciones2,$medicion['nombre']);					
+			array_push($head,$medicion['nombre']);					
+		}
+
 		array_push($head,'TOTAL');
 		
 		// Guardamos resultado de consulta en variable de sesión para reusarlas en un action posterior
-		$session->set("mediciones",$mediciones);
+		$session->set("mediciones",$mediciones2);
 		// $session->set("agregaciones",$agregaciones);
 		$session->set("evolucion_quiebre",$evolucion_quiebre);
 				
@@ -196,9 +204,8 @@ class EvolucionController extends Controller
     }
 	
 	// Definimos un comparador de fechas para ordenar las mediciones
-	function sortFunction( $a, $b ) {
-		echo $a;
-		return strtotime(date('Y-m',strtotime($a))) - strtotime(date('Y-m',strtotime($b)));
+	function sortFunction( $a, $b ) {		
+		return strtotime($a['fecha']) - strtotime($b['fecha']);
 	}		
 	
 	public function tablaAction(Request $request)
@@ -209,60 +216,47 @@ class EvolucionController extends Controller
 		
 		$mediciones=$session->get("mediciones");		
 		$evolucion_quiebre=$session->get("evolucion_quiebre");
-			
+
 		$body=array();				
 		
 		/* Recorrer vector de mediciones, y resultado de la consulta de forma sincrona; cada vez que se encuentre coincidencia hacer 
 		fetch en resultado consulta, si no, asignar vacio */
-				
+		
 		$num_regs=count($evolucion_quiebre);
 		$cont_meds=0;
 		$cont_regs=0;
 		$num_meds=count($mediciones);		
 		// Estructura que almacena los sumarizados		
+		$fila=array_fill(0,$num_meds+3,'-');
+		$total=0;
+		$nivel1=$evolucion_quiebre[$cont_regs]['PRODUCTO'];
 		
 		while($cont_regs<$num_regs)
-		{			
-			$fila=array();			
-			
-			$fila[0]=utf8_encode(substr($evolucion_quiebre[$cont_regs]['PRODUCTO'],0,20));				
-			$fila[1]=$evolucion_quiebre[$cont_regs]['SEGMENTO'];					
-			
-			while($cont_meds<$num_meds)
-			{
-				// Si el contador de registros excede su numero de elementos, aun pueden haber mediciones que no hagan match
-				if($cont_regs>=$num_regs)
-				{
-					$fila[$cont_meds+2]='-';										
-					$cont_meds++;
-				}	
-				else
-				{
-					if($mediciones[$cont_meds]==$evolucion_quiebre[$cont_regs]['NOMBRE'])
-					{
-						$fila[$cont_meds+2]=round($evolucion_quiebre[$cont_regs]['quiebre'],1);		
-						// $agregaciones[$resumen_quiebre[$cont_regs]['SEGMENTO']][$cont_cads]+=round($resumen_quiebre[$cont_regs]['quiebre'],1);
-						$cont_meds++;
-						$cont_regs++;
-					}
-					else
-					{
-						$fila[$cont_meds+2]='-';	
-						$cont_meds++;					
-					}
-				}
-			}			
-			$fila[$cont_meds+2]=0;
-			// Si se recorrieron todas las cadenas, agrego la fila al body y reseteo el contador de cadenas
-			$cont_meds=0;
-			array_push($body,(object)$fila);
-		}			
-		// print_r($body);
-		// print_r($agregaciones);
-		// $session->close();					
+		{	// Lleno la fila con vacios, le agrego 3 posiciones, correspondientes a los niveles de agregación y al total												
+			// Mientras el primer nivel de agregación no cambie
+			if($nivel1==$evolucion_quiebre[$cont_regs]['PRODUCTO'])
+			{					
+				$fila[0]=$evolucion_quiebre[$cont_regs]['PRODUCTO'];					
+				$fila[1]=$evolucion_quiebre[$cont_regs]['SEGMENTO'];	
+				$columna_quiebre=array_search($evolucion_quiebre[$cont_regs]['NOMBRE'],$mediciones);								
+				$fila[$columna_quiebre+2]=round($evolucion_quiebre[$cont_regs]['quiebre'],1);						
+				$total+=$evolucion_quiebre[$cont_regs]['quiebre'];	
+				$cont_regs++;
+			}	
+			else
+			{			
+				// Si el primer nivel de agregacion cambió, lo actualizo, agrego la fila al body y reseteo el contador de mediciones			
+				$fila[$num_meds+2]=round($total/$num_meds,1);
+				$total=0;				
+				$nivel1=$evolucion_quiebre[$cont_regs]['PRODUCTO'];				
+				array_push($body,(object)$fila);
+				$fila=array_fill(0,$num_meds+3,'-');				
+			}
+		}											
 		/*
 		 * Output
 		 */
+		 // print_r($body);
 		$output = array(
 			"sEcho" => intval($_GET['sEcho']),
 			"iTotalRecords" => $num_regs,
