@@ -351,7 +351,54 @@ $(document).ready(function () {
 	{#% endfor %#}
 	
 	cargartooltip();
-	});						
+	
+	
+	
+	//GUARDA QUE BOTON SE PRESIONA EN EL FORMULARIO
+	var $boton_presionado;
+	$('form#filtros input').click(function() {
+		$boton_presionado = $(this);
+	});
+	
+	//LOGICA DEL SUBMIT DEL FORMULARIO, SE DEBERIA OCUPAR AJAX
+	$('form#filtros').submit(function() {
+		if($boton_presionado.attr("value") === "Limpiar Filtros"){
+			$('form#filtros select[multiple="multiple"] option').prop('selected',true);
+		}
+		else procesarform(); //SE PROCESA FORMULARIO
+		return false;
+	});
+	
+	//REGION
+	$(document).on('change', '#f_region_Region', function(){
+		//RECARGAR PROVINCIA
+		var datos = $(this).serialize();
+		$('#f_provincia_Provincia').before('<img class="loader" alt="" style="float:right" src="/bundles/cademreporte/images/loader.gif">');
+		$.get( "{{ path('helper_filtro_region') }}", datos, function(data) {
+			$('#f_provincia').html(data);
+		},'html')
+		.done(function() {quitarloader(); $('#f_provincia_Provincia').change();})
+		.fail(function() { alert("Se produjo un error al cargar las provincias");quitarloader();})
+		.always(function() { /*alert("finished");*/});
+	});
+	
+	//PROVINCIA
+	$(document).on('change', '#f_provincia_Provincia', function(){
+		//RECARGAR COMUNA
+		var datos = $(this).serialize();
+		$('#f_comuna_Comuna').before('<img class="loader" alt="" style="float:right" src="/bundles/cademreporte/images/loader.gif">');
+		$.get( "{{ path('helper_filtro_provincia') }}", datos, function(data) {
+			$('#f_comuna').html(data);
+		},'html')
+		.done(function() { /*alert("second success");*/ })
+		.fail(function() { alert("Se produjo un error al cargar las comunas"); })
+		.always(function() { /*alert("finished");*/ quitarloader();});
+	});
+	
+	
+	
+	
+});						
 				
 		// $("#tabla_resumen").treetable({ 
 			// expandable: true, 
@@ -360,55 +407,42 @@ $(document).ready(function () {
 		// });	
 	
 		
-		$('thead th').click(function() {
-			var label= $(this).attr('tag');
-		
-			$(".ui-state-active").removeClass("ui-state-active");
-			$(this).addClass("ui-state-active");
-			$.get( "{#{ path('resumen_evolutivo') }#}", label, function(data) {	
-				{#% for item in variables_clientes %#}
-					{#% if loop.index == 1 %#}
-						i_quiebre.series[0].setData(data); 
-						i_quiebre.setTitle({ text: "Evolucion Quiebre '"+label +"'"});
-					{#% endif %#}
-				{#% endfor %#}
-				cargartooltip();
-			});
-		});		
-		
-		//GUARDA QUE BOTON SE PRESIONA EN EL FORMULARIO
-		var $boton_presionado;
-		$('form#filtros input').click(function() {
-			$boton_presionado = $(this);
+	$('thead th').click(function() {
+		var label= $(this).attr('tag');
+	
+		$(".ui-state-active").removeClass("ui-state-active");
+		$(this).addClass("ui-state-active");
+		$.get( "{#{ path('resumen_evolutivo') }#}", label, function(data) {	
+			{#% for item in variables_clientes %#}
+				{#% if loop.index == 1 %#}
+					i_quiebre.series[0].setData(data); 
+					i_quiebre.setTitle({ text: "Evolucion Quiebre '"+label +"'"});
+				{#% endif %#}
+			{#% endfor %#}
+			cargartooltip();
 		});
+	});		
+	
+	
+	
+	
+	//LOGICA DEL SUBMIT DEL FORMULARIO, SE DEBERIA OCUPAR AJAX
+	function procesarform(){
+	
+		//LOADER
+		$('form#filtros input').last().after('<img class="loader" alt="" style="float:right" src="/bundles/cademreporte/images/loader.gif">');
+		//GET
+		//PROCESO
+		alert('aca se hace request get/post');
+		//AL FINALIZAR
+		quitarloader();
+	}
+	
+	function quitarloader(){
+		if($('.loader').length > 0) $('.loader').remove();
+	}
 		
-		//LOGICA DEL SUBMIT DEL FORMULARIO, SE DEBERIA OCUPAR AJAX
-		$('form#filtros').submit(function() {
-			if($boton_presionado.attr("value") === "Limpiar Filtros"){
-				$('form#filtros select[multiple="multiple"] option').prop('selected',true);
-			}
-			if($boton_presionado.attr("value") === "Filtrar"){
-				$.get( "{{ path('resumen_periodo') }}", $(this).serialize(), function(data) {
-
-					$('#tabla_resumen tbody tr').each(function(){
-						var cont=0;
-						$(this).children().each(function(){
-							if(cont>0)
-								$(this).text(Math.floor((Math.random()*100)+1));
-							cont++;
-						});
-					});
-				{#% for item in variables_clientes %#}
-					{#% if loop.index == 1 %#}
-						i_quiebre.series[0].setData(data.evolutivo); 
-						i_quiebre.setTitle({ text: "Evolucion Quiebre General"});
-					{#% endif %#}
-				{#% endfor %#} 
-				},
-				'json');
-			}
-		return false;
-	});
+		
 
 	function cargartooltip(){
 		$.each(periodo.data, function(index, value) {
