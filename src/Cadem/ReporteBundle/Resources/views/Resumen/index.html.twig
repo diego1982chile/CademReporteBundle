@@ -55,12 +55,13 @@ div.dataTables_scroll {
 }
 
 td{
-	font-size: .64em !important;
+	font-size: .55em !important;
 	text-align: center !important;
+	font-family: "Arial",Georgia,Serif !important;	
 }
 
 th{
-	font-size: .64em !important;
+	font-size: .55em !important;
 	text-align: center !important;
 }
 
@@ -138,7 +139,7 @@ function construirTabla()
 		"bProcessing": true,
 		"bServerSide": true,
 		"sAjaxSource": "{{ path('resumen_tabla') }}",
-		"sScrollY": "300px",
+		"sScrollY": "280px",
 		"sScrollX": "100%",
  		"sScrollXInner": maxWidth+'%',
  		"bScrollCollapse": true,
@@ -149,7 +150,9 @@ function construirTabla()
 		"bJQueryUI": true,
 		"bAutoWidth": false, 
 		"aoColumnDefs": [
-			{ "bVisible": false, "aTargets": [1] }
+			{ "bVisible": false, "aTargets": [1] },
+			{ "sClass": "tag", "aTargets": [0] }
+			// { "sWidth": "20%", "aTargets": [0] }
 		],
 		"fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {			
 			$(nRow).attr("data-tt-parent-id",aData[1]);		  
@@ -170,7 +173,6 @@ function fixedColumn()
 			{
 				return;
 			}
-
 			var nGroup, nCell, iIndex, sGroup;
 			var sLastGroup = "", iCorrector=0;
 			var nTrs = $('#tabla_resumen tbody tr');
@@ -213,7 +215,7 @@ function fixedColumn()
                     nGroup = document.createElement( 'tr' );
 					nCell = document.createElement( 'td' );
 					nCell.className = "group tag";
-					nCell.innerHTML = sGroup.toUpperCase();
+					nCell.innerHTML = sGroup;
 					nGroup.appendChild( nCell );
                     // Se añade fila de agregacion para tabla fija
 					$(nGroup).insertBefore( $('tbody tr:eq('+(i+iCorrector)+')', left.body)[0] );
