@@ -102,7 +102,7 @@ class DetalleController extends Controller
 		foreach($mediciones_q as $m) $mediciones[$m['id']] = $m['nombre'];
 		
 		if(count($mediciones) > 0){
-			$ultima_medicion = current(array_keys($mediciones)[0]);
+			$ultima_medicion = current(array_keys($mediciones));
 			$id_medicion_actual = $ultima_medicion;
 			if(count($mediciones) > 1) list(,$id_medicion_anterior) = array_keys($mediciones);
 			else $id_medicion_anterior = $id_medicion_actual;
