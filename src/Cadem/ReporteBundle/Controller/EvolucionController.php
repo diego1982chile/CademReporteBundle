@@ -227,36 +227,36 @@ class EvolucionController extends Controller
 		$cont_regs=0;
 		$num_meds=count($mediciones);		
 		// Estructura que almacena los sumarizados		
+		$fila=array_fill(0,$num_meds+3,'-');
+		$total=0;
+		$nivel1=$evolucion_quiebre[$cont_regs]['PRODUCTO'];
 		
 		while($cont_regs<$num_regs)
-		{			
-			$fila=array_fill(0,$num_meds+3,'-');
-			$fila[0]=utf8_encode(substr($evolucion_quiebre[$cont_regs]['PRODUCTO'],0,26));				
-			$fila[1]=$evolucion_quiebre[$cont_regs]['SEGMENTO'];					
-			
-			while($cont_meds<$num_meds)
-			{
-				if($cont_regs>=$num_regs)
-					break;
-				$columna_quiebre=array_search($evolucion_quiebre[$cont_regs]['NOMBRE'],$mediciones);				
-				// Si el contador de registros excede su numero de elementos, aun pueden haber cadenas que no hagan match
-				$fila[$columna_quiebre+2]=round($evolucion_quiebre[$cont_regs]['quiebre'],1);				
-				$cont_meds++;
+		{	// Lleno la fila con vacios, le agrego 3 posiciones, correspondientes a los niveles de agregación y al total												
+			// Mientras el primer nivel de agregación no cambie
+			if($nivel1==$evolucion_quiebre[$cont_regs]['PRODUCTO'])
+			{					
+				$fila[0]=$evolucion_quiebre[$cont_regs]['PRODUCTO'];					
+				$fila[1]=$evolucion_quiebre[$cont_regs]['SEGMENTO'];	
+				$columna_quiebre=array_search($evolucion_quiebre[$cont_regs]['NOMBRE'],$mediciones);								
+				$fila[$columna_quiebre+2]=round($evolucion_quiebre[$cont_regs]['quiebre'],1);						
+				$total+=$evolucion_quiebre[$cont_regs]['quiebre'];	
 				$cont_regs++;
-			}			
-			$fila[$cont_meds+2]=0;
-			// Si se recorrieron todas las cadenas, agrego la fila al body y reseteo el contador de cadenas
-			$cont_meds=0;
-			array_push($body,(object)$fila);
-		}			
-		// print_r($mediciones);		
-		// print_r($evolucion_quiebre);
-		// print_r($body);
-		// print_r($agregaciones);
-		// $session->close();					
+			}	
+			else
+			{			
+				// Si el primer nivel de agregacion cambió, lo actualizo, agrego la fila al body y reseteo el contador de mediciones			
+				$fila[$num_meds+2]=round($total/$num_meds,1);
+				$total=0;				
+				$nivel1=$evolucion_quiebre[$cont_regs]['PRODUCTO'];				
+				array_push($body,(object)$fila);
+				$fila=array_fill(0,$num_meds+3,'-');				
+			}
+		}											
 		/*
 		 * Output
 		 */
+		 // print_r($body);
 		$output = array(
 			"sEcho" => intval($_GET['sEcho']),
 			"iTotalRecords" => $num_regs,
