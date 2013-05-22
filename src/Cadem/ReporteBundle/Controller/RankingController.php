@@ -271,7 +271,7 @@ class RankingController extends Controller
 	public function filtrosAction(Request $request)
     {
 		$cacheDriver = new \Doctrine\Common\Cache\ApcCache();
-		$cacheseg = 1;
+		$cacheseg = 0;
 		$start = microtime(true);
 		$user = $this->getUser();
 		$em = $this->getDoctrine()->getManager();
@@ -291,8 +291,8 @@ class RankingController extends Controller
 		$id_cliente = $cliente->getId();
 		$id_medicion_actual = intval($data['f_periodo']['Periodo']);
 		$id_estudio = intval($data['f_estudio']['Estudio']);// 0 = TODOS
-		$array_region = $data['f_region']['Region'];
-		$array_provincia = $data['f_provincia']['Provincia'];
+		// $array_region = $data['f_region']['Region'];
+		// $array_provincia = $data['f_provincia']['Provincia'];
 		$array_comuna = $data['f_comuna']['Comuna'];
 		foreach($array_comuna as $k => $v) $array_comuna[$k] = intval($v);
 		
