@@ -7,11 +7,13 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
+use Symfony\Component\HttpFoundation\Session;
+
 class DetalleController extends Controller
-{
-    
+{    	
 	public function indexAction()
     {
+		$session = $this->get("session");
 	
 		$user = $this->getUser();
 		$em = $this->getDoctrine()->getManager();
@@ -87,8 +89,7 @@ class DetalleController extends Controller
 		{
 			$choices_comunas[$r->getId()] = strtoupper($r->getNombre());
 		}
-		
-		
+				
 		//MEDICION
 		$query = $em->createQuery(
 			'SELECT m.id, m.nombre FROM CademReporteBundle:Medicion m
@@ -158,296 +159,51 @@ class DetalleController extends Controller
 			->getForm();
 		
 			
-			
+			//CONSULTA
 		
+		$sql = "SELECT (case when q.hayquiebre = 1 then 1 else 0 END) as quiebre, ic.CODIGOITEM as COD_PRODUCTO,i.NOMBRE as NOM_PRODUCTO,ni.NOMBRE as SEGMENTO, sc.CODIGOSALA as COD_SALA, s.CALLE as CALLE_SALA, s.NUMEROCALLE as NUM_SALA, cad.NOMBRE as CAD_SALA, com.NOMBRE as COM_SALA FROM QUIEBRE q
+		INNER JOIN SALAMEDICION sm on sm.ID = q.SALAMEDICION_ID
+		INNER JOIN MEDICION m on m.ID = sm.MEDICION_ID and m.ID=17
+		INNER JOIN SALACLIENTE sc on sc.ID = sm.SALACLIENTE_ID
+		INNER JOIN SALA s on s.ID = sc.SALA_ID
+		INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID and c.ID=12
+		INNER JOIN ITEMCLIENTE ic on ic.ID = q.ITEMCLIENTE_ID AND ic.CLIENTE_ID = c.ID
+		INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
+		INNER JOIN COMUNA com on s.COMUNA_ID=com.ID
+		INNER JOIN CADENA cad on s.CADENA_ID=cad.ID	
+		INNER JOIN ITEM i on i.ID = ic.ITEM_ID	
+		ORDER BY NOM_PRODUCTO,SEGMENTO";
+		$detalle_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();
+		$niveles=2;
+				
+		// print_r($resumen_quiebre);
 		
-		$min = 0;
-		$max = 2;
+		// CONSTRUIR EL ENCABEZADO DE LA TABLA
 		
-$tabla_resumen = array(
-		'head' => array('SKU/SALA',
-						'CATEGORIA',						
-						'BIGGER (RENDIC) CAUPOLICÁN 191|K0305003',
-						'JUMBO COSTANERA CENTER|K0408012',
-						'JUMBO ANTOFAGASTA ANGAMOS L534|K0313003',
-						'JUMBO ANTOFAGASTA PA CERDA L796|K0313013',
-						'JUMBO BILBAO L501|K0310002',
-						'JUMBO CALAMA L614|K0313012',
-						'LIDER EXPRESS CALAMA INCA ORO L69|K0310008',
-						'LIDER HIPER LA REINA L95|K0310009',
-						'LIDER HIPER PUENTE ALTO L73|K0312001',
-						'TOTTUS ANTOFAGASTA MALL L15|K0405028',
-						'TOTTUS NATANIEL L12|K0302003',
-						'UNIMARC COPIAPO ATACAMA L22|K0308001',
-						),
-		'body' => array(	
-						array(
-								'SKU'=> 'IMPERIAL BOTELLA PACK 4X330CC',
-								'categoria'=> 'CERVEZAS',								
-								'ST1' => mt_rand($min, $max),
-								'ST2' => mt_rand($min, $max),
-								'ST3' => mt_rand($min, $max),
-								'ST4' => mt_rand($min, $max),
-								'ST5' => mt_rand($min, $max),
-								'ST6' => mt_rand($min, $max),
-								'ST7' => mt_rand($min, $max),
-								'ST8' => mt_rand($min, $max),
-								'ST9' => mt_rand($min, $max),
-								'ST10' => mt_rand($min, $max),		
-								'ST11' => mt_rand($min, $max),		
-								'ST12' => mt_rand($min, $max),	
-							),
-						array(
-								'SKU'=> 'CORONITA 5° CAJA 24 X 207CC',						
-								'categoria'=> 'CERVEZAS',								
-								'ST1' => mt_rand($min, $max),
-								'ST2' => mt_rand($min, $max),
-								'ST3' => mt_rand($min, $max),
-								'ST4' => mt_rand($min, $max),
-								'ST5' => mt_rand($min, $max),
-								'ST6' => mt_rand($min, $max),
-								'ST7' => mt_rand($min, $max),
-								'ST8' => mt_rand($min, $max),
-								'ST9' => mt_rand($min, $max),
-								'ST10' => mt_rand($min, $max),		
-								'ST11' => mt_rand($min, $max),	
-								'ST12' => mt_rand($min, $max),
-							),		
-						array(
-								'SKU'=> 'RED BULL SUGAR FREE 250CC',
-								'categoria'=> 'ENERGETICAS',								
-								'ST1' => mt_rand($min, $max),
-								'ST2' => mt_rand($min, $max),
-								'ST3' => mt_rand($min, $max),
-								'ST4' => mt_rand($min, $max),
-								'ST5' => mt_rand($min, $max),
-								'ST6' => mt_rand($min, $max),
-								'ST7' => mt_rand($min, $max),
-								'ST8' => mt_rand($min, $max),
-								'ST9' => mt_rand($min, $max),
-								'ST10' => mt_rand($min, $max),		
-								'ST11' => mt_rand($min, $max),	
-								'ST12' => mt_rand($min, $max),
-							),
-						array(
-								'SKU'=> 'RED BULL ENERGY DRINK VETTEL EDITION LATA 355CC',
-								'categoria'=> 'ENERGETICAS',								
-								'ST1' => mt_rand($min, $max),
-								'ST2' => mt_rand($min, $max),
-								'ST3' => mt_rand($min, $max),
-								'ST4' => mt_rand($min, $max),
-								'ST5' => mt_rand($min, $max),
-								'ST6' => mt_rand($min, $max),
-								'ST7' => mt_rand($min, $max),
-								'ST8' => mt_rand($min, $max),
-								'ST9' => mt_rand($min, $max),
-								'ST10' => mt_rand($min, $max),		
-								'ST11' => mt_rand($min, $max),	
-								'ST12' => mt_rand($min, $max),
-							),
-						array(
-								'SKU'=> 'CHAMPAGNE UNDURRAGA BRUT 12,5° 750CC',
-								'categoria'=> 'ESPUMANTES',								
-								'ST1' => mt_rand($min, $max),
-								'ST2' => mt_rand($min, $max),
-								'ST3' => mt_rand($min, $max),
-								'ST4' => mt_rand($min, $max),
-								'ST5' => mt_rand($min, $max),
-								'ST6' => mt_rand($min, $max),
-								'ST7' => mt_rand($min, $max),
-								'ST8' => mt_rand($min, $max),
-								'ST9' => mt_rand($min, $max),
-								'ST10' => mt_rand($min, $max),		
-								'ST11' => mt_rand($min, $max),	
-								'ST12' => mt_rand($min, $max),
-							),		
-						array(
-								'SKU'=> 'RON FLOR DE CAÑA 40° DORADO 1750CC',
-								'categoria'=> 'RON',								
-								'ST1' => mt_rand($min, $max),
-								'ST2' => mt_rand($min, $max),
-								'ST3' => mt_rand($min, $max),
-								'ST4' => mt_rand($min, $max),
-								'ST5' => mt_rand($min, $max),
-								'ST6' => mt_rand($min, $max),
-								'ST7' => mt_rand($min, $max),
-								'ST8' => mt_rand($min, $max),
-								'ST9' => mt_rand($min, $max),
-								'ST10' => mt_rand($min, $max),		
-								'ST11' => mt_rand($min, $max),
-								'ST12' => mt_rand($min, $max),
-							),
-						array(
-								'SKU'=> 'RON FLOR DE CAÑA 40° 7 AÑOS 750CC',
-								'categoria'=> 'RON',								
-								'ST1' => mt_rand($min, $max),
-								'ST2' => mt_rand($min, $max),
-								'ST3' => mt_rand($min, $max),
-								'ST4' => mt_rand($min, $max),
-								'ST5' => mt_rand($min, $max),
-								'ST6' => mt_rand($min, $max),
-								'ST7' => mt_rand($min, $max),
-								'ST8' => mt_rand($min, $max),
-								'ST9' => mt_rand($min, $max),
-								'ST10' => mt_rand($min, $max),		
-								'ST11' => mt_rand($min, $max),	
-								'ST12' => mt_rand($min, $max),
-							),					
-						array(
-								'SKU'=> 'CORTTON ERRAZURIZ CABERNET SAUVIGNON 750CC',
-								'categoria'=> 'VINO',								
-								'ST1' => mt_rand($min, $max),
-								'ST2' => mt_rand($min, $max),
-								'ST3' => mt_rand($min, $max),
-								'ST4' => mt_rand($min, $max),
-								'ST5' => mt_rand($min, $max),
-								'ST6' => mt_rand($min, $max),
-								'ST7' => mt_rand($min, $max),
-								'ST8' => mt_rand($min, $max),
-								'ST9' => mt_rand($min, $max),
-								'ST10' => mt_rand($min, $max),		
-								'ST11' => mt_rand($min, $max),	
-								'ST12' => mt_rand($min, $max),
-							),	
-						array(
-								'SKU'=> 'VINO UNDURRAGA PINOT CABERNET SAUVIGNON 750CC',
-								'categoria'=> 'VINO',								
-								'ST1' => mt_rand($min, $max),
-								'ST2' => mt_rand($min, $max),
-								'ST3' => mt_rand($min, $max),
-								'ST4' => mt_rand($min, $max),
-								'ST5' => mt_rand($min, $max),
-								'ST6' => mt_rand($min, $max),
-								'ST7' => mt_rand($min, $max),
-								'ST8' => mt_rand($min, $max),
-								'ST9' => mt_rand($min, $max),
-								'ST10' => mt_rand($min, $max),		
-								'ST11' => mt_rand($min, $max),	
-								'ST12' => mt_rand($min, $max),
-							),	
-						array(
-								'SKU'=> 'IMPERIAL BOTELLA PACK 4X330CC',
-								'categoria'=> 'VINO',								
-								'ST1' => mt_rand($min, $max),
-								'ST2' => mt_rand($min, $max),
-								'ST3' => mt_rand($min, $max),
-								'ST4' => mt_rand($min, $max),
-								'ST5' => mt_rand($min, $max),
-								'ST6' => mt_rand($min, $max),
-								'ST7' => mt_rand($min, $max),
-								'ST8' => mt_rand($min, $max),
-								'ST9' => mt_rand($min, $max),
-								'ST10' => mt_rand($min, $max),		
-								'ST11' => mt_rand($min, $max),	
-								'ST12' => mt_rand($min, $max),
-							),	
-						array(
-								'SKU'=> 'VINO CALITERRA RESERVA CABERNET SAUVIGNON',
-								'categoria'=> 'VINO',								
-								'ST1' => mt_rand($min, $max),
-								'ST2' => mt_rand($min, $max),
-								'ST3' => mt_rand($min, $max),
-								'ST4' => mt_rand($min, $max),
-								'ST5' => mt_rand($min, $max),
-								'ST6' => mt_rand($min, $max),
-								'ST7' => mt_rand($min, $max),
-								'ST8' => mt_rand($min, $max),
-								'ST9' => mt_rand($min, $max),
-								'ST10' => mt_rand($min, $max),		
-								'ST11' => mt_rand($min, $max),	
-								'ST12' => mt_rand($min, $max),
-							),	
-						array(
-								'SKU'=> 'VINO VERAMONTE SAUVIGNON BLANC',
-								'categoria'=> 'VINO',								
-								'ST1' => mt_rand($min, $max),
-								'ST2' => mt_rand($min, $max),
-								'ST3' => mt_rand($min, $max),
-								'ST4' => mt_rand($min, $max),
-								'ST5' => mt_rand($min, $max),
-								'ST6' => mt_rand($min, $max),
-								'ST7' => mt_rand($min, $max),
-								'ST8' => mt_rand($min, $max),
-								'ST9' => mt_rand($min, $max),
-								'ST10' => mt_rand($min, $max),		
-								'ST11' => mt_rand($min, $max),	
-								'ST12' => mt_rand($min, $max),
-							),	
-						array(
-								'SKU'=> 'VODKA STOLICHNAYA CLASSIC 40° 750CC',
-								'categoria'=> 'VODKA',								
-								'ST1' => mt_rand($min, $max),
-								'ST2' => mt_rand($min, $max),
-								'ST3' => mt_rand($min, $max),
-								'ST4' => mt_rand($min, $max),
-								'ST5' => mt_rand($min, $max),
-								'ST6' => mt_rand($min, $max),
-								'ST7' => mt_rand($min, $max),
-								'ST8' => mt_rand($min, $max),
-								'ST9' => mt_rand($min, $max),
-								'ST10' => mt_rand($min, $max),		
-								'ST11' => mt_rand($min, $max),	
-								'ST12' => mt_rand($min, $max),
-							),								
-						)
-					);
+		if($niveles==1)
+			$head=array('SKU/SALA');
+		else
+			$head=array('SKU/SALA','SEGMENTO');
+				
+		$salas=array();		
 		
-	
-		// $tabla_resumen = array(
-		// 'cadenas' => array('LIDER','JUMBO','SANTA ISABEL','SMU','SODIMAC','MAYORISTA 10','ALVI','TOTAL'),
-		// 'totales' => array('nombre'=>'QUIEBRE SC JOHNSON',
-						   // 'valores'=>array(mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max))
-					 // ),
-		// 'segmento' => array(array('nombre'=>'AIR CARE',
-								  // 'valores'=>array(mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max)),
-								  // 'categoria'=>array(array('nombre'=>'AMBIENTALES AUTO',
-														   // 'valores'=>array(mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max)),
-											
-															// ),		
-													 // array('nombre'=>'CONTINUO ELECTRICO',
-														   // 'valores'=>array(mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max)),
-											
-															// ),					
-													 // array('nombre'=>'CONTINUO NO ELECTRICO',
-														   // 'valores'=>array(mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max)),
-											
-															// )			
-													 // ),		
-																													 
-								 // ),
-							// array('nombre'=>'AUTO CARE',
-								  // 'valores'=>array(mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max)),
-								  // 'categoria'=>array(array('nombre'=>'AMBIENTALES AUTO',
-														   // 'valores'=>array(mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max)),
-											
-															// ),									
-													 // ),		
-																													 
-								 // ), 
-							// array('nombre'=>' HOME CLEANING',
-								  // 'valores'=>array(mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max)),
-								  // 'categoria'=>array(array('nombre'=>'BAÑO',
-														   // 'valores'=>array(mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max)),
-															// ),																						
-													 // array('nombre'=>'BAÑO-CREMA',
-														   // 'valores'=>array(mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max)),
-															// ),																						 
-													 // array('nombre'=>'COCINA',
-														   // 'valores'=>array(mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max)),
-															// ),																						 
-													 // array('nombre'=>'LIMPIAHORNOS',
-														   // 'valores'=>array(mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max)),
-															// ),									
-																										 
-																													 
-								 // ), 								 
-							// ),
-						// ),
-					// );
+		// Generamos el head de la tabla, y las salas
+		foreach($detalle_quiebre as $registro)
+		{
+			// print_r($resumen_quiebre);
+			if(!array_key_exists($registro['COD_SALA'],$head))
+			{				
+				$head[$registro['COD_SALA']]=$registro['CAD_SALA'].' '.$registro['CALLE_SALA'].' '.$registro['NUM_SALA'].' '.$registro['COM_SALA'];				
+				array_push($salas,$registro['COD_SALA']);				
+			}		
+		}											
+		array_push($head,'TOTAL');
+		// print_r($head);
 		
-		$periodos= array('2012-03 SEM 1_7','2013-03 SEM 8_13','2013-03 SEM 15_20','2013-03 SEM 21_26','2013-03 SEM 27_31','2013-04 SEM 1_7','2013-04 SEM 8_13','2013-04 SEM 14_19');
-		$evolutivo= array(mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max), mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max));	
-		
+		// Guardamos resultado de consulta en variable de sesión para reusarlas en un action posterior
+		$session->set("salas",$salas);		
+		$session->set("detalle_quiebre",$detalle_quiebre);		
+				
 		//RESPONSE
 		$response = $this->render('CademReporteBundle:Detalle:index.html.twig',
 		array(
@@ -458,11 +214,9 @@ $tabla_resumen = array(
 				'form_provincia' => $form_provincia->createView(),
 				'form_comuna' 	=> $form_comuna->createView(),	
 			),
-			'tabla_resumen' => $tabla_resumen,
+			'head' => $head,
 			'logofilename' => $logofilename,
 			'logostyle' => $logostyle,
-			'evolutivo' => json_encode($evolutivo),
-			'periodos' => json_encode($periodos)
 			)
 		);
 
@@ -470,91 +224,85 @@ $tabla_resumen = array(
 		$response->setPrivate();
 		$response->setMaxAge(1);
 
-
 		return $response;
     }
 	
-	public function periodoAction(Request $request)
-	{
+	function limit_text($text, $limit) {
+      if (str_word_count($text, 0) > $limit) {
+          $words = str_word_count($text, 2);
+          $pos = array_keys($words);
+          $text = substr($text, 0, $pos[$limit]) . '...';
+      }
+      return $text;
+    }
 	
-		$min = 0;
-		$max = 100;				
-	
-	$tabla_resumen = array(
-		'cadenas' => array('LIDER','JUMBO','SANTA ISABEL','SMU','SODIMAC','MAYORISTA 10','ALVI','TOTAL'),
-		'totales' => array('nombre'=>'QUIEBRE SC JOHNSON',
-						   'valores'=>array(mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max))
-					 ),
-		'segmento' => array(array('nombre'=>'AIR CARE',
-								  'valores'=>array(mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max)),
-								  'categoria'=>array(array('nombre'=>'AMBIENTALES AUTO',
-														   'valores'=>array(mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max)),
-											
-															),		
-													 array('nombre'=>'CONTINUO ELECTRICO',
-														   'valores'=>array(mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max)),
-											
-															),					
-													 array('nombre'=>'CONTINUO NO ELECTRICO',
-														   'valores'=>array(mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max)),
-											
-															)			
-													 ),		
-																													 
-								 ),
-							array('nombre'=>'AUTO CARE',
-								  'valores'=>array(mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max)),
-								  'categoria'=>array(array('nombre'=>'AMBIENTALES AUTO',
-														   'valores'=>array(mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max)),
-											
-															),									
-													 ),		
-																													 
-								 ), 
-							array('nombre'=>' HOME CLEANING',
-								  'valores'=>array(mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max)),
-								  'categoria'=>array(array('nombre'=>'BAÑO',
-														   'valores'=>array(mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max)),
-															),																						
-													 array('nombre'=>'BAÑO-CREMA',
-														   'valores'=>array(mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max)),
-															),																						 
-													 array('nombre'=>'COCINA',
-														   'valores'=>array(mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max)),
-															),																						 
-													 array('nombre'=>'LIMPIAHORNOS',
-														   'valores'=>array(mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max)),
-															),									
-																										 
-																													 
-								 ), 								 
-							),
-						),
-					);
-					
+	public function tablaAction(Request $request)
+	{		
+		// CONSTRUIR EL CUERPO DE LA TABLA
+
+		$session=$this->get("session");
 		
-		$evolutivo= array(mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max), mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max));	
+		$salas=$session->get("salas");		
+		$detalle_quiebre=$session->get("detalle_quiebre");
+		// print_r($detalle_quiebre);
+		// print_r($salas);
+		/* Recibir los distintos segmentos hasta completar el total de columnas. Almacenarlos en variables de sesion para que
+		sobrevivan al action */
+		$data = $request->query->all();
+				
+		$body=array();			
+						
+		$num_regs=count($detalle_quiebre);		
+		$cont_salas=0;
+		$cont_regs=0;
+		$num_salas=count($salas);		
+		// Estructura que almacena los sumarizados	
+		// Para llevar los cambios del 1er nivel de agregacion
+		$nivel1=$detalle_quiebre[$cont_regs]['COD_PRODUCTO'];		
+		$fila=array_fill(0,$num_salas+3,'-');
+		$total=0;				
 		
-		//RESPONSE
-		$response = 
-		array(
-			'tabla_resumen' => $tabla_resumen,
-			'evolutivo' => $evolutivo,
-			);
-		
-		return new JsonResponse($response);
+		while($cont_regs<$num_regs)
+		{	// Lleno la fila con vacios, le agrego 3 posiciones, correspondientes a los niveles de agregación y al total												
+			// // Mientras el primer nivel de agregación no cambie			
+			if($nivel1==$detalle_quiebre[$cont_regs]['COD_PRODUCTO'])
+			{									
+				$fila[0]=$detalle_quiebre[$cont_regs]['NOM_PRODUCTO'].' ['.$detalle_quiebre[$cont_regs]['COD_PRODUCTO'].']';					
+				$fila[1]=str_replace(' ','_',$detalle_quiebre[$cont_regs]['SEGMENTO']);																			
+				$columna_quiebre=array_search($detalle_quiebre[$cont_regs]['COD_SALA'],$salas);													
+				$fila[$columna_quiebre+2]=round($detalle_quiebre[$cont_regs]['quiebre'],1);						
+				$total+=$detalle_quiebre[$cont_regs]['quiebre'];	
+				$cont_regs++;						
+			}	
+			else
+			{		
+				// print_r($fila);
+				$fila[$num_salas+2]=round($total/$num_salas,1);
+				$total=0;
+				// Si el primer nivel de agregacion cambió, lo actualizo y agrego la fila al body y reseteo el contador de cadenas
+				$nivel1=$detalle_quiebre[$cont_regs]['COD_PRODUCTO'];
+				array_push($body,(object)$fila);
+				$fila=array_fill(0,$num_salas+3,'-');
+				// // $cont_regs--;
+			}
+		}		
+		// print_r($cadenas);		
+		// print_r($resumen_quiebre);
+		// print_r($body);
+		// return new JsonResponse(array("Codigo"=>1,"Mensaje"=>"1er segmento ingresado exitosamente"));
+		/*
+		 * Output
+		 */
+		// $session->close();
+		$output = array(
+			"sEcho" => intval($_GET['sEcho']),
+			"iTotalRecords" => $num_regs,
+			"iTotalDisplayRecords" => $num_regs,
+			"aaData" => $body
+		);		
+		return new JsonResponse($output);		
 	}
-	
-	public function evolutivoAction(Request $request)
-    {
-		$min = 0;
-		$max = 100;	
-	
-		$evolutivo= array(mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max), mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max));
 		
-		return new JsonResponse($evolutivo);
-	}
-	
 	public function indicadoresAction(Request $request)
     {
 		// $start = microtime(true);

@@ -55,13 +55,13 @@ div.dataTables_scroll {
 }
 
 td{
-	font-size: .55em !important;
+	font-size: .6em !important;
 	text-align: center !important;
 	font-family: "Arial",Georgia,Serif !important;	
 }
 
 th{
-	font-size: .55em !important;
+	font-size: .6em !important;
 	text-align: center !important;
 }
 
@@ -135,32 +135,37 @@ function calcularAnchoMaximo()
 
 function construirTabla()
 {
-	oTable = $('#tabla_resumen').dataTable({
-		"bProcessing": true,
-		"bServerSide": true,
-		"sAjaxSource": "{{ path('resumen_tabla') }}",
-		"sScrollY": "280px",
-		"sScrollX": "100%",
- 		"sScrollXInner": maxWidth+'%',
- 		"bScrollCollapse": true,
-		"bFilter": false,
-		"bSort": false,
-		"bInfo": false,
-		"bPaginate": false,
-		"bJQueryUI": true,
-		"bAutoWidth": false, 
-		"aoColumnDefs": [
-			{ "bVisible": false, "aTargets": [1] },
-			{ "sClass": "tag", "aTargets": [0] }
-			// { "sWidth": "20%", "aTargets": [0] }
-		],
-		"fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {			
-			$(nRow).attr("data-tt-parent-id",aData[1]);		  
-		},		
-		"aaSortingFixed": [[ 1, 'asc' ]],
-	//	"sDom": '<"H"Cfr>t<"F"ip>',					
+	$('#tabla_resumen').ready(function(){		
+		oTable = $('#tabla_resumen').dataTable({
+			"bProcessing": true,
+			"bServerSide": true,
+			"sAjaxSource": "{{ path('resumen_tabla') }}",
+			"sScrollY": "280px",
+			"sScrollX": "100%",
+			"sScrollXInner": maxWidth+'%',
+			"bScrollCollapse": true,
+			"bFilter": false,
+			"bSort": false,
+			"bInfo": false,
+			"bPaginate": false,
+			"bJQueryUI": true,
+			"bAutoWidth": false, 
+			"aoColumnDefs": [
+				{ "bVisible": false, "aTargets": [1] },
+				{ "sClass": "tag", "aTargets": [0] }
+				// { "sWidth": "20%", "aTargets": [0] }
+			],
+			"fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {			
+				$(nRow).attr("data-tt-parent-id",aData[1]);		  
+			},		
+			"aaSortingFixed": [[ 1, 'asc' ]],
+			"fnInitComplete": function() {
+				  fixedColumn();
+				}			
+		//	"sDom": '<"H"Cfr>t<"F"ip>',					
+		});
+		$('div.fg-toolbar:first').append("<h5 style='float:left;margin:0em'>Tabla Resumen Quiebre: (%) de Quiebre Categoria/Cadena</h5>");
 	});
-	$('div.fg-toolbar:first').append("<h5 style='float:left;margin:0em'>Tabla Resumen Quiebre: (%) de Quiebre Categoria/Cadena</h5>");
 }
 
 function fixedColumn()
@@ -194,7 +199,7 @@ function fixedColumn()
                     for(var j=0 ; j< cols ; j++)
 					{
 						nCells[j] = document.createElement( 'td' );						 
-						nCells[j].className = "group";														
+						nCells[j].className = "group";																				
 						nCells[j].innerHTML = 0;
 																	
 						nGroup.appendChild( nCells[j] );						 
@@ -293,7 +298,7 @@ $(document).ready(function () {
 
 	callbacks.add( calcularAnchoMaximo() );
 	callbacks.add( construirTabla() );
-	callbacks.add( fixedColumn() );
+	// callbacks.add( fixedColumn() );
 	
 	{#% for item in variables_clientes %#}
         {#% if loop.index == 1 %#}

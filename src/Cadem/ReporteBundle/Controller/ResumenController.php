@@ -291,33 +291,45 @@ class ResumenController extends Controller
 		
 		$cadenas=$session->get("cadenas");		
 		$resumen_quiebre=$session->get("resumen_quiebre");
-		// $agregaciones=$session->get("agregaciones");
-		// print_r($resumen_quiebre);	
 			
 		$body=array();			
-		
-		/* Recorrer vector de cadenas, y resultado de la consulta de forma sincrona; cada vez que se encuentre coincidencia hacer 
-		fetch en resultado consulta, si no, asignar vacio */
 				
 		$num_regs=count($resumen_quiebre);		
 		$cont_cads=0;
 		$cont_regs=0;
 		$num_cads=count($cadenas);		
-		// Estructura que almacena los sumarizados	
 		// Para llevar los cambios del 1er nivel de agregacion
 		$nivel1=$resumen_quiebre[$cont_regs]['SEGMENTO'];
-		// echo "NUM_REGS=".$num_regs;
+		$nivel2=$resumen_quiebre[$cont_regs]['CATEGORIA'];
 		$fila=array_fill(0,$num_cads+3,'-');
+		$matriz_totales=array();
+		$totales=array_fill(0,$num_cads,0);
 		$total=0;
+		$cont=1;
 		
 		while($cont_regs<$num_regs)
 		{	// Lleno la fila con vacios, le agrego 3 posiciones, correspondientes a los niveles de agregación y al total												
 			// Mientras el primer nivel de agregación no cambie
+			$columna_quiebre=array_search($resumen_quiebre[$cont_regs]['CADENA'],$cadenas);	
+						
+			if($nivel2==$resumen_quiebre[$cont_regs]['CATEGORIA'])
+			{
+				$totales[$columna_quiebre]+=round($resumen_quiebre[$cont_regs]['quiebre'],1);				
+			}
+			else
+			{
+				// echo "cont=".$cont;
+				for($aux=0;$aux<count($totales);++$aux)
+					$totales[$aux]=round($totales[$aux]/$cont,1);				
+				$cont=1;
+				array_push($matriz_totales,$totales);				
+				$nivel2=$resumen_quiebre[$cont_regs]['CATEGORIA'];
+				$totales=array_fill(0,$num_cads,0);
+			}			
 			if($nivel1==$resumen_quiebre[$cont_regs]['SEGMENTO'])
 			{					
 				$fila[0]=$resumen_quiebre[$cont_regs]['SEGMENTO'];					
-				$fila[1]=$resumen_quiebre[$cont_regs]['CATEGORIA'];	
-				$columna_quiebre=array_search($resumen_quiebre[$cont_regs]['CADENA'],$cadenas);								
+				$fila[1]=$resumen_quiebre[$cont_regs]['CATEGORIA'];												
 				$fila[$columna_quiebre+2]=round($resumen_quiebre[$cont_regs]['quiebre'],1);						
 				$total+=$resumen_quiebre[$cont_regs]['quiebre'];	
 				$cont_regs++;
@@ -326,14 +338,15 @@ class ResumenController extends Controller
 			{		
 				$fila[$num_cads+2]=round($total/$num_cads,1);
 				$total=0;
-				// Si el primer nivel de agregacion cambió, lo actualizo y agrego la fila al body y reseteo el contador de cadenas
+				$cont++;
+				// Si el primer nivel de agregacion cambió, lo actualizo, agrego la fila al body y reseteo el contador de cadenas
 				$nivel1=$resumen_quiebre[$cont_regs]['SEGMENTO'];
 				array_push($body,(object)$fila);
 				$fila=array_fill(0,$num_cads+3,'-');
 				// $cont_regs--;
 			}
 		}		
-		// print_r($cadenas);		
+		// print_r($matriz_totales);		
 		// print_r($resumen_quiebre);
 		// print_r($body);
 		/*
@@ -343,7 +356,8 @@ class ResumenController extends Controller
 			"sEcho" => intval($_GET['sEcho']),
 			"iTotalRecords" => $num_regs,
 			"iTotalDisplayRecords" => $num_regs,
-			"aaData" => $body
+			"aaData" => $body,
+			"matriz_totales" => $matriz_totales
 		);		
 		return new JsonResponse($output);
 	}
