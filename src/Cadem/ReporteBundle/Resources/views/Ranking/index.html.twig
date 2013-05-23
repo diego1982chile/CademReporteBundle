@@ -327,40 +327,23 @@ $(document).ready(function () {
 	
 });
 
-	// (function (original) {
-  // jQuery.fn.clone = function () {
-    // var result           = original.apply(this, arguments),
-        // my_textareas     = this.find('textarea').add(this.filter('textarea')),
-        // result_textareas = result.find('textarea').add(result.filter('textarea')),
-        // my_selects       = this.find('select').add(this.filter('select')),
-        // result_selects   = result.find('select').add(result.filter('select'));
-
-    // for (var i = 0, l = my_textareas.length; i < l; ++i) $(result_textareas[i]).val($(my_textareas[i]).val());
-    // for (var i = 0, l = my_selects.length;   i < l; ++i) result_selects[i].selectedIndex = my_selects[i].selectedIndex;
-
-    // return result;
-  // };
-// }) (jQuery.fn.clone);
-
 
 	//LOGICA DEL SUBMIT DEL FORMULARIO, SE DEBERIA OCUPAR AJAX
 	function procesarform(){
-		
 		//SE CLONA FORM Y SE ARREGLA LOS ITEM SELECCIONADOS POR USUARIO
-		var test = $('form#filtros').clone();
-		test.find('option').removeAttr("selected");
-		var se = $('form#filtros option');
-		se.each(function(i) {
-			if($(this).is(':selected')) test.find('option').eq(i).attr("selected", true);
+		var cform = $('form#filtros').clone();
+		cform.find('option').removeAttr("selected");
+		var originform = $('form#filtros option');
+		originform.each(function(i) {
+			if($(this).is(':selected')) cform.find('option').eq(i).attr("selected", true);
 		});
 		//SE QUITA REGION Y COMUNA
-		test.find('#f_region').remove();
-		test.find('#f_provincia').remove();
-		test.find('input').remove();
+		cform.find('#f_region').remove();
+		cform.find('#f_provincia').remove();
+		cform.find('input').remove();
 		
-		console.log(test.html());
 		//AGREGO INFO TOPBOTTOM
-		var dataform = test.serialize();
+		var dataform = cform.serialize();
 		var topbottom_empleado = $('#topbottom_empleado').serialize();
 		var topbottom_producto = $('#topbottom_producto').serialize();
 		var topbottom_sala = $('#topbottom_sala').serialize();
