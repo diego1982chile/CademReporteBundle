@@ -15,9 +15,9 @@ class RstExtension extends \Twig_Extension
 	
 	public function rst2htmlFilter($rst)
     {
-		if(file_exists('/usr/bin/rst2html')){
+		if(file_exists('C:\docutils\tools\rst2html.py')){
 			// --initial-header-level=3 to begin titles at the h3 tag
-			$process = new Process('rst2html --no-doc-title --initial-header-level=3');
+			$process = new Process('C:\docutils\tools\rst2html.py --no-doc-title --initial-header-level=3');
 			$process->setStdin($rst);
 			$process->run();
 			if (!$process->isSuccessful()) {
@@ -25,8 +25,8 @@ class RstExtension extends \Twig_Extension
 			}
 			$html = $process->getOutput();
 
-			$startpos = strpos($html, '<body>') + 6 + 23;
-			$endpos   = strpos($html, '</body>') - 7;
+			$startpos = strpos($html, '<body>') + 6 + 24;
+			$endpos   = strpos($html, '</body>') - 8;
 			
 			return substr($html, $startpos, $endpos - $startpos);
 		}
