@@ -118,6 +118,7 @@ var i_quiebre;
 var periodo = {{ periodos|raw }};
 var oTable;
 var maxWidth;
+var DatosAdicionales = [];
 
 function calcularAnchoMaximo()
 {
@@ -140,6 +141,21 @@ function construirTabla()
 			"bProcessing": true,
 			"bServerSide": true,
 			"sAjaxSource": "{{ path('resumen_tabla') }}",
+			"fnServerData": function ( sSource, aoData, fnCallback ) {
+				//AGREGAMOS LOS DATOS SOLO SI HAY
+				if (DatosAdicionales.length > 0) for(i in DatosAdicionales) aoData.push(DatosAdicionales[i]);
+				$.ajax( {
+					"dataType": 'json', 
+					"type": "GET", 
+					"url": sSource, 
+					"data": aoData, 
+					"success": function(data){//QUE PASA SI FALLA?
+								// fixedColumn();
+								fnCallback(data);
+								DatosAdicionales = [];//AL FINAL SE BORRAN
+							}
+				} );
+			},
 			"sScrollY": "280px",
 			"sScrollX": "100%",
 			"sScrollXInner": maxWidth+'%',
@@ -331,8 +347,8 @@ $(document).ready(function () {
             }			
 		},		
 		yAxis: {
-	        max: 100,
-			min: 0,
+	        // max: 100,
+			// min: 0,
             //categories: [0,100],
 			title: {
                     text: 'Promedio Quiebre (%)'
@@ -358,63 +374,102 @@ $(document).ready(function () {
 	{#% endfor %#}
 	
 	cargartooltip();
-	});						
-				
-		// $("#tabla_resumen").treetable({ 
-			// expandable: true, 
-			// onNodeExpand: function () {			
-			// }
-		// });	
-			
-		$('thead th').click(function() {
-			var label= $(this).attr('tag');
-		
-			$(".ui-state-active").removeClass("ui-state-active");
-			$(this).addClass("ui-state-active");
-			$.get( "{#{ path('resumen_evolutivo') }#}", label, function(data) {	
-				{#% for item in variables_clientes %#}
-					{#% if loop.index == 1 %#}
-						i_quiebre.series[0].setData(data); 
-						i_quiebre.setTitle({ text: "Evolucion Quiebre '"+label +"'"});
-					{#% endif %#}
-				{#% endfor %#}
-				cargartooltip();
-			});
-		});		
-		
-		//GUARDA QUE BOTON SE PRESIONA EN EL FORMULARIO
-		var $boton_presionado;
-		$('form#filtros input').click(function() {
-			$boton_presionado = $(this);
-		});
-		
-		//LOGICA DEL SUBMIT DEL FORMULARIO, SE DEBERIA OCUPAR AJAX
-		$('form#filtros').submit(function() {
-			if($boton_presionado.attr("value") === "Limpiar Filtros"){
-				$('form#filtros select[multiple="multiple"] option').prop('selected',true);
-			}
-			if($boton_presionado.attr("value") === "Filtrar"){
-				$.get( "{{ path('resumen_periodo') }}", $(this).serialize(), function(data) {
-
-					$('#tabla_resumen tbody tr').each(function(){
-						var cont=0;
-						$(this).children().each(function(){
-							if(cont>0)
-								$(this).text(Math.floor((Math.random()*100)+1));
-							cont++;
-						});
-					});
-				{#% for item in variables_clientes %#}
-					{#% if loop.index == 1 %#}
-						i_quiebre.series[0].setData(data.evolutivo); 
-						i_quiebre.setTitle({ text: "Evolucion Quiebre General"});
-					{#% endif %#}
-				{#% endfor %#} 
-				},
-				'json');
-			}
+	
+	
+	
+	//GUARDA QUE BOTON SE PRESIONA EN EL FORMULARIO
+	var $boton_presionado;
+	$('form#filtros input').click(function() {
+		$boton_presionado = $(this);
+	});
+	
+	//LOGICA DEL SUBMIT DEL FORMULARIO, SE DEBERIA OCUPAR AJAX
+	$('form#filtros').submit(function() {
+		if($boton_presionado.attr("value") === "Limpiar Filtros"){
+			$('form#filtros select[multiple="multiple"] option').prop('selected',true);
+			$('#f_region_Region').change();
+		}
+		else procesarform(); //SE PROCESA FORMULARIO
 		return false;
 	});
+	
+	//REGION
+	$(document).on('change', '#f_region_Region', function(){
+		//RECARGAR PROVINCIA
+		var datos = $(this).serialize();
+		$('#f_provincia_Provincia').before('<img class="loader" alt="" style="float:right" src="/bundles/cademreporte/images/loader.gif">');
+		$.get( "{{ path('helper_filtro_region') }}", datos, function(data) {
+			$('#f_provincia').html(data);
+		},'html')
+		.done(function() {quitarloader(); $('#f_provincia_Provincia').change();})
+		.fail(function() { alert("Se produjo un error al cargar las provincias");quitarloader();})
+		.always(function() { /*alert("finished");*/});
+	});
+	
+	//PROVINCIA
+	$(document).on('change', '#f_provincia_Provincia', function(){
+		//RECARGAR COMUNA
+		var datos = $(this).serialize();
+		$('#f_comuna_Comuna').before('<img class="loader" alt="" style="float:right" src="/bundles/cademreporte/images/loader.gif">');
+		$.get( "{{ path('helper_filtro_provincia') }}", datos, function(data) {
+			$('#f_comuna').html(data);
+		},'html')
+		.done(function() { /*alert("second success");*/ })
+		.fail(function() { alert("Se produjo un error al cargar las comunas"); })
+		.always(function() { /*alert("finished");*/ quitarloader();});
+	});
+	
+	
+	
+	
+});
+	
+		
+	$('thead th').click(function() {
+		var label= $(this).attr('tag');
+	
+		$(".ui-state-active").removeClass("ui-state-active");
+		$(this).addClass("ui-state-active");
+		$.get( "{#{ path('resumen_evolutivo') }#}", label, function(data) {	
+			{#% for item in variables_clientes %#}
+				{#% if loop.index == 1 %#}
+					i_quiebre.series[0].setData(data); 
+					i_quiebre.setTitle({ text: "Evolucion Quiebre '"+label +"'"});
+				{#% endif %#}
+			{#% endfor %#}
+			cargartooltip();
+		});
+	});		
+	
+	
+	
+	
+	//LOGICA DEL SUBMIT DEL FORMULARIO, SE DEBERIA OCUPAR AJAX
+	function procesarform(){
+		//SE CLONA FORM Y SE ARREGLA LOS ITEM SELECCIONADOS POR USUARIO
+		var cform = $('form#filtros').clone();
+		cform.find('option').removeAttr("selected");
+		var originform = $('form#filtros option');
+		originform.each(function(i) {
+			if($(this).is(':selected')) cform.find('option').eq(i).attr("selected", true);
+		});
+		//SE QUITA REGION Y COMUNA
+		cform.find('#f_region').remove();
+		cform.find('#f_provincia').remove();
+		cform.find('input').remove();
+		
+		var dataform = cform.serializeArray();
+		
+		DatosAdicionales = dataform;
+		oTable.fnDraw();//SI NO FUNCIONA ESTO USAR LA DE ABAJO
+		// oTable.fnReloadAjax();
+	}
+	
+	function quitarloader(){
+		if($('.loader').length > 0) $('.loader').remove();
+	}
+		
+		
 
 	function cargartooltip(){
 		$.each(periodo.data, function(index, value) {
@@ -424,5 +479,64 @@ $(document).ready(function () {
 			});
 		});	
 	}
+	
+	
+	
+	$.fn.dataTableExt.oApi.fnReloadAjax = function ( oSettings, sNewSource, fnCallback, bStandingRedraw )
+{
+    if ( sNewSource !== undefined && sNewSource !== null ) {
+        oSettings.sAjaxSource = sNewSource;
+    }
+ 
+    // Server-side processing should just call fnDraw
+    if ( oSettings.oFeatures.bServerSide ) {
+        this.fnDraw();
+        return;
+    }
+ 
+    this.oApi._fnProcessingDisplay( oSettings, true );
+    var that = this;
+    var iStart = oSettings._iDisplayStart;
+    var aData = [];
+ 
+    this.oApi._fnServerParams( oSettings, aData );
+ 
+    oSettings.fnServerData.call( oSettings.oInstance, oSettings.sAjaxSource, aData, function(json) {
+        /* Clear the old information from the table */
+        that.oApi._fnClearTable( oSettings );
+ 
+        /* Got the data - add it to the table */
+        var aData =  (oSettings.sAjaxDataProp !== "") ?
+            that.oApi._fnGetObjectDataFn( oSettings.sAjaxDataProp )( json ) : json;
+ 
+        for ( var i=0 ; i<aData.length ; i++ )
+        {
+            that.oApi._fnAddData( oSettings, aData[i] );
+        }
+         
+        oSettings.aiDisplay = oSettings.aiDisplayMaster.slice();
+ 
+        that.fnDraw();
+ 
+        if ( bStandingRedraw === true )
+        {
+            oSettings._iDisplayStart = iStart;
+            that.oApi._fnCalculateEnd( oSettings );
+            that.fnDraw( false );
+        }
+ 
+        that.oApi._fnProcessingDisplay( oSettings, false );
+ 
+        /* Callback user function - for event handlers etc */
+        if ( typeof fnCallback == 'function' && fnCallback !== null )
+        {
+            fnCallback( oSettings );
+        }
+    }, oSettings );
+};
+	
+	
+	
+	
  </script>
 {% endblock %}

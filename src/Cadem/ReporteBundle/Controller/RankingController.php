@@ -101,9 +101,9 @@ class RankingController extends Controller
 		foreach($mediciones_q as $m) $mediciones[$m['id']] = $m['nombre'];
 		
 		if(count($mediciones) > 0){
-			$ultima_medicion = array_keys($mediciones)[0];
+			$ultima_medicion = current(array_keys($mediciones));
 			$id_medicion_actual = $ultima_medicion;
-			if(count($mediciones) > 1) $id_medicion_anterior = array_keys($mediciones)[1];
+			if(count($mediciones) > 1) list(,$id_medicion_anterior) = array_keys($mediciones);
 			else $id_medicion_anterior = $id_medicion_actual;
 		}
 		else $ultima_medicion = null;
@@ -271,7 +271,7 @@ class RankingController extends Controller
 	public function filtrosAction(Request $request)
     {
 		$cacheDriver = new \Doctrine\Common\Cache\ApcCache();
-		$cacheseg = 1;
+		$cacheseg = 0;
 		$start = microtime(true);
 		$user = $this->getUser();
 		$em = $this->getDoctrine()->getManager();
@@ -291,8 +291,8 @@ class RankingController extends Controller
 		$id_cliente = $cliente->getId();
 		$id_medicion_actual = intval($data['f_periodo']['Periodo']);
 		$id_estudio = intval($data['f_estudio']['Estudio']);// 0 = TODOS
-		$array_region = $data['f_region']['Region'];
-		$array_provincia = $data['f_provincia']['Provincia'];
+		// $array_region = $data['f_region']['Region'];
+		// $array_provincia = $data['f_provincia']['Provincia'];
 		$array_comuna = $data['f_comuna']['Comuna'];
 		foreach($array_comuna as $k => $v) $array_comuna[$k] = intval($v);
 		

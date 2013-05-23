@@ -102,39 +102,30 @@ class ResumenController extends Controller
 		
 		foreach($mediciones_q as $m) $mediciones[$m['id']] = $m['nombre'];
 		
-		if(count($mediciones) > 0) $ultima_medicion = array_keys($mediciones)[0];
+		if(count($mediciones) > 0) $ultima_medicion = current(array_keys($mediciones));
 		else $ultima_medicion = null;
 		
-		$defaultData = array();
-		$form_periodo = $this->createFormBuilder($defaultData)
+		
+		$form_estudio = $this->get('form.factory')->createNamedBuilder('f_estudio', 'form')
 			->add('Estudio', 'choice', array(
 				'choices'   => $choices_estudio,
 				'required'  => true,
 				'multiple'  => false,
-				'data' => '0'			
-			))		
+				'data' => '0',
+				'attr' => array('id' => 'myValue')
+			))
+			->getForm();
+			
+		$form_periodo = $this->get('form.factory')->createNamedBuilder('f_periodo', 'form')
 			->add('Periodo', 'choice', array(
 				'choices'   => $mediciones,
 				'required'  => true,
 				'multiple'  => false,
-				'data' => $ultima_medicion
-			))
-			->getForm();
-		$form_canal = $this->createFormBuilder($defaultData)
-			->add('Canal', 'choice', array(
-				'choices'   => array(
-						'1' => 'TODOS',
-						'2' => 'SUPERMERCADO',
-						'3' => 'MAYORISTA',
-						'4' => 'MINORISTA'
-				),
-				'required'  => true,
-				'multiple'  => false,
-				'data' => '1'			
+				'data' => $ultima_medicion			
 			))
 			->getForm();
 			
-		$form_region = $this->createFormBuilder($defaultData)
+		$form_region = $this->get('form.factory')->createNamedBuilder('f_region', 'form')
 			->add('Region', 'choice', array(
 				'choices'   => $choices_regiones,
 				'required'  => true,
@@ -143,7 +134,7 @@ class ResumenController extends Controller
 			))
 			->getForm();
 			
-		$form_provincia = $this->createFormBuilder($defaultData)
+		$form_provincia = $this->get('form.factory')->createNamedBuilder('f_provincia', 'form')
 			->add('Provincia', 'choice', array(
 				'choices'   => $choices_provincias,
 				'required'  => true,
@@ -152,14 +143,14 @@ class ResumenController extends Controller
 			))
 			->getForm();
 			
-		$form_comuna = $this->createFormBuilder($defaultData)
+		$form_comuna = $this->get('form.factory')->createNamedBuilder('f_comuna', 'form')
 			->add('Comuna', 'choice', array(
 				'choices'   => $choices_comunas,
 				'required'  => true,
 				'multiple'  => true,
 				'data' => array_keys($choices_comunas)
 			))
-			->getForm();					
+			->getForm();			
 		
 		
 		//CONSULTA
@@ -264,10 +255,11 @@ class ResumenController extends Controller
 		$response = $this->render('CademReporteBundle:Resumen:index.html.twig',
 		array(
 			'forms' => array(
-				'form_periodo' => $form_periodo->createView(),
+				'form_estudio' 	=> $form_estudio->createView(),
+				'form_periodo' 	=> $form_periodo->createView(),	
 				'form_region' 	=> $form_region->createView(),
 				'form_provincia' => $form_provincia->createView(),
-				'form_comuna' 	=> $form_comuna->createView(),
+				'form_comuna' 	=> $form_comuna->createView(),	
 			),
 			'head' => $head,
 			'logofilename' => $logofilename,

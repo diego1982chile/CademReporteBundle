@@ -323,6 +323,7 @@ $(document).ready(function () {
 	$('form#filtros').submit(function() {
 		if($boton_presionado.attr("value") === "Limpiar Filtros"){
 			$('form#filtros select[multiple="multiple"] option').prop('selected',true);
+			$('#f_region_Region').change();
 		}
 		else procesarform(); //SE PROCESA FORMULARIO
 		return false;
