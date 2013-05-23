@@ -29,15 +29,18 @@ ranking_filtros:
     pattern:  /ranking/filtros
     defaults: { _controller: CademReporteBundle:Ranking:filtros }
     methods:  [GET]
-detalle_index:
-    pattern:  /detalle
-    defaults: { _controller: CademReporteBundle:Detalle:index }
 evolucion_index:
     pattern:  /evolucion
     defaults: { _controller: CademReporteBundle:Evolucion:index }
 evolucion_tabla:
     pattern:  /evolucion/tabla
     defaults: { _controller: CademReporteBundle:Evolucion:tabla }	
+detalle_index:
+    pattern:  /detalle
+    defaults: { _controller: CademReporteBundle:Detalle:index }	
+detalle_tabla:
+    pattern:  /detalle/tabla
+    defaults: { _controller: CademReporteBundle:Detalle:tabla }	
 #RUTAS GENERALES Y AYUDANTES
 helper_filtro_region:
     pattern:  /h/filtro/region
