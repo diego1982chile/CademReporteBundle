@@ -118,6 +118,7 @@ var i_quiebre;
 var periodo = {{ periodos|raw }};
 var oTable;
 var maxWidth;
+var DatosAdicionales = [];
 
 function calcularAnchoMaximo()
 {
@@ -140,6 +141,21 @@ function construirTabla()
 			"bProcessing": true,
 			"bServerSide": true,
 			"sAjaxSource": "{{ path('resumen_tabla') }}",
+			"fnServerData": function ( sSource, aoData, fnCallback ) {
+				//AGREGAMOS LOS DATOS SOLO SI HAY
+				if (DatosAdicionales.length > 0) for(i in DatosAdicionales) aoData.push(DatosAdicionales[i]);
+				$.ajax( {
+					"dataType": 'json', 
+					"type": "GET", 
+					"url": sSource, 
+					"data": aoData, 
+					"success": function(data){//QUE PASA SI FALLA?
+								// fixedColumn();
+								fnCallback(data);
+								DatosAdicionales = [];//AL FINAL SE BORRAN
+							}
+				} );
+			},
 			"sScrollY": "280px",
 			"sScrollX": "100%",
 			"sScrollXInner": maxWidth+'%',
@@ -331,8 +347,8 @@ $(document).ready(function () {
             }			
 		},		
 		yAxis: {
-	        max: 100,
-			min: 0,
+	        // max: 100,
+			// min: 0,
             //categories: [0,100],
 			title: {
                     text: 'Promedio Quiebre (%)'
@@ -430,14 +446,23 @@ $(document).ready(function () {
 	
 	//LOGICA DEL SUBMIT DEL FORMULARIO, SE DEBERIA OCUPAR AJAX
 	function procesarform(){
-	
-		//LOADER
-		$('form#filtros input').last().after('<img class="loader" alt="" style="float:right" src="/bundles/cademreporte/images/loader.gif">');
-		//GET
-		//PROCESO
-		alert('aca se hace request get/post');
-		//AL FINALIZAR
-		quitarloader();
+		//SE CLONA FORM Y SE ARREGLA LOS ITEM SELECCIONADOS POR USUARIO
+		var cform = $('form#filtros').clone();
+		cform.find('option').removeAttr("selected");
+		var originform = $('form#filtros option');
+		originform.each(function(i) {
+			if($(this).is(':selected')) cform.find('option').eq(i).attr("selected", true);
+		});
+		//SE QUITA REGION Y COMUNA
+		cform.find('#f_region').remove();
+		cform.find('#f_provincia').remove();
+		cform.find('input').remove();
+		
+		var dataform = cform.serializeArray();
+		
+		DatosAdicionales = dataform;
+		oTable.fnDraw();//SI NO FUNCIONA ESTO USAR LA DE ABAJO
+		// oTable.fnReloadAjax();
 	}
 	
 	function quitarloader(){
@@ -454,5 +479,64 @@ $(document).ready(function () {
 			});
 		});	
 	}
+	
+	
+	
+	$.fn.dataTableExt.oApi.fnReloadAjax = function ( oSettings, sNewSource, fnCallback, bStandingRedraw )
+{
+    if ( sNewSource !== undefined && sNewSource !== null ) {
+        oSettings.sAjaxSource = sNewSource;
+    }
+ 
+    // Server-side processing should just call fnDraw
+    if ( oSettings.oFeatures.bServerSide ) {
+        this.fnDraw();
+        return;
+    }
+ 
+    this.oApi._fnProcessingDisplay( oSettings, true );
+    var that = this;
+    var iStart = oSettings._iDisplayStart;
+    var aData = [];
+ 
+    this.oApi._fnServerParams( oSettings, aData );
+ 
+    oSettings.fnServerData.call( oSettings.oInstance, oSettings.sAjaxSource, aData, function(json) {
+        /* Clear the old information from the table */
+        that.oApi._fnClearTable( oSettings );
+ 
+        /* Got the data - add it to the table */
+        var aData =  (oSettings.sAjaxDataProp !== "") ?
+            that.oApi._fnGetObjectDataFn( oSettings.sAjaxDataProp )( json ) : json;
+ 
+        for ( var i=0 ; i<aData.length ; i++ )
+        {
+            that.oApi._fnAddData( oSettings, aData[i] );
+        }
+         
+        oSettings.aiDisplay = oSettings.aiDisplayMaster.slice();
+ 
+        that.fnDraw();
+ 
+        if ( bStandingRedraw === true )
+        {
+            oSettings._iDisplayStart = iStart;
+            that.oApi._fnCalculateEnd( oSettings );
+            that.fnDraw( false );
+        }
+ 
+        that.oApi._fnProcessingDisplay( oSettings, false );
+ 
+        /* Callback user function - for event handlers etc */
+        if ( typeof fnCallback == 'function' && fnCallback !== null )
+        {
+            fnCallback( oSettings );
+        }
+    }, oSettings );
+};
+	
+	
+	
+	
  </script>
 {% endblock %}
