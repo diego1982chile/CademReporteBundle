@@ -166,7 +166,8 @@ class DetalleController extends Controller
 		INNER JOIN MEDICION m on m.ID = sm.MEDICION_ID and m.ID=17
 		INNER JOIN SALACLIENTE sc on sc.ID = sm.SALACLIENTE_ID
 		INNER JOIN SALA s on s.ID = sc.SALA_ID
-		INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID and c.ID=12
+		INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
+		INNER JOIN USUARIO u on u.cliente_id=c.id and u.id=".$user->getId()."
 		INNER JOIN ITEMCLIENTE ic on ic.ID = q.ITEMCLIENTE_ID AND ic.CLIENTE_ID = c.ID
 		INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
 		INNER JOIN COMUNA com on s.COMUNA_ID=com.ID
@@ -238,12 +239,49 @@ class DetalleController extends Controller
 	
 	public function tablaAction(Request $request)
 	{		
-		// CONSTRUIR EL CUERPO DE LA TABLA
-
-		$session=$this->get("session");
+		// Recuperar el usuario, parámetros y datos de sesión
+		$user = $this->getUser();
+		$em = $this->getDoctrine()->getManager();
+		$session=$this->get("session");			
+		$salas=$session->get("salas");			
 		
-		$salas=$session->get("salas");		
-		$detalle_quiebre=$session->get("detalle_quiebre");
+		$parametros = $request->query->all();
+		// $dataform = $data['f_region'];				
+		
+		// // CONSTRUIR EL CUERPO DE LA TABLA
+		if(!array_key_exists('f_estudio',$parametros))
+		{ // Si el action es invocado durante la carga de la pagina obtener el dataset desde la sesion							
+			$detalle_quiebre=$session->get("detalle_quiebre");
+		}
+		else
+		{ // Si es una llamada desde el filtro, entonces se deben recuperar los parametros y regenerar el dataset			
+			$estudio=$parametros['f_estudio']['Estudio'];			
+			$comunas='';
+			foreach($parametros['f_comuna']['Comuna'] as $comuna)
+				$comunas.=$comuna.',';	
+			$comunas = trim($comunas, ',');
+				
+			// return(print_r($comunas,true));
+			
+			$sql = "SELECT (case when q.hayquiebre = 1 then 1 else 0 END) as quiebre, ic.CODIGOITEM as COD_PRODUCTO,i.NOMBRE as NOM_PRODUCTO,ni.NOMBRE as SEGMENTO, sc.CODIGOSALA as COD_SALA, s.CALLE as CALLE_SALA, s.NUMEROCALLE as NUM_SALA, cad.NOMBRE as CAD_SALA, com.NOMBRE as COM_SALA FROM QUIEBRE q
+					INNER JOIN SALAMEDICION sm on sm.ID = q.SALAMEDICION_ID
+					INNER JOIN MEDICION m on m.ID = sm.MEDICION_ID and m.ID=$medicion
+					INNER JOIN SALACLIENTE sc on sc.ID = sm.SALACLIENTE_ID
+					INNER JOIN SALA s on s.ID = sc.SALA_ID
+					INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
+					INNER JOIN USUARIO u on u.cliente_id=c.id and u.id=".$user->getId()."
+					INNER JOIN ITEMCLIENTE ic on ic.ID = q.ITEMCLIENTE_ID AND ic.CLIENTE_ID = c.ID
+					INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
+					INNER JOIN COMUNA com on s.COMUNA_ID=com.ID and ($comunas)
+					INNER JOIN CADENA cad on s.CADENA_ID=cad.ID	
+					INNER JOIN ITEM i on i.ID = ic.ITEM_ID	
+					ORDER BY NOM_PRODUCTO,SEGMENTO";				
+			
+			$detalle_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();
+			// return(print_r($sql,true));								
+		}		
+	
+		// CONSTRUIR EL CUERPO DE LA TABLA
 		// print_r($detalle_quiebre);
 		// print_r($salas);
 		/* Recibir los distintos segmentos hasta completar el total de columnas. Almacenarlos en variables de sesion para que
@@ -260,16 +298,41 @@ class DetalleController extends Controller
 		// Para llevar los cambios del 1er nivel de agregacion
 		$nivel1=$detalle_quiebre[$cont_regs]['COD_PRODUCTO'];		
 		$fila=array_fill(0,$num_salas+3,'-');
-		$total=0;				
+		$nivel2=$detalle_quiebre[$cont_regs]['SEGMENTO'];
+		// Almacena totales de agregacion
+		$matriz_totales=array();
+		// Lleno la fila con vacios, le agrego 1 posiciones, correspondientes al total																		
+		$totales=array_fill(0,$num_salas+1,0);
+		$total=0;
+		$cont=1;
+		$cont_totales=0;				
 		
 		while($cont_regs<$num_regs)
-		{	// Lleno la fila con vacios, le agrego 3 posiciones, correspondientes a los niveles de agregación y al total												
+		{	// Lleno la fila con vacios, le agrego 3 posiciones, correspondientes a los niveles de agregación y al total	
+			$columna_quiebre=array_search($detalle_quiebre[$cont_regs]['COD_SALA'],$salas);	
+			
+			// Mientras no cambie el 2o nivel acumulamos totales de agregcion en columnas correspondientes			
+			if($nivel2==$detalle_quiebre[$cont_regs]['SEGMENTO'])
+			{
+				$totales[$columna_quiebre]+=round($detalle_quiebre[$cont_regs]['quiebre'],1);				
+			}
+			else
+			{ // Si cambia el 2o nivel agrego totales del segmento actual a la matriz			
+				for($aux=0;$aux<count($totales);++$aux)
+					$totales[$aux]=round($totales[$aux]/$cont,1);			
+				$totales[$num_salas]=round($totales[$num_salas]/$cont,1);	
+				// Reinicializo contador de segmentos
+				$cont=0;
+				$matriz_totales[$cont_totales]=$totales;
+				$cont_totales++;
+				$nivel2=$detalle_quiebre[$cont_regs]['SEGMENTO'];
+				$totales=array_fill(0,$num_salas+1,0);
+			}							
 			// // Mientras el primer nivel de agregación no cambie			
 			if($nivel1==$detalle_quiebre[$cont_regs]['COD_PRODUCTO'])
 			{									
 				$fila[0]=$detalle_quiebre[$cont_regs]['NOM_PRODUCTO'].' ['.$detalle_quiebre[$cont_regs]['COD_PRODUCTO'].']';					
-				$fila[1]=str_replace(' ','_',$detalle_quiebre[$cont_regs]['SEGMENTO']);																			
-				$columna_quiebre=array_search($detalle_quiebre[$cont_regs]['COD_SALA'],$salas);													
+				$fila[1]=str_replace(' ','_',$detalle_quiebre[$cont_regs]['SEGMENTO']);																																			
 				$fila[$columna_quiebre+2]=round($detalle_quiebre[$cont_regs]['quiebre'],1);						
 				$total+=$detalle_quiebre[$cont_regs]['quiebre'];	
 				$cont_regs++;						
@@ -283,12 +346,33 @@ class DetalleController extends Controller
 				$nivel1=$detalle_quiebre[$cont_regs]['COD_PRODUCTO'];
 				array_push($body,(object)$fila);
 				$fila=array_fill(0,$num_salas+3,'-');
+				$cont++;
 				// // $cont_regs--;
 			}
+			if($cont_regs==$num_regs-1)
+			{
+				$fila[$num_salas+2]=round($total/$num_salas,1);
+				$totales[$num_salas]+=$total/$num_salas;
+				$total=0;
+				// $cont++;
+				// Si el primer nivel de agregacion cambió, lo actualizo, agrego la fila al body y reseteo el contador de cadenas
+				$nivel1=$detalle_quiebre[$cont_regs]['COD_PRODUCTO'];
+				array_push($body,(object)$fila);
+				$fila=array_fill(0,$num_salas+3,'-');
+				// echo "cont=".$cont."\n";
+				for($aux=0;$aux<count($totales);++$aux)
+					$totales[$aux]=round($totales[$aux]/$cont,1);				
+				$cont=0;
+				$matriz_totales[$cont_totales]=$totales;
+				$cont_totales++;
+				$nivel2=$detalle_quiebre[$cont_regs]['SEGMENTO'];
+				$totales=array_fill(0,$num_salas+1,0);				
+			}				
 		}		
 		// print_r($cadenas);		
 		// print_r($resumen_quiebre);
 		// print_r($body);
+		// print_r($matriz_totales);
 		// return new JsonResponse(array("Codigo"=>1,"Mensaje"=>"1er segmento ingresado exitosamente"));
 		/*
 		 * Output
@@ -298,7 +382,8 @@ class DetalleController extends Controller
 			"sEcho" => intval($_GET['sEcho']),
 			"iTotalRecords" => $num_regs,
 			"iTotalDisplayRecords" => $num_regs,
-			"aaData" => $body
+			"aaData" => $body,
+			"matriz_totales" => $matriz_totales
 		);		
 		return new JsonResponse($output);		
 	}
