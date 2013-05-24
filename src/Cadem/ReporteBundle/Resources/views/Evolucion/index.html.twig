@@ -146,12 +146,15 @@ function construirTabla()
 					"type": "GET", 
 					"url": sSource, 
 					"data": aoData, 
-					"success": function(data){//QUE PASA SI FALLA?				
+					"success": function(data){
 								matriz_totales=data.matriz_totales;					
 								fnCallback(data);
 								DatosAdicionales = [];//AL FINAL SE BORRAN
 							}
-				} );
+				} )
+				.done(function() {  })
+				.fail(function() {  })
+				.always(function() { quitarloader(); });
 			},		
 		"sScrollY": maxHeight+'px',
 		"sScrollX": "100%",
@@ -351,6 +354,7 @@ $(document).ready(function () {
 		var dataform = cform.serializeArray();
 		
 		DatosAdicionales = dataform;
+		$('form#filtros input').last().after('<img class="loader" alt="" style="float:right" src="/bundles/cademreporte/images/loader.gif">');
 		oTable.fnDraw();//SI NO FUNCIONA ESTO USAR LA DE ABAJO
 		// oTable.fnReloadAjax();
 	}
