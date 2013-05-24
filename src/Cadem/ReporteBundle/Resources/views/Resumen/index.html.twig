@@ -152,8 +152,7 @@ function construirTabla()
 					"url": sSource, 
 					"data": aoData, 
 					"success": function(data){//QUE PASA SI FALLA?														
-								matriz_totales=data.matriz_totales;								
-								alert(JSON.stringify(matriz_totales));
+								matriz_totales=data.matriz_totales;																
 								fnCallback(data);
 								DatosAdicionales = [];//AL FINAL SE BORRAN
 							}
@@ -193,8 +192,7 @@ function construirTabla()
 function fixedColumn()
 {			
 		new FixedColumns( oTable, {
-		"fnDrawCallback": function ( left, right ) {
-			alert(JSON.stringify(matriz_totales));
+		"fnDrawCallback": function ( left, right ) {			
 			/////////////////////////// Esta parte añade las filas de agregacion a la tabla //////////////////////////////////
 			var oSettings = oTable.fnSettings();
 			if ( oSettings.aiDisplay.length === 0 )

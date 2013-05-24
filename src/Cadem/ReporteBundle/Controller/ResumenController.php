@@ -277,7 +277,7 @@ class ResumenController extends Controller
 	
 	public function tablaAction(Request $request)
 	{	
-		// Recuperar el usuario y datos de sesión
+		// Recuperar el usuario, parámetros y datos de sesión
 		$user = $this->getUser();
 		$em = $this->getDoctrine()->getManager();
 		$session=$this->get("session");			
