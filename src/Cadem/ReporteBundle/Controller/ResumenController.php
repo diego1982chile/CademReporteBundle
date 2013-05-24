@@ -206,6 +206,7 @@ class ResumenController extends Controller
 			JOIN e.cliente c
 			JOIN c.usuarios u
 			WHERE u.id = :id
+			GROUP BY m.nombre, m.fechainicio, m.fechafin
 			ORDER BY m.fechainicio DESC')
 			->setMaxResults(12)
 			->setParameter('id', $user->getId());
