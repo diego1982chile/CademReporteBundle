@@ -255,7 +255,8 @@ class DetalleController extends Controller
 		}
 		else
 		{ // Si es una llamada desde el filtro, entonces se deben recuperar los parametros y regenerar el dataset			
-			$estudio=$parametros['f_estudio']['Estudio'];			
+			$estudio=$parametros['f_estudio']['Estudio'];	
+			$medicion=$parametros['f_periodo']['Periodo'];			
 			$comunas='';
 			foreach($parametros['f_comuna']['Comuna'] as $comuna)
 				$comunas.=$comuna.',';	
@@ -272,7 +273,7 @@ class DetalleController extends Controller
 					INNER JOIN USUARIO u on u.cliente_id=c.id and u.id=".$user->getId()."
 					INNER JOIN ITEMCLIENTE ic on ic.ID = q.ITEMCLIENTE_ID AND ic.CLIENTE_ID = c.ID
 					INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
-					INNER JOIN COMUNA com on s.COMUNA_ID=com.ID and ($comunas)
+					INNER JOIN COMUNA com on s.COMUNA_ID=com.ID and com.ID in ($comunas)
 					INNER JOIN CADENA cad on s.CADENA_ID=cad.ID	
 					INNER JOIN ITEM i on i.ID = ic.ITEM_ID	
 					ORDER BY NOM_PRODUCTO,SEGMENTO";				
@@ -294,81 +295,85 @@ class DetalleController extends Controller
 		$cont_salas=0;
 		$cont_regs=0;
 		$num_salas=count($salas);		
-		// Estructura que almacena los sumarizados	
-		// Para llevar los cambios del 1er nivel de agregacion
-		$nivel1=$detalle_quiebre[$cont_regs]['COD_PRODUCTO'];		
-		$fila=array_fill(0,$num_salas+3,'-');
-		$nivel2=$detalle_quiebre[$cont_regs]['SEGMENTO'];
 		// Almacena totales de agregacion
 		$matriz_totales=array();
-		// Lleno la fila con vacios, le agrego 1 posiciones, correspondientes al total																		
-		$totales=array_fill(0,$num_salas+1,0);
-		$total=0;
-		$cont=1;
-		$cont_totales=0;				
+		// Estructura que almacena los sumarizados	
+		// Para llevar los cambios del 1er nivel de agregacion					
 		
-		while($cont_regs<$num_regs)
-		{	// Lleno la fila con vacios, le agrego 3 posiciones, correspondientes a los niveles de agregación y al total	
-			$columna_quiebre=array_search($detalle_quiebre[$cont_regs]['COD_SALA'],$salas);	
-			
-			// Mientras no cambie el 2o nivel acumulamos totales de agregcion en columnas correspondientes			
-			if($nivel2==$detalle_quiebre[$cont_regs]['SEGMENTO'])
-			{
-				$totales[$columna_quiebre]+=round($detalle_quiebre[$cont_regs]['quiebre'],1);				
-			}
-			else
-			{ // Si cambia el 2o nivel agrego totales del segmento actual a la matriz			
-				for($aux=0;$aux<count($totales);++$aux)
-					$totales[$aux]=round($totales[$aux]/$cont,1);			
-				$totales[$num_salas]=round($totales[$num_salas]/$cont,1);	
-				// Reinicializo contador de segmentos
-				$cont=0;
-				$matriz_totales[$cont_totales]=$totales;
-				$cont_totales++;
-				$nivel2=$detalle_quiebre[$cont_regs]['SEGMENTO'];
-				$totales=array_fill(0,$num_salas+1,0);
-			}							
-			// // Mientras el primer nivel de agregación no cambie			
-			if($nivel1==$detalle_quiebre[$cont_regs]['COD_PRODUCTO'])
-			{									
-				$fila[0]=$detalle_quiebre[$cont_regs]['NOM_PRODUCTO'].' ['.$detalle_quiebre[$cont_regs]['COD_PRODUCTO'].']';					
-				$fila[1]=str_replace(' ','_',$detalle_quiebre[$cont_regs]['SEGMENTO']);																																			
-				$fila[$columna_quiebre+2]=round($detalle_quiebre[$cont_regs]['quiebre'],1);						
-				$total+=$detalle_quiebre[$cont_regs]['quiebre'];	
-				$cont_regs++;						
+		if($num_regs>0)
+		{
+			$nivel1=$detalle_quiebre[$cont_regs]['COD_PRODUCTO'];		
+			$fila=array_fill(0,$num_salas+3,'-');
+			$nivel2=$detalle_quiebre[$cont_regs]['SEGMENTO'];			
+			// Lleno la fila con vacios, le agrego 1 posiciones, correspondientes al total																		
+			$totales=array_fill(0,$num_salas+1,0);
+			$total=0;
+			$cont=1;
+			$cont_totales=0;
+		
+			while($cont_regs<$num_regs)
+			{	// Lleno la fila con vacios, le agrego 3 posiciones, correspondientes a los niveles de agregación y al total	
+				$columna_quiebre=array_search($detalle_quiebre[$cont_regs]['COD_SALA'],$salas);	
+				
+				// Mientras no cambie el 2o nivel acumulamos totales de agregcion en columnas correspondientes			
+				if($nivel2==$detalle_quiebre[$cont_regs]['SEGMENTO'])
+				{
+					$totales[$columna_quiebre]+=round($detalle_quiebre[$cont_regs]['quiebre'],1);				
+				}
+				else
+				{ // Si cambia el 2o nivel agrego totales del segmento actual a la matriz			
+					for($aux=0;$aux<count($totales);++$aux)
+						$totales[$aux]=round($totales[$aux]/$cont,1);			
+					$totales[$num_salas]=round($totales[$num_salas]/$cont,1);	
+					// Reinicializo contador de segmentos
+					$cont=0;
+					$matriz_totales[$cont_totales]=$totales;
+					$cont_totales++;
+					$nivel2=$detalle_quiebre[$cont_regs]['SEGMENTO'];
+					$totales=array_fill(0,$num_salas+1,0);
+				}							
+				// // Mientras el primer nivel de agregación no cambie			
+				if($nivel1==$detalle_quiebre[$cont_regs]['COD_PRODUCTO'])
+				{									
+					$fila[0]=$detalle_quiebre[$cont_regs]['NOM_PRODUCTO'].' ['.$detalle_quiebre[$cont_regs]['COD_PRODUCTO'].']';					
+					$fila[1]=str_replace(' ','_',$detalle_quiebre[$cont_regs]['SEGMENTO']);																																			
+					$fila[$columna_quiebre+2]=round($detalle_quiebre[$cont_regs]['quiebre'],1);						
+					$total+=$detalle_quiebre[$cont_regs]['quiebre'];	
+					$cont_regs++;						
+				}	
+				else
+				{		
+					// print_r($fila);
+					$fila[$num_salas+2]=round($total/$num_salas,1);
+					$total=0;
+					// Si el primer nivel de agregacion cambió, lo actualizo y agrego la fila al body y reseteo el contador de cadenas
+					$nivel1=$detalle_quiebre[$cont_regs]['COD_PRODUCTO'];
+					array_push($body,(object)$fila);
+					$fila=array_fill(0,$num_salas+3,'-');
+					$cont++;
+					// // $cont_regs--;
+				}
+				if($cont_regs==$num_regs-1)
+				{
+					$fila[$num_salas+2]=round($total/$num_salas,1);
+					$totales[$num_salas]+=$total/$num_salas;
+					$total=0;
+					// $cont++;
+					// Si el primer nivel de agregacion cambió, lo actualizo, agrego la fila al body y reseteo el contador de cadenas
+					$nivel1=$detalle_quiebre[$cont_regs]['COD_PRODUCTO'];
+					array_push($body,(object)$fila);
+					$fila=array_fill(0,$num_salas+3,'-');
+					// echo "cont=".$cont."\n";
+					for($aux=0;$aux<count($totales);++$aux)
+						$totales[$aux]=round($totales[$aux]/$cont,1);				
+					$cont=0;
+					$matriz_totales[$cont_totales]=$totales;
+					$cont_totales++;
+					$nivel2=$detalle_quiebre[$cont_regs]['SEGMENTO'];
+					$totales=array_fill(0,$num_salas+1,0);				
+				}				
 			}	
-			else
-			{		
-				// print_r($fila);
-				$fila[$num_salas+2]=round($total/$num_salas,1);
-				$total=0;
-				// Si el primer nivel de agregacion cambió, lo actualizo y agrego la fila al body y reseteo el contador de cadenas
-				$nivel1=$detalle_quiebre[$cont_regs]['COD_PRODUCTO'];
-				array_push($body,(object)$fila);
-				$fila=array_fill(0,$num_salas+3,'-');
-				$cont++;
-				// // $cont_regs--;
-			}
-			if($cont_regs==$num_regs-1)
-			{
-				$fila[$num_salas+2]=round($total/$num_salas,1);
-				$totales[$num_salas]+=$total/$num_salas;
-				$total=0;
-				// $cont++;
-				// Si el primer nivel de agregacion cambió, lo actualizo, agrego la fila al body y reseteo el contador de cadenas
-				$nivel1=$detalle_quiebre[$cont_regs]['COD_PRODUCTO'];
-				array_push($body,(object)$fila);
-				$fila=array_fill(0,$num_salas+3,'-');
-				// echo "cont=".$cont."\n";
-				for($aux=0;$aux<count($totales);++$aux)
-					$totales[$aux]=round($totales[$aux]/$cont,1);				
-				$cont=0;
-				$matriz_totales[$cont_totales]=$totales;
-				$cont_totales++;
-				$nivel2=$detalle_quiebre[$cont_regs]['SEGMENTO'];
-				$totales=array_fill(0,$num_salas+1,0);				
-			}				
-		}		
+		}
 		// print_r($cadenas);		
 		// print_r($resumen_quiebre);
 		// print_r($body);
