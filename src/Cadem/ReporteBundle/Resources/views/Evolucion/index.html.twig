@@ -54,6 +54,10 @@ div.dataTables_scroll {
 	clear: both !important; 
 	}
 
+table body tr{ 
+	height: 10px !important;
+} 	
+	
 td{
 	text-align: center !important;
 	font-size: .6em !important;
@@ -105,6 +109,7 @@ table {
 
 <script src="{{ asset('bundles/cademreporte/js/jquery.dataTables.min.js') }}"></script>
 <script src="{{ asset('bundles/cademreporte/js/dataTables.fixedColumns.js') }}"></script>
+<script src="{{ asset('bundles/cademreporte/js/dataTables.scroller.min.js') }}"></script>
 
 <script>
 {#% for item in variables_clientes %#}
@@ -168,16 +173,19 @@ function construirTabla()
 		"bAutoWidth": false, 
 		"aoColumnDefs": [
 			{ "bVisible": false, "aTargets": [1] },	
-			{ "sWidth": "0%",  "sClass": "tag", "aTargets": [0] }				
+			{ "sWidth": "12%",  "sClass": "tag", "aTargets": [0] }				
 		],
-		// "fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {			
-			// $(nRow).attr("data-tt-parent-id",aData[1]);		  
-		// },			
+		"fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {			
+			$(nRow).children(':eq(0)').text(aData[0].substring(0,25));		  
+		},			
 		"aaSortingFixed": [[ 1, 'asc' ]],
 		"fnInitComplete": function() {
 			  fixedColumn();
-			}		
-	//	"sDom": '<"H"Cfr>t<"F"ip>',					
+			},
+		"bDeferRender": true,
+		"bSortClasses": false
+		// "sDom": "frtiS",
+	//	"sDom": '<"H"Cfr>t<"F"ip>',	
 	});
 	$('div.fg-toolbar:first').append("<h5 style='float:left;margin:0em'>Tabla Resumen Quiebre: (%) de Quiebre Categoria/Cadena</h5>");
 }
@@ -185,6 +193,7 @@ function construirTabla()
 function fixedColumn()
 {				
 		new FixedColumns( oTable, {
+		 "sHeightMatch": "none",
 		"fnDrawCallback": function ( left, right ) {
 			/////////////////////////// Esta parte añade las filas de agregacion a la tabla //////////////////////////////////
 			var oSettings = oTable.fnSettings();

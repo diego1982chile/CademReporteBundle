@@ -55,6 +55,10 @@ div.dataTables_scroll {
 	clear: both !important; 
 	}
 
+table body tr{ 
+	height: 10px !important;
+} 	
+	
 td{
 	font-size: .6em !important;
 	text-align: center !important;
@@ -89,6 +93,7 @@ span.indenter{
 
 <script src="{{ asset('bundles/cademreporte/js/jquery.dataTables.min.js') }}"></script>
 <script src="{{ asset('bundles/cademreporte/js/dataTables.fixedColumns.js') }}"></script>
+<script src="{{ asset('bundles/cademreporte/js/dataTables.scroller.min.js') }}"></script>
 <script>
 {#% for item in variables_clientes %#}
 {#{"var i_"~item.variable.nombre~";"}#}
@@ -97,6 +102,8 @@ span.indenter{
 var oTable;
 var maxWidth;
 var maxHeight;
+var DatosAdicionales = [];
+var matriz_totales = [];
 
 function calcularAnchoMaximo()
 {
@@ -120,20 +127,21 @@ function construirTabla()
 			"bProcessing": true,
 			"bServerSide": true,
 			"sAjaxSource": "{{ path('detalle_tabla') }}",
-			// "fnServerData": function ( sSource, aoData, fnCallback ) {	
-				// aoData.push({'name':'sEcho','value':1});
-				// alert(JSON.stringify(aoData));
-				// $.ajax( {
-					// "dataType": 'json', 
-					// "type": "GET", 
-					// "url": sSource, 
-					// "data": aoData, 
-					// "success": function(data){		
-								// fixedColumn();
-								// fnCallback(data);
-							// }
-				// } );
-			// },
+			"fnServerData": function ( sSource, aoData, fnCallback ) {
+				//AGREGAMOS LOS DATOS SOLO SI HAY
+				if (DatosAdicionales.length > 0) for(i in DatosAdicionales) aoData.push(DatosAdicionales[i]);
+				$.ajax( {
+					"dataType": 'json', 
+					"type": "GET", 
+					"url": sSource, 
+					"data": aoData, 
+					"success": function(data){//QUE PASA SI FALLA?				
+								matriz_totales=data.matriz_totales;					
+								fnCallback(data);
+								DatosAdicionales = [];//AL FINAL SE BORRAN
+							}
+				} );
+			},	
 			"sScrollY": maxHeight+'px',
 			"sScrollX": "100%",
 			"sScrollXInner": maxWidth+'%',
@@ -150,7 +158,8 @@ function construirTabla()
 			],
 			"aaSortingFixed": [[ 1, 'asc' ]],
 			//"sDom": 'T<"clear">lfrtip',		
-			"sDom": '<"H"Cfr>t<"F"ip>',	
+			// "sDom": '<"H"Cfr>t<"F"ip>',	
+			// "sDom": "frtiS",
 			"fnInitComplete": function() {
 				  fixedColumn();
 				}			
@@ -162,6 +171,7 @@ function construirTabla()
 function fixedColumn()
 {
 		new FixedColumns( oTable, {
+		"sHeightMatch": "none",
 		"fnDrawCallback": function ( left, right ) {
 			/////////////////////////// Esta parte añade las filas de agregacion a la tabla //////////////////////////////////
 			var oSettings = oTable.fnSettings();
@@ -221,63 +231,6 @@ function fixedColumn()
 					sLastGroup = sGroup;
 				}
 			}
-			//////////////// Esta parte calcula los valores de las agregaciones (SEGMENTO Y TOTAL) //////////////////////
-					
-				// var totalesGlobales=new Array();
-				// var contGlobal=0;
-				// for (var i = 0; i < cols ; i++) totalesGlobales[i] = 0;
-				// $('#tabla_resumen tbody tr.parent').each(function(){						
-					// var totalesParciales= new Array();
-					// for (var i = 0; i < cols; i++) totalesParciales[i] = 0;
-					// var cont=0;
-					// $('#tabla_resumen tbody tr[data-tt-parent-id="'+$(this).attr('data-tt-id')+'"]').each(function(){
-						// contGlobal++;
-						// var j=0;
-						// $(this).children().each(function(){
-							// totalesParciales[j]=totalesParciales[j]+parseInt($(this).attr('value'));
-							// j++;
-						// });
-						// cont++;
-					// });
-					// var j=0;
-					// $(this).children().each(function(){
-						// $(this).text(parseFloat((totalesParciales[j]/cont)).toFixed(1));
-						// totalesGlobales[j]=totalesGlobales[j]+totalesParciales[j];							
-						// j++;
-					// });
-				// });	
-				// var nTrs = $('#tabla_resumen tbody tr');
-				// var nGroup = document.createElement( 'tr' );
-						
-				// var nCells= new Array();
-				
-				// for(var j=0 ; j<cols ; j++)
-				// {
-					// nCells[j] = document.createElement( 'td' );					
-					// nCells[j].className = "group";							
-						
-					// nCells[j].innerHTML = parseFloat((totalesGlobales[j])/contGlobal).toFixed(1);//totales[j];					
-					// nGroup.appendChild( nCells[j] );
-				// }			
-				// nTrs[0].parentNode.insertBefore( nGroup, nTrs[0] );
-				// var att=document.createAttribute("class");
-				// att.value="parent head";
-				// // Se añade fila de agregacion para tabla principal
-				// nTrs[0].previousSibling.setAttributeNode(att);		
-				
-                // nGroup = document.createElement( 'tr' );
-				// nCell = document.createElement( 'td' );
-				// nCell.className = "group tag";
-				// nCell.innerHTML = "QUIEBRE GENERAL";
-				// nGroup.appendChild( nCell );
-                // // Se añade fila de agregacion para tabla fija
-				// $(nGroup).insertBefore( $('tbody tr:eq('+(0)+')', left.body)[0] );																
-				///////////////////////////////////////////////////////////////////////////////////////////////////////////
-				
-				// $('.dataTables_scrollHeadInner').css('padding-right','17px');
-				// $('.dataTables_scrollHeadInner').css('width','1861px');
-				// $('.dataTables_scrollHead').css('padding-right','17px');
-				
 		}
 	});
 }
@@ -294,9 +247,7 @@ $(document).ready(function () {
 	$(window).bind('resize', function () {
 		oTable.fnAdjustColumnSizing();
 	});
-	*/
-	
-	
+	*/	
 	$('#tabla_resumen_wrapper tr th').click(function() {
 		var label= $(this).text().trim();
 		$('.ui-state-active').removeClass();
@@ -367,6 +318,28 @@ $(document).ready(function () {
 		//AL FINALIZAR
 		quitarloader();
 	}
+	
+	//LOGICA DEL SUBMIT DEL FORMULARIO, SE DEBERIA OCUPAR AJAX
+	function procesarform(){
+		//SE CLONA FORM Y SE ARREGLA LOS ITEM SELECCIONADOS POR USUARIO
+		var cform = $('form#filtros').clone();
+		cform.find('option').removeAttr("selected");
+		var originform = $('form#filtros option');
+		originform.each(function(i) {
+			if($(this).is(':selected')) cform.find('option').eq(i).attr("selected", true);
+		});
+		//SE QUITA REGION Y COMUNA
+		cform.find('#f_region').remove();
+		cform.find('#f_provincia').remove();
+		cform.find('input').remove();
+		
+		var dataform = cform.serializeArray();
+		
+		DatosAdicionales = dataform;
+		oTable.fnDraw();//SI NO FUNCIONA ESTO USAR LA DE ABAJO
+		// oTable.fnReloadAjax();
+	}
+		
 
 	function quitarloader(){
 		if($('.loader').length > 0) $('.loader').remove();
