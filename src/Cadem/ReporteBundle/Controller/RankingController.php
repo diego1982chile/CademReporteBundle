@@ -270,8 +270,8 @@ class RankingController extends Controller
 	
 	public function filtrosAction(Request $request)
     {
-		$cacheDriver = new \Doctrine\Common\Cache\ApcCache();
-		$cacheseg = 0;
+		// $cacheDriver = new \Doctrine\Common\Cache\ApcCache();
+		// $cacheseg = 0;
 		$start = microtime(true);
 		$user = $this->getUser();
 		$em = $this->getDoctrine()->getManager();
@@ -354,15 +354,15 @@ class RankingController extends Controller
 			ORDER BY quiebre {$orderby_sala}";
 		$param = array($id_cliente, $id_medicion_actual, $array_comuna, $id_medicion_anterior);
 		$tipo_param = array(\PDO::PARAM_INT, \PDO::PARAM_INT, \Doctrine\DBAL\Connection::PARAM_INT_ARRAY, \PDO::PARAM_INT);
-		// $ranking_sala = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
+		$ranking_sala = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
 		//CACHE
-		$s1 = sha1($sql.print_r($param,true));
-		if($cacheDriver->contains($s1)) $ranking_sala = $cacheDriver->fetch($s1);
-		else
-		{
-			$ranking_sala = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
-			$cacheDriver->save($s1, $ranking_sala, $cacheseg);
-		}
+		// $s1 = sha1($sql.print_r($param,true));
+		// if($cacheDriver->contains($s1)) $ranking_sala = $cacheDriver->fetch($s1);
+		// else
+		// {
+			// $ranking_sala = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
+			// $cacheDriver->save($s1, $ranking_sala, $cacheseg);
+		// }
 		
 		
 		
@@ -394,15 +394,15 @@ class RankingController extends Controller
 			ORDER BY quiebre {$orderby_producto}";
 		$param = array($id_cliente, $id_medicion_actual, $array_comuna, $id_medicion_anterior);
 		$tipo_param = array(\PDO::PARAM_INT, \PDO::PARAM_INT, \Doctrine\DBAL\Connection::PARAM_INT_ARRAY, \PDO::PARAM_INT);
-		// $ranking_item = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
+		$ranking_item = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
 		//CACHE
-		$s1 = sha1($sql.print_r($param,true));
-		if($cacheDriver->contains($s1)) $ranking_item = $cacheDriver->fetch($s1);
-		else
-		{
-			$ranking_item = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
-			$cacheDriver->save($s1, $ranking_item, $cacheseg);
-		}
+		// $s1 = sha1($sql.print_r($param,true));
+		// if($cacheDriver->contains($s1)) $ranking_item = $cacheDriver->fetch($s1);
+		// else
+		// {
+			// $ranking_item = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
+			// $cacheDriver->save($s1, $ranking_item, $cacheseg);
+		// }
 		
 		
 		// RANKING POR VENDEDOR--------------------------------------------------
@@ -432,15 +432,15 @@ class RankingController extends Controller
 			
 		$param = array($id_cliente, $id_medicion_actual, $array_comuna, $id_medicion_anterior);
 		$tipo_param = array(\PDO::PARAM_INT, \PDO::PARAM_INT, \Doctrine\DBAL\Connection::PARAM_INT_ARRAY, \PDO::PARAM_INT);
-		// $ranking_empleado = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
+		$ranking_empleado = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
 		//CACHE
-		$s1 = sha1($sql.print_r($param,true));
-		if($cacheDriver->contains($s1)) $ranking_empleado = $cacheDriver->fetch($s1);
-		else
-		{
-			$ranking_empleado = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
-			$cacheDriver->save($s1, $ranking_empleado, $cacheseg);
-		}
+		// $s1 = sha1($sql.print_r($param,true));
+		// if($cacheDriver->contains($s1)) $ranking_empleado = $cacheDriver->fetch($s1);
+		// else
+		// {
+			// $ranking_empleado = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
+			// $cacheDriver->save($s1, $ranking_empleado, $cacheseg);
+		// }
 		
 		
 		
