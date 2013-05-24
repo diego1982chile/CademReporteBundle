@@ -117,8 +117,10 @@ legend {
 var i_quiebre;
 var periodo = {{ periodos|raw }};
 var oTable;
+var oFc;
 var maxWidth;
 var DatosAdicionales = [];
+var matriz_totales = [];
 
 function calcularAnchoMaximo()
 {
@@ -141,7 +143,7 @@ function construirTabla()
 			"bProcessing": true,
 			"bServerSide": true,
 			"sAjaxSource": "{{ path('resumen_tabla') }}",
-			"fnServerData": function ( sSource, aoData, fnCallback ) {
+			"fnServerData": function ( sSource, aoData, fnCallback ) {				
 				//AGREGAMOS LOS DATOS SOLO SI HAY
 				if (DatosAdicionales.length > 0) for(i in DatosAdicionales) aoData.push(DatosAdicionales[i]);
 				$.ajax( {
@@ -149,13 +151,17 @@ function construirTabla()
 					"type": "GET", 
 					"url": sSource, 
 					"data": aoData, 
-					"success": function(data){//QUE PASA SI FALLA?
-								// fixedColumn();
+					"success": function(data){//QUE PASA SI FALLA?														
+								matriz_totales=data.matriz_totales;								
+								alert(JSON.stringify(matriz_totales));
 								fnCallback(data);
 								DatosAdicionales = [];//AL FINAL SE BORRAN
 							}
 				} );
 			},
+			// "oLanguage": {
+						// "sProcessing": "<img src='{{ asset('bundles/cademreporte/images/loader.gif') }}'>"
+			// },			
 			"sScrollY": "280px",
 			"sScrollX": "100%",
 			"sScrollXInner": maxWidth+'%',
@@ -171,13 +177,13 @@ function construirTabla()
 				{ "sClass": "tag", "aTargets": [0] }
 				// { "sWidth": "20%", "aTargets": [0] }
 			],
-			"fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {			
-				$(nRow).attr("data-tt-parent-id",aData[1]);		  
-			},		
+			// "fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {			
+				// $(nRow).attr("data-tt-parent-id",aData[1]);		  
+			// },		
 			"aaSortingFixed": [[ 1, 'asc' ]],
-			"fnInitComplete": function() {
-				  fixedColumn();
-				}			
+			"fnInitComplete": function() {										
+					fixedColumn();
+				},			
 		//	"sDom": '<"H"Cfr>t<"F"ip>',					
 		});
 		$('div.fg-toolbar:first').append("<h5 style='float:left;margin:0em'>Tabla Resumen Quiebre: (%) de Quiebre Categoria/Cadena</h5>");
@@ -185,9 +191,10 @@ function construirTabla()
 }
 
 function fixedColumn()
-{
+{			
 		new FixedColumns( oTable, {
 		"fnDrawCallback": function ( left, right ) {
+			alert(JSON.stringify(matriz_totales));
 			/////////////////////////// Esta parte añade las filas de agregacion a la tabla //////////////////////////////////
 			var oSettings = oTable.fnSettings();
 			if ( oSettings.aiDisplay.length === 0 )
@@ -198,9 +205,10 @@ function fixedColumn()
 			var sLastGroup = "", iCorrector=0;
 			var nTrs = $('#tabla_resumen tbody tr');
 			// var iColspan = nTrs[0].getElementsByTagName('td').length;
-            var cols=oTable.fnSettings().aoColumns.length-1;
+            var cols=oTable.fnSettings().aoColumns.length-2;
+			var row=0;
 			
-			for ( var i=0 ; i<nTrs.length ; i++ )
+			for ( var i=0 ; i<nTrs.length ; ++i )
 			{
 				iIndex = oSettings._iDisplayStart + i;
 
@@ -209,17 +217,23 @@ function fixedColumn()
 				if ( sGroup != sLastGroup )
 				{
               		var nGroup = document.createElement('tr');
+					// Se agrgega una columna correspondiente a la columna oculta
+					var nCells= new Array();   
+					var nCell;
+					nCell = document.createElement( 'td' );						 
+					nCell.className = "group";																									
+					nCell.innerHTML = 0;															
+					nGroup.appendChild( nCell ); 					
 					
-					var nCells= new Array();    
-                  
-                    for(var j=0 ; j< cols ; j++)
+                    for(var j=0 ; j< cols ; ++j)
 					{
 						nCells[j] = document.createElement( 'td' );						 
 						nCells[j].className = "group";																				
-						nCells[j].innerHTML = 0;
-																	
+						// alert(matriz_totales[row][j]);
+						nCells[j].innerHTML = matriz_totales[row][j];																
 						nGroup.appendChild( nCells[j] );						 
 					}
+					++row;
                     nTrs[i].parentNode.insertBefore( nGroup, nTrs[i] );
 					// Se crea atributo que asocie la fila de agregacion con sus filas hijas
 					var att=document.createAttribute("data-tt-id");
@@ -245,65 +259,7 @@ function fixedColumn()
 					sLastGroup = sGroup;
 				}
 			}
-			//////////////// Esta parte calcula los valores de las agregaciones (SEGMENTO Y TOTAL) //////////////////////
-					
-				var totalesGlobales=new Array();
-				var contGlobal=0;
-				for (var i = 0; i < cols ; i++) totalesGlobales[i] = 0;
-				$('#tabla_resumen tbody tr.parent').each(function(){						
-					var totalesParciales= new Array();
-					for (var i = 0; i < cols; i++) totalesParciales[i] = 0;
-					var cont=0;
-					$('#tabla_resumen tbody tr[data-tt-parent-id="'+$(this).attr('data-tt-id')+'"]').each(function(){						
-						contGlobal++;
-						var j=0;
-						$(this).children().each(function(){
-							// alert($(this).text());
-							if($(this).text()=='-')
-								totalesParciales[j]=totalesParciales[j]+0;
-							else
-								totalesParciales[j]=totalesParciales[j]+parseFloat($(this).text());
-							j++;
-						});
-						cont++;
-					});
-					var j=0;
-					$(this).children().each(function(){
-						$(this).text(parseFloat((totalesParciales[j]/cont)).toFixed(1));
-						totalesGlobales[j]=totalesGlobales[j]+totalesParciales[j];							
-						j++;
-					});
-				});	
-				var nTrs = $('#tabla_resumen tbody tr');
-				var nGroup = document.createElement( 'tr' );
-						
-				var nCells= new Array();
-				
-				for(var j=0 ; j<cols ; j++)
-				{
-					nCells[j] = document.createElement( 'td' );					
-					nCells[j].className = "group";							
-						
-					nCells[j].innerHTML = parseFloat((totalesGlobales[j])/contGlobal).toFixed(1);//totales[j];					
-					nGroup.appendChild( nCells[j] );
-				}			
-				nTrs[0].parentNode.insertBefore( nGroup, nTrs[0] );
-				var att=document.createAttribute("class");
-				att.value="parent head";
-				// Se añade fila de agregacion para tabla principal
-				nTrs[0].previousSibling.setAttributeNode(att);		
-				
-                nGroup = document.createElement( 'tr' );
-				nCell = document.createElement( 'td' );
-				nCell.className = "group tag";
-				nCell.innerHTML = "QUIEBRE GENERAL";
-				nGroup.appendChild( nCell );
-                // Se añade fila de agregacion para tabla fija
-				$(nGroup).insertBefore( $('tbody tr:eq('+(0)+')', left.body)[0] );				
-								
-                // Se añade fila de agregacion para tabla fija
-				$(nGroup).insertBefore( $('tbody tr:eq('+(0)+')', left.body)[0] );					
-				///////////////////////////////////////////////////////////////////////////////////////////////////////////
+			// matriz_totales=[];
 		}
 	});
 }
@@ -374,9 +330,7 @@ $(document).ready(function () {
 	{#% endfor %#}
 	
 	cargartooltip();
-	
-	
-	
+			
 	//GUARDA QUE BOTON SE PRESIONA EN EL FORMULARIO
 	var $boton_presionado;
 	$('form#filtros input').click(function() {
@@ -418,12 +372,8 @@ $(document).ready(function () {
 		.fail(function() { alert("Se produjo un error al cargar las comunas"); })
 		.always(function() { /*alert("finished");*/ quitarloader();});
 	});
-	
-	
-	
-	
+				
 });
-	
 		
 	$('thead th').click(function() {
 		var label= $(this).attr('tag');
@@ -439,10 +389,7 @@ $(document).ready(function () {
 			{#% endfor %#}
 			cargartooltip();
 		});
-	});		
-	
-	
-	
+	});					
 	
 	//LOGICA DEL SUBMIT DEL FORMULARIO, SE DEBERIA OCUPAR AJAX
 	function procesarform(){
@@ -468,9 +415,7 @@ $(document).ready(function () {
 	function quitarloader(){
 		if($('.loader').length > 0) $('.loader').remove();
 	}
-		
-		
-
+				
 	function cargartooltip(){
 		$.each(periodo.data, function(index, value) {
 			$('div#i_quiebre tspan:contains("'+value+'")').attr('title', periodo.tooltip[index])
@@ -478,12 +423,10 @@ $(document).ready(function () {
 				track: true
 			});
 		});	
-	}
-	
-	
+	}		
 	
 	$.fn.dataTableExt.oApi.fnReloadAjax = function ( oSettings, sNewSource, fnCallback, bStandingRedraw )
-{
+	{
     if ( sNewSource !== undefined && sNewSource !== null ) {
         oSettings.sAjaxSource = sNewSource;
     }
@@ -533,10 +476,7 @@ $(document).ready(function () {
             fnCallback( oSettings );
         }
     }, oSettings );
-};
-	
-	
-	
+};			
 	
  </script>
 {% endblock %}
