@@ -156,17 +156,17 @@ class ResumenController extends Controller
 		//CONSULTA
 		
 		$sql = "SELECT (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre, ni.NOMBRE as SEGMENTO, ni2.NOMBRE as CATEGORIA, cad.NOMBRE as CADENA FROM QUIEBRE q
-		INNER JOIN SALAMEDICION sm on sm.ID = q.SALAMEDICION_ID
-		INNER JOIN MEDICION m on m.ID = sm.MEDICION_ID
-		INNER JOIN SALACLIENTE sc on sc.ID = sm.SALACLIENTE_ID
-		INNER JOIN SALA s on s.ID = sc.SALA_ID
-		INNER JOIN CADENA cad on cad.ID = s.CADENA_ID
-		INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
-		INNER JOIN ITEMCLIENTE ic on ic.ID = q.ITEMCLIENTE_ID AND ic.CLIENTE_ID = c.ID
-		INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
-		INNER JOIN NIVELITEM ni2 on ni2.ID = ic.NIVELITEM_ID2
-		WHERE c.ID = 12 AND m.ID =17
-		GROUP BY ni2.NOMBRE, ni.NOMBRE, cad.NOMBRE";
+			INNER JOIN SALAMEDICION sm on sm.ID = q.SALAMEDICION_ID
+			INNER JOIN MEDICION m on m.ID = sm.MEDICION_ID and m.ID =17
+			INNER JOIN SALACLIENTE sc on sc.ID = sm.SALACLIENTE_ID
+			INNER JOIN SALA s on s.ID = sc.SALA_ID
+			INNER JOIN CADENA cad on cad.ID = s.CADENA_ID
+			INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
+			INNER JOIN USUARIO u on u.cliente_id=c.id and u.id=".$user->getId()."
+			INNER JOIN ITEMCLIENTE ic on ic.ID = q.ITEMCLIENTE_ID AND ic.CLIENTE_ID = c.ID
+			INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
+			INNER JOIN NIVELITEM ni2 on ni2.ID = ic.NIVELITEM_ID2			
+			GROUP BY ni2.NOMBRE, ni.NOMBRE, cad.NOMBRE";
 		$resumen_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();
 		$niveles=2;
 				
@@ -276,71 +276,132 @@ class ResumenController extends Controller
     }
 	
 	public function tablaAction(Request $request)
-	{		
-		// CONSTRUIR EL CUERPO DE LA TABLA
-
-		$session=$this->get("session");
+	{	
+		// Recuperar el usuario y datos de sesión
+		$user = $this->getUser();
+		$em = $this->getDoctrine()->getManager();
+		$session=$this->get("session");			
+		$cadenas=$session->get("cadenas");			
 		
-		$cadenas=$session->get("cadenas");		
-		$resumen_quiebre=$session->get("resumen_quiebre");
-			
-		$body=array();			
+		$parametros = $request->query->all();
+		// $dataform = $data['f_region'];				
+		
+		// // CONSTRUIR EL CUERPO DE LA TABLA
+		if(!array_key_exists('f_estudio',$parametros))
+		{ // Si el action es invocado durante la carga de la pagina obtener el dataset desde la sesion							
+			$resumen_quiebre=$session->get("resumen_quiebre");
+		}
+		else
+		{ // Si es una llamada desde el filtro, entonces se deben recuperar los parametros y regenerar el dataset			
+			$estudio=$parametros['f_estudio']['Estudio'];
+			$medicion=$parametros['f_periodo']['Periodo'];
+			$comunas='';
+			foreach($parametros['f_comuna']['Comuna'] as $comuna)
+				$comunas.=$comuna.',';	
+			$comunas = trim($comunas, ',');
 				
+			// return(print_r($comunas,true));
+			
+			$sql = "SELECT (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre, ni.NOMBRE as SEGMENTO, ni2.NOMBRE as CATEGORIA, cad.NOMBRE as CADENA FROM QUIEBRE q
+			INNER JOIN SALAMEDICION sm on sm.ID = q.SALAMEDICION_ID
+			INNER JOIN MEDICION m on m.ID = sm.MEDICION_ID and m.ID = $medicion
+			INNER JOIN SALACLIENTE sc on sc.ID = sm.SALACLIENTE_ID
+			INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in($comunas)
+			INNER JOIN CADENA cad on cad.ID = s.CADENA_ID
+			INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
+			INNER JOIN USUARIO u on u.cliente_id=c.id and u.id=".$user->getId()."
+			INNER JOIN ITEMCLIENTE ic on ic.ID = q.ITEMCLIENTE_ID AND ic.CLIENTE_ID = c.ID
+			INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
+			INNER JOIN NIVELITEM ni2 on ni2.ID = ic.NIVELITEM_ID2				
+			GROUP BY ni2.NOMBRE, ni.NOMBRE, cad.NOMBRE";				
+			
+			$resumen_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();
+			// return(print_r($sql,true));								
+		}		
+		$body=array();			
 		$num_regs=count($resumen_quiebre);		
 		$cont_cads=0;
 		$cont_regs=0;
 		$num_cads=count($cadenas);		
-		// Para llevar los cambios del 1er nivel de agregacion
-		$nivel1=$resumen_quiebre[$cont_regs]['SEGMENTO'];
-		$nivel2=$resumen_quiebre[$cont_regs]['CATEGORIA'];
-		$fila=array_fill(0,$num_cads+3,'-');
 		$matriz_totales=array();
-		$totales=array_fill(0,$num_cads,0);
-		$total=0;
-		$cont=1;
-		
-		while($cont_regs<$num_regs)
-		{	// Lleno la fila con vacios, le agrego 3 posiciones, correspondientes a los niveles de agregación y al total												
-			// Mientras el primer nivel de agregación no cambie
-			$columna_quiebre=array_search($resumen_quiebre[$cont_regs]['CADENA'],$cadenas);	
-						
-			if($nivel2==$resumen_quiebre[$cont_regs]['CATEGORIA'])
-			{
-				$totales[$columna_quiebre]+=round($resumen_quiebre[$cont_regs]['quiebre'],1);				
-			}
-			else
-			{
-				// echo "cont=".$cont;
-				for($aux=0;$aux<count($totales);++$aux)
-					$totales[$aux]=round($totales[$aux]/$cont,1);				
-				$cont=1;
-				array_push($matriz_totales,$totales);				
-				$nivel2=$resumen_quiebre[$cont_regs]['CATEGORIA'];
-				$totales=array_fill(0,$num_cads,0);
-			}			
-			if($nivel1==$resumen_quiebre[$cont_regs]['SEGMENTO'])
-			{					
-				$fila[0]=$resumen_quiebre[$cont_regs]['SEGMENTO'];					
-				$fila[1]=$resumen_quiebre[$cont_regs]['CATEGORIA'];												
-				$fila[$columna_quiebre+2]=round($resumen_quiebre[$cont_regs]['quiebre'],1);						
-				$total+=$resumen_quiebre[$cont_regs]['quiebre'];	
-				$cont_regs++;
-			}	
-			else
-			{		
-				$fila[$num_cads+2]=round($total/$num_cads,1);
-				$total=0;
-				$cont++;
-				// Si el primer nivel de agregacion cambió, lo actualizo, agrego la fila al body y reseteo el contador de cadenas
-				$nivel1=$resumen_quiebre[$cont_regs]['SEGMENTO'];
-				array_push($body,(object)$fila);
-				$fila=array_fill(0,$num_cads+3,'-');
-				// $cont_regs--;
-			}
-		}		
+				
+		if($num_regs>0)
+		{					
+			// Para llevar los cambios del 1er nivel de agregacion
+			$nivel1=$resumen_quiebre[$cont_regs]['SEGMENTO'];
+			$nivel2=$resumen_quiebre[$cont_regs]['CATEGORIA'];
+			// Lleno la fila con vacios, le agrego 3 posiciones, correspondientes a los niveles de agregación y al total															
+			$fila=array_fill(0,$num_cads+3,'-');
+			// Almacena totales de agregacion			
+			// Lleno la fila con vacios, le agrego 1 posiciones, correspondientes al total																		
+			$totales=array_fill(0,$num_cads+1,0);
+			$total=0;
+			$cont=1;
+			$cont_totales=0;
+			
+			while($cont_regs<$num_regs)
+			{	
+				$columna_quiebre=array_search($resumen_quiebre[$cont_regs]['CADENA'],$cadenas);	
+				// Mientras no cambie el 2o nivel acumulamos totales de agregcion en columnas correspondientes			
+				if($nivel2==$resumen_quiebre[$cont_regs]['CATEGORIA'])
+				{
+					$totales[$columna_quiebre]+=round($resumen_quiebre[$cont_regs]['quiebre'],1);				
+				}
+				else
+				{ // Si cambia el 2o nivel agrego totales del segmento actual a la matriz			
+					for($aux=0;$aux<count($totales);++$aux)
+						$totales[$aux]=round($totales[$aux]/$cont,1);			
+					$totales[$num_cads]=round($totales[$num_cads]/$cont,1);	
+					// Reinicializo contador de segmentos
+					$cont=0;
+					$matriz_totales[$cont_totales]=$totales;
+					$cont_totales++;
+					$nivel2=$resumen_quiebre[$cont_regs]['CATEGORIA'];
+					$totales=array_fill(0,$num_cads+1,0);
+				}			
+				if($nivel1==$resumen_quiebre[$cont_regs]['SEGMENTO'])
+				{ // Mientras no cambie el 1er nivel asignamos los valores de quiebre a las columnas correspondientes				
+					$fila[0]=$resumen_quiebre[$cont_regs]['SEGMENTO'];					
+					$fila[1]=$resumen_quiebre[$cont_regs]['CATEGORIA'];												
+					$fila[$columna_quiebre+2]=round($resumen_quiebre[$cont_regs]['quiebre'],1);						
+					$total+=$resumen_quiebre[$cont_regs]['quiebre'];	
+					$cont_regs++;
+				}	
+				else
+				{ // Si el primer nivel de agregacion cambió, lo actualizo, agrego la fila al body y reseteo el contador de cadenas
+					$fila[$num_cads+2]=round($total/$num_cads,1);
+					$totales[$num_cads]=$totales[$num_cads]+$total/$num_cads;				
+					$total=0;
+					$cont++;				
+					$nivel1=$resumen_quiebre[$cont_regs]['SEGMENTO'];
+					array_push($body,(object)$fila);
+					$fila=array_fill(0,$num_cads+3,'-');
+					// $cont_regs--;
+				}
+				if($cont_regs==$num_regs-1)
+				{
+					$fila[$num_cads+2]=round($total/$num_cads,1);
+					$totales[$num_cads]+=$total/$num_cads;
+					$total=0;
+					// $cont++;
+					// Si el primer nivel de agregacion cambió, lo actualizo, agrego la fila al body y reseteo el contador de cadenas
+					$nivel1=$resumen_quiebre[$cont_regs]['SEGMENTO'];
+					array_push($body,(object)$fila);
+					$fila=array_fill(0,$num_cads+3,'-');
+					// echo "cont=".$cont."\n";
+					for($aux=0;$aux<count($totales);++$aux)
+						$totales[$aux]=round($totales[$aux]/$cont,1);				
+					$cont=0;
+					$matriz_totales[$cont_totales]=$totales;
+					$cont_totales++;
+					$nivel2=$resumen_quiebre[$cont_regs]['CATEGORIA'];
+					$totales=array_fill(0,$num_cads+1,0);				
+				}
+			}		
+		}
 		// print_r($matriz_totales);		
 		// print_r($resumen_quiebre);
-		// print_r($body);
+		// print_r($body);		
 		/*
 		 * Output
 		 */
@@ -352,26 +413,7 @@ class ResumenController extends Controller
 			"matriz_totales" => $matriz_totales
 		);		
 		return new JsonResponse($output);
-	}
-	
-	public function periodoAction(Request $request)
-	{
-	
-		$min = 0;
-		$max = 100;				
-					
-		
-		$evolutivo= array(mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max), mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max));	
-		
-		//RESPONSE
-		$response = 
-		array(
-			'tabla_resumen' => $tabla_resumen,
-			'evolutivo' => $evolutivo,
-			);
-		
-		return new JsonResponse($response);
-	}
+	}	
 	
 	public function evolutivoAction(Request $request)
     {
