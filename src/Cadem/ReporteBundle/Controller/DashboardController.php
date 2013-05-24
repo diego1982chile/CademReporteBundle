@@ -46,17 +46,32 @@ class DashboardController extends Controller
 		$logofilename = $cliente->getLogofilename();
 		$logostyle = $cliente->getLogostyle();
 		
-		//QUIEBRE ULTIMA MEDICION |||| OCUPANDO CASE Y DBAL SE PUEDE HACER CON UNA SOLA CONSULTA
+		//ULTIMA MEDICION
 		$query = $em->createQuery(
-			'SELECT (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q) FROM CademReporteBundle:Quiebre q
-			JOIN q.salamedicion sm
-			JOIN sm.salacliente sc
-			JOIN sc.cliente c
-			WHERE c.id = :idcliente')
+			'SELECT m.id FROM CademReporteBundle:Medicion m
+			JOIN m.estudio e
+			WHERE e.clienteid = :idcliente
+			ORDER BY m.fechainicio DESC')
 			->setParameter('idcliente', $cliente->getId());
-		$quiebre = $query->getSingleScalarResult();
+		$medicion_q = $query->getArrayResult();
 		
-		$porc_quiebre = round($quiebre,1);
+		if(count($medicion_q) > 0){
+			$id_ultima_medicion = $medicion_q[0]['id'];
+		
+			//QUIEBRE ULTIMA MEDICION
+			$query = $em->createQuery(
+				'SELECT (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q) FROM CademReporteBundle:Quiebre q
+				JOIN q.salamedicion sm
+				JOIN sm.salacliente sc
+				WHERE sc.clienteid = :idcliente AND sm.medicionid = :idmedicion')
+				->setParameter('idcliente', $cliente->getId())
+				->setParameter('idmedicion', $id_ultima_medicion);
+			$quiebre = $query->getSingleScalarResult();
+			$porc_quiebre = round($quiebre,1);
+		}
+		else $porc_quiebre = 0;
+		
+		
 		
 		
 		//RESPONSE
@@ -81,27 +96,6 @@ class DashboardController extends Controller
 	
 	public function indicadoresAction(Request $request)
     {
-		// $start = microtime(true);
-
-		// $em = $this->getDoctrine()->getManager();
-		// $query = $em->createQuery(
-			// 'SELECT t FROM CademReporteBundle:Test t'
-		// )->setMaxResults(10000);
-		
-		// $cacheDriver = new \Doctrine\Common\Cache\ApcCache();
-
-		
-		//$cacheDriver->deleteAll();
-		// if($prueba = $cacheDriver->contains('my_query_result')){
-			// $test = $cacheDriver->fetch('my_query_result');
-		// }
-		// else{
-			// $test = $query->getResult(\Doctrine\ORM\Query::HYDRATE_ARRAY);
-			// $cacheDriver->save('my_query_result', $test, 20);
-		// }
-		
-		// $time_taken = microtime(true) - $start;
-		
 		$data = $request->query->all();
 
 		$em = $this->getDoctrine()->getManager();
