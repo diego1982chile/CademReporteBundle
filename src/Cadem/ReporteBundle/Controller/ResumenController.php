@@ -169,8 +169,6 @@ class ResumenController extends Controller
 			GROUP BY ni2.NOMBRE, ni.NOMBRE, cad.NOMBRE";
 		$resumen_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();
 		$niveles=2;
-				
-		// print_r($resumen_quiebre);
 		
 		// CONSTRUIR EL ENCABEZADO DE LA TABLA
 		
@@ -203,51 +201,43 @@ class ResumenController extends Controller
 		
 		//medicion join estudio
 		$query = $em->createQuery(
-			'SELECT m.nombre, m.fechafin FROM CademReporteBundle:Medicion m
+			'SELECT m.nombre, m.fechainicio, m.fechafin FROM CademReporteBundle:Medicion m
 			JOIN m.estudio e
 			JOIN e.cliente c
 			JOIN c.usuarios u
-			WHERE u.id = :id')
+			WHERE u.id = :id
+			ORDER BY m.fechainicio DESC')
+			->setMaxResults(12)
 			->setParameter('id', $user->getId());
 		$mediciones_q = $query->getArrayResult();
+		$mediciones_q = array_reverse($mediciones_q);
 		
-		foreach($mediciones_q as $m)
-		{
-			$mediciones[] = $m['nombre'];
-			$mediciones_corta[] = $m['fechafin']->format('d/m');
+		foreach($mediciones_q as $m){
+			$mediciones[] = $m['fechainicio']->format('d/m').'-'.$m['fechafin']->format('d/m');
+			$mediciones_tooltip[] = $m['nombre'];
 		}
 		
 		//quiebre join salamedicion join medicion
 		$query = $em->createQuery(
-			'SELECT COUNT(q) FROM CademReporteBundle:Quiebre q
+			'SELECT (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*1.0)/COUNT(q.id) as quiebre FROM CademReporteBundle:Quiebre q
 			JOIN q.salamedicion sm
 			JOIN sm.medicion m
 			JOIN m.estudio e
 			JOIN e.cliente c
 			JOIN c.usuarios u
 			WHERE u.id = :id
-			GROUP BY m.id')
+			GROUP BY m.id, m.fechainicio
+			ORDER BY m.fechainicio DESC')
+			->setMaxResults(12)
 			->setParameter('id', $user->getId());
-		$quiebres_totales = $query->getResult();
-
-		$query = $em->createQuery(
-			'SELECT COUNT(q) FROM CademReporteBundle:Quiebre q
-			JOIN q.salamedicion sm
-			JOIN sm.medicion m
-			JOIN m.estudio e
-			JOIN e.cliente c
-			JOIN c.usuarios u
-			WHERE u.id = :id
-			AND q.hayquiebre = 1
-			GROUP BY m.id')
-			->setParameter('id', $user->getId());
-		$quiebres = $query->getResult();
+		$quiebres = $query->getArrayResult();
+		$quiebres = array_reverse($quiebres);
 		
-		foreach ($quiebres_totales as $key => $value) $porc_quiebre[] = $quiebres[$key][1]/$quiebres_totales[$key][1]*100;
+		foreach ($quiebres as $q) $porc_quiebre[] = round($q['quiebre']*100,1);
 								
 		$periodos= array(
-			'tooltip' => $mediciones,
-			'data' => $mediciones_corta,
+			'tooltip' => $mediciones_tooltip,
+			'data' => $mediciones,
 		);
 		$evolutivo= $porc_quiebre;							
 			
