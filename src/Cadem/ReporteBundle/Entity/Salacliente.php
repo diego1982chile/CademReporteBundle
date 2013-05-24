@@ -21,6 +21,13 @@ class Salacliente
      * @ORM\GeneratedValue(strategy="IDENTITY")
      */
     private $id;
+	
+	/**
+     * @var integer
+     *
+     * @ORM\Column(name="CLIENTE_ID", type="integer", nullable=true)
+     */
+    private $clienteid;
 
     /**
      * @var string
@@ -87,6 +94,29 @@ class Salacliente
     public function getId()
     {
         return $this->id;
+    }
+	
+	/**
+     * Get clienteid
+     *
+     * @return integer 
+     */
+    public function getClienteId()
+    {
+        return $this->clienteid;
+    }
+	
+	/**
+     * Set clienteid
+     *
+	 * @param integer $clienteid
+     * @return Salacliente
+     */
+    public function SetClienteId($clienteid)
+    {
+        $this->clienteid = $clienteid;
+		
+		return $this;
     }
 
     /**

@@ -21,6 +21,13 @@ class Salamedicion
      * @ORM\GeneratedValue(strategy="IDENTITY")
      */
     private $id;
+	
+	/**
+     * @var integer
+     *
+     * @ORM\Column(name="MEDICION_ID", type="integer", nullable=true)
+     */
+    private $medicionid;
 
     /**
      * @var boolean
@@ -71,6 +78,29 @@ class Salamedicion
     public function getId()
     {
         return $this->id;
+    }
+	
+	/**
+     * Get medicionid
+     *
+     * @return integer 
+     */
+    public function getMedicionId()
+    {
+        return $this->medicionid;
+    }
+	
+	/**
+     * Set medicionid
+     *
+	 * @param integer $medicionid
+     * @return Salamedicion
+     */
+    public function SetClienteId($medicionid)
+    {
+        $this->medicionid = $medicionid;
+		
+		return $this;
     }
 
     /**

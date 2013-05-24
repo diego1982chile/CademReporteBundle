@@ -21,6 +21,13 @@ class Estudio
      * @ORM\GeneratedValue(strategy="NONE")
      */
     private $id;
+	
+	/**
+     * @var integer
+     *
+     * @ORM\Column(name="CLIENTE_ID", type="integer", nullable=true)
+     */
+    private $clienteid;
 
     /**
      * @var string
@@ -98,6 +105,29 @@ class Estudio
     public function getId()
     {
         return $this->id;
+    }
+	
+	/**
+     * Get clienteid
+     *
+     * @return integer 
+     */
+    public function getClienteId()
+    {
+        return $this->clienteid;
+    }
+	
+	/**
+     * Set clienteid
+     *
+	 * @param integer $clienteid
+     * @return Estudio
+     */
+    public function SetClienteId($clienteid)
+    {
+        $this->clienteid = $clienteid;
+		
+		return $this;
     }
 
     /**
