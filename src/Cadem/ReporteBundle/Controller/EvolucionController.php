@@ -132,7 +132,9 @@ class EvolucionController extends Controller
 				INNER JOIN SALAMEDICION sm on sm.ID = q.SALAMEDICION_ID
 				INNER JOIN MEDICION m on m.ID = sm.MEDICION_ID AND m.ID IN (SELECT TOP(12) m2.ID FROM MEDICION m2 WHERE m2.ID = sm.MEDICION_ID ORDER BY m2.FECHAINICIO ASC)
 				INNER JOIN SALACLIENTE sc on sc.ID = sm.SALACLIENTE_ID
-				INNER JOIN ITEMCLIENTE ic on ic.ID = q.ITEMCLIENTE_ID AND ic.CLIENTE_ID = 12
+				INNER JOIN ITEMCLIENTE ic on ic.ID = q.ITEMCLIENTE_ID
+				INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
+				INNER JOIN USUARIO u on u.cliente_id=c.id and u.id=".$user->getId()."
 				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
 				INNER JOIN ITEM i on i.ID = ic.ITEM_ID
 				GROUP BY  ni.NOMBRE,i.NOMBRE,m.NOMBRE,m.FECHAINICIO
@@ -210,12 +212,46 @@ class EvolucionController extends Controller
 	
 	public function tablaAction(Request $request)
 	{		
-		// CONSTRUIR EL CUERPO DE LA TABLA
-
-		$session=$this->get("session");
+		// Recuperar el usuario, parámetros y datos de sesión
+		$user = $this->getUser();
+		$em = $this->getDoctrine()->getManager();
+		$session=$this->get("session");			
+		$mediciones=$session->get("mediciones");			
 		
-		$mediciones=$session->get("mediciones");		
-		$evolucion_quiebre=$session->get("evolucion_quiebre");
+		$parametros = $request->query->all();
+		// $dataform = $data['f_region'];				
+		
+		// // CONSTRUIR EL CUERPO DE LA TABLA
+		if(!array_key_exists('f_estudio',$parametros))
+		{ // Si el action es invocado durante la carga de la pagina obtener el dataset desde la sesion							
+			$evolucion_quiebre=$session->get("evolucion_quiebre");
+		}
+		else
+		{ // Si es una llamada desde el filtro, entonces se deben recuperar los parametros y regenerar el dataset			
+			$estudio=$parametros['f_estudio']['Estudio'];			
+			$comunas='';
+			foreach($parametros['f_comuna']['Comuna'] as $comuna)
+				$comunas.=$comuna.',';	
+			$comunas = trim($comunas, ',');
+				
+			// return(print_r($comunas,true));
+			
+			$sql = "SELECT (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre, i.NOMBRE as PRODUCTO,  ni.NOMBRE as SEGMENTO, m.NOMBRE, m.FECHAINICIO FROM QUIEBRE q				
+				INNER JOIN SALAMEDICION sm on sm.ID = q.SALAMEDICION_ID
+				INNER JOIN MEDICION m on m.ID = sm.MEDICION_ID AND m.ID IN (SELECT TOP(12) m2.ID FROM MEDICION m2 WHERE m2.ID = sm.MEDICION_ID ORDER BY m2.FECHAINICIO ASC)
+				INNER JOIN SALACLIENTE sc on sc.ID = sm.SALACLIENTE_ID
+				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in($comunas)
+				INNER JOIN ITEMCLIENTE ic on ic.ID = q.ITEMCLIENTE_ID
+				INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
+				INNER JOIN USUARIO u on u.cliente_id=c.id and u.id=".$user->getId()."
+				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
+				INNER JOIN ITEM i on i.ID = ic.ITEM_ID
+				GROUP BY  ni.NOMBRE,i.NOMBRE,m.NOMBRE,m.FECHAINICIO
+				ORDER BY ni.NOMBRE,i.NOMBRE";				
+			
+			$evolucion_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();
+			// return(print_r($sql,true));								
+		}	
 
 		$body=array();				
 		
@@ -240,28 +276,30 @@ class EvolucionController extends Controller
 		$cont_totales=0;		
 		
 		while($cont_regs<$num_regs)
-		{	// Lleno la fila con vacios, le agrego 3 posiciones, correspondientes a los niveles de agregación y al total												
+		{	// Lleno la fila con vacios, le agrego 3 posiciones, correspondientes a los niveles de agregación y al total
+			$columna_quiebre=array_search($evolucion_quiebre[$cont_regs]['NOMBRE'],$mediciones);	
+		
 			// Mientras no cambie el 2o nivel acumulamos totales de agregcion en columnas correspondientes			
 			if($nivel2==$evolucion_quiebre[$cont_regs]['SEGMENTO'])
 			{
-				$totales[$evolucion_quiebre]+=round($evolucion_quiebre[$cont_regs]['quiebre'],1);				
+				$totales[$columna_quiebre]+=round($evolucion_quiebre[$cont_regs]['quiebre'],1);				
 			}
 			else
 			{ // Si cambia el 2o nivel agrego totales del segmento actual a la matriz			
 				for($aux=0;$aux<count($totales);++$aux)
 					$totales[$aux]=round($totales[$aux]/$cont,1);			
-				$totales[$num_cads]=round($totales[$num_cads]/$cont,1);	
+				$totales[$num_meds]=round($totales[$num_meds]/$cont,1);	
 				// Reinicializo contador de segmentos
 				$cont=0;
 				$matriz_totales[$cont_totales]=$totales;
 				$cont_totales++;
-				$nivel2=$resumen_quiebre[$cont_regs]['SEGMENTO'];
-				$totales=array_fill(0,$num_cads+1,0);
+				$nivel2=$evolucion_quiebre[$cont_regs]['SEGMENTO'];
+				$totales=array_fill(0,$num_meds+1,0);
 			}			
 			// Mientras el primer nivel de agregación no cambie
 			if($nivel1==$evolucion_quiebre[$cont_regs]['PRODUCTO'])
 			{					
-				$fila[0]=$evolucion_quiebre[$cont_regs]['PRODUCTO'];					
+				$fila[0]=trim($evolucion_quiebre[$cont_regs]['PRODUCTO']);					
 				$fila[1]=$evolucion_quiebre[$cont_regs]['SEGMENTO'];	
 				$columna_quiebre=array_search($evolucion_quiebre[$cont_regs]['NOMBRE'],$mediciones);								
 				$fila[$columna_quiebre+2]=round($evolucion_quiebre[$cont_regs]['quiebre'],1);						
@@ -272,7 +310,7 @@ class EvolucionController extends Controller
 			{			
 				// Si el primer nivel de agregacion cambió, lo actualizo, agrego la fila al body y reseteo el contador de mediciones			
 				$fila[$num_meds+2]=round($total/$num_meds,1);
-				$totales[$num_cads]=$totales[$num_meds]+$total/$num_meds;				
+				$totales[$num_meds]=$totales[$num_meds]+$total/$num_meds;				
 				$total=0;				
 				$nivel1=$evolucion_quiebre[$cont_regs]['PRODUCTO'];				
 				array_push($body,(object)$fila);
@@ -288,7 +326,7 @@ class EvolucionController extends Controller
 				// Si el primer nivel de agregacion cambió, lo actualizo, agrego la fila al body y reseteo el contador de cadenas
 				$nivel1=$evolucion_quiebre[$cont_regs]['PRODUCTO'];
 				array_push($body,(object)$fila);
-				$fila=array_fill(0,$num_cads+3,'-');
+				$fila=array_fill(0,$num_meds+3,'-');
 				// echo "cont=".$cont."\n";
 				for($aux=0;$aux<count($totales);++$aux)
 					$totales[$aux]=round($totales[$aux]/$cont,1);				
