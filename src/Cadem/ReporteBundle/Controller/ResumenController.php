@@ -215,7 +215,9 @@ class ResumenController extends Controller
 		$mediciones_q = array_reverse($mediciones_q);
 		
 		foreach($mediciones_q as $m){
-			$mediciones_data[] = (new \DateTime($m['FECHAINICIO']))->format('d/m').'-'.(new \DateTime($m['FECHAFIN']))->format('d/m');
+			$fi = new \DateTime($m['FECHAINICIO']);
+			$ff = new \DateTime($m['FECHAFIN']);
+			$mediciones_data[] = $fi->format('d/m').'-'.$ff->format('d/m');
 			$mediciones_tooltip[] = $m['NOMBRE'];
 		}
 		
