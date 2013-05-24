@@ -213,8 +213,10 @@ class ResumenController extends Controller
 		$mediciones_q = $query->getArrayResult();
 		$mediciones_q = array_reverse($mediciones_q);
 		
+		if(count($mediciones_q) != 12) return 'AAA';
+		
 		foreach($mediciones_q as $m){
-			$mediciones[] = $m['fechainicio']->format('d/m').'-'.$m['fechafin']->format('d/m');
+			$mediciones_data[] = $m['fechainicio']->format('d/m').'-'.$m['fechafin']->format('d/m');
 			$mediciones_tooltip[] = $m['nombre'];
 		}
 		
@@ -238,7 +240,7 @@ class ResumenController extends Controller
 								
 		$periodos= array(
 			'tooltip' => $mediciones_tooltip,
-			'data' => $mediciones,
+			'data' => $mediciones_data,
 		);
 		$evolutivo= $porc_quiebre;							
 			
