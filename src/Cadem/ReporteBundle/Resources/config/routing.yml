@@ -16,9 +16,6 @@ resumen_index:
 resumen_evolutivo:
     pattern: /resumen/evolutivo
     defaults: { _controller: CademReporteBundle:Resumen:evolutivo }	
-resumen_periodo:
-    pattern: /resumen/periodo
-    defaults: { _controller: CademReporteBundle:Resumen:periodo }	
 resumen_tabla:
     pattern: /resumen/tabla
     defaults: { _controller: CademReporteBundle:Resumen:tabla }	

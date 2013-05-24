@@ -29,6 +29,7 @@ class ResumenController extends Controller
 		$clientes = $query->getResult();
 		$cliente = $clientes[0];
 		$estudios = $cliente->getEstudios();
+		$id_cliente = $cliente->getId();
 		
 		$choices_estudio = array('0' => 'TODOS');
 		foreach($estudios as $e)
@@ -199,44 +200,42 @@ class ResumenController extends Controller
 		$session->set("resumen_quiebre",$resumen_quiebre);		
 		// print_r($tabla_resumen);						
 		
-		//medicion join estudio
-		$query = $em->createQuery(
-			'SELECT m.nombre, m.fechainicio, m.fechafin FROM CademReporteBundle:Medicion m
-			JOIN m.estudio e
-			JOIN e.cliente c
-			JOIN c.usuarios u
-			WHERE u.id = :id
-			GROUP BY m.nombre, m.fechainicio, m.fechafin
-			ORDER BY m.fechainicio DESC')
-			->setMaxResults(12)
-			->setParameter('id', $user->getId());
-		$mediciones_q = $query->getArrayResult();
+		
+		//DATOS DEL EJE X EN EVOLUTIVO
+		$sql = "SELECT TOP(12) m.NOMBRE, m.FECHAINICIO, m.FECHAFIN FROM MEDICION m
+			INNER JOIN SALAMEDICION sm on sm.MEDICION_ID = m.ID
+			INNER JOIN SALACLIENTE sc on sc.ID = sm.SALACLIENTE_ID
+			INNER JOIN SALA s on s.ID = sc.SALA_ID
+			
+			WHERE sc.CLIENTE_ID = ?
+			ORDER BY m.FECHAINICIO DESC";
+		$param = array($id_cliente);
+		$tipo_param = array(\PDO::PARAM_INT);
+		$mediciones_q = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
 		$mediciones_q = array_reverse($mediciones_q);
 		
-		if(count($mediciones_q) != 12) return 'AAA';
-		
 		foreach($mediciones_q as $m){
-			$mediciones_data[] = $m['fechainicio']->format('d/m').'-'.$m['fechafin']->format('d/m');
-			$mediciones_tooltip[] = $m['nombre'];
+			$mediciones_data[] = (new \DateTime($m['FECHAINICIO']))->format('d/m').'-'.(new \DateTime($m['FECHAFIN']))->format('d/m');
+			$mediciones_tooltip[] = $m['NOMBRE'];
 		}
 		
-		//quiebre join salamedicion join medicion
-		$query = $em->createQuery(
-			'SELECT (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*1.0)/COUNT(q.id) as quiebre FROM CademReporteBundle:Quiebre q
-			JOIN q.salamedicion sm
-			JOIN sm.medicion m
-			JOIN m.estudio e
-			JOIN e.cliente c
-			JOIN c.usuarios u
-			WHERE u.id = :id
-			GROUP BY m.id, m.fechainicio
-			ORDER BY m.fechainicio DESC')
-			->setMaxResults(12)
-			->setParameter('id', $user->getId());
-		$quiebres = $query->getArrayResult();
-		$quiebres = array_reverse($quiebres);
+		//DATOS DEL EJE Y EN EVOLUTIVO
+		$sql = "SELECT TOP(12) (SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 END)*1.0)/COUNT(q.ID) as QUIEBRE FROM QUIEBRE q
+			INNER JOIN SALAMEDICION sm on sm.ID = q.SALAMEDICION_ID
+			INNER JOIN MEDICION m on m.ID = sm.MEDICION_ID
+			INNER JOIN SALACLIENTE sc on sc.ID = sm.SALACLIENTE_ID
+			INNER JOIN SALA s on s.ID = sc.SALA_ID
+			
+			WHERE sc.CLIENTE_ID = ?
+			GROUP BY m.FECHAINICIO
+			ORDER BY m.FECHAINICIO DESC";
+		$param = array($id_cliente);
+		$tipo_param = array(\PDO::PARAM_INT);
+		$quiebres_q = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
+		$quiebres_q = array_reverse($quiebres_q);
 		
-		foreach ($quiebres as $q) $porc_quiebre[] = round($q['quiebre']*100,1);
+		foreach ($quiebres_q as $q) $porc_quiebre[] = round($q['QUIEBRE']*100,1);
+		
 								
 		$periodos= array(
 			'tooltip' => $mediciones_tooltip,
@@ -266,7 +265,82 @@ class ResumenController extends Controller
 		$response->setMaxAge(1);
 
 		return $response;
-    }
+    }	
+	
+	public function evolutivoAction(Request $request)
+    {
+		$user = $this->getUser();
+		$em = $this->getDoctrine()->getManager();
+		$data = $request->query->all();
+		
+		//CLIENTE
+		$query = $em->createQuery(
+			'SELECT c FROM CademReporteBundle:Cliente c
+			JOIN c.usuarios u
+			WHERE u.id = :id AND c.activo = 1')
+			->setParameter('id', $user->getId());
+		$clientes = $query->getResult();
+		$cliente = $clientes[0];
+		
+		//DATOS
+		$id_cliente = $cliente->getId();
+		// $id_medicion_actual = intval($data['f_periodo']['Periodo']);
+		$id_estudio = intval($data['f_estudio']['Estudio']);// 0 = TODOS
+		$array_comuna = $data['f_comuna']['Comuna'];
+		foreach($array_comuna as $k => $v) $array_comuna[$k] = intval($v);
+		
+		
+		//DATOS DEL EJE X EN EVOLUTIVO
+		$sql = "SELECT TOP(12) m.NOMBRE, m.FECHAINICIO, m.FECHAFIN FROM MEDICION m
+			INNER JOIN SALAMEDICION sm on sm.MEDICION_ID = m.ID
+			INNER JOIN SALACLIENTE sc on sc.ID = sm.SALACLIENTE_ID
+			INNER JOIN SALA s on s.ID = sc.SALA_ID
+			
+			WHERE sc.CLIENTE_ID = ? AND s.COMUNA_ID IN ( ? )
+			ORDER BY m.FECHAINICIO DESC";
+		$param = array($id_cliente, $array_comuna);
+		$tipo_param = array(\PDO::PARAM_INT, \Doctrine\DBAL\Connection::PARAM_INT_ARRAY);
+		$mediciones_q = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
+		$mediciones_q = array_reverse($mediciones_q);
+		
+		foreach($mediciones_q as $m){
+			$mediciones_data[] = (new \DateTime($m['FECHAINICIO']))->format('d/m').'-'.(new \DateTime($m['FECHAFIN']))->format('d/m');
+			$mediciones_tooltip[] = $m['NOMBRE'];
+		}
+		
+		//DATOS DEL EJE Y EN EVOLUTIVO
+		$sql = "SELECT TOP(12) (SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 END)*1.0)/COUNT(q.ID) as QUIEBRE FROM QUIEBRE q
+			INNER JOIN SALAMEDICION sm on sm.ID = q.SALAMEDICION_ID
+			INNER JOIN MEDICION m on m.ID = sm.MEDICION_ID
+			INNER JOIN SALACLIENTE sc on sc.ID = sm.SALACLIENTE_ID
+			INNER JOIN SALA s on s.ID = sc.SALA_ID
+			
+			WHERE sc.CLIENTE_ID = ? AND s.COMUNA_ID IN ( ? )
+			GROUP BY m.FECHAINICIO
+			ORDER BY m.FECHAINICIO DESC";
+		$param = array($id_cliente, $array_comuna);
+		$tipo_param = array(\PDO::PARAM_INT, \Doctrine\DBAL\Connection::PARAM_INT_ARRAY);
+		$quiebres_q = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
+		$quiebres_q = array_reverse($quiebres_q);
+		
+		foreach ($quiebres_q as $q) $porc_quiebre[] = round($q['QUIEBRE']*100,1);
+		
+		//RESPONSE
+		$response = array(
+			'evo_ejex' => $mediciones_data,
+			'evo_tooltip' => $mediciones_tooltip,
+			'evo_ejey' => $porc_quiebre
+		);
+		$response = new JsonResponse($response);
+		
+		//CACHE
+		$response->setPrivate();
+		$response->setMaxAge(1);
+
+
+		return $response;
+		
+	}
 	
 	public function tablaAction(Request $request)
 	{	
@@ -392,9 +466,7 @@ class ResumenController extends Controller
 				}
 			}		
 		}
-		// print_r($matriz_totales);		
-		// print_r($resumen_quiebre);
-		// print_r($body);		
+	
 		/*
 		 * Output
 		 */
@@ -406,151 +478,5 @@ class ResumenController extends Controller
 			"matriz_totales" => $matriz_totales
 		);		
 		return new JsonResponse($output);
-	}	
-	
-	public function evolutivoAction(Request $request)
-    {
-		$min = 0;
-		$max = 100;	
-	
-		$evolutivo= array(mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max), mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max));
-		
-		return new JsonResponse($evolutivo);
 	}
-	
-	public function indicadoresAction(Request $request)
-    {
-		// $start = microtime(true);
-
-		// $em = $this->getDoctrine()->getManager();
-		// $query = $em->createQuery(
-			// 'SELECT t FROM CademReporteBundle:Test t'
-		// )->setMaxResults(10000);
-		
-		// $cacheDriver = new \Doctrine\Common\Cache\ApcCache();
-
-		
-		//$cacheDriver->deleteAll();
-		// if($prueba = $cacheDriver->contains('my_query_result')){
-			// $test = $cacheDriver->fetch('my_query_result');
-		// }
-		// else{
-			// $test = $query->getResult(\Doctrine\ORM\Query::HYDRATE_ARRAY);
-			// $cacheDriver->save('my_query_result', $test, 20);
-		// }
-		
-		// $time_taken = microtime(true) - $start;
-		
-		$data = $request->query->all();
-		
-		$min = 0;
-		$max = 100;
-		
-		switch($data['form']['Canal']){
-			case '1':
-				$min = 60;
-				$max = 100;
-			break;
-			case '2':
-				$min = 40;
-				$max = 100;
-			break;
-			case '3':
-				$min = 0;
-				$max = 60;
-			break;
-		}
-		
-		$ranking = array(
-			'head' => array('CATEGORIA','JUMBO','LIDER','TOTTUS','TOTAL'),
-			'body' => array(
-				array("CERVEZA", mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max)),
-				array("ENERGETICA", mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max)),
-				array("RON", mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max))
-			)
-		);
-				
-		$responseA = array(
-				'cobertura' =>	array(
-					'type' => 'pie',
-					'name' => 'Cobertura',
-					'data' => array(
-							array('name' => 'Cumple', 'y' => 20, 'color' => '#83A931'),
-							array('name' => 'No cumple', 'y' => 80, 'color' => '#EB3737')
-						)
-				),
-				'atributo' =>	array(
-					'type' => 'pie',
-					'name' => 'Atributo',
-					'data' => array(
-							array('name' => 'Cumple', 'y' => 35.5, 'color' => '#83A931'),
-							array('name' => 'No cumple', 'y' => 64.5, 'color' => '#EB3737')
-						)
-				),
-				'quiebre' =>	array(
-					'type' => 'pie',
-					'name' => 'Quiebre',
-					'data' => array(
-							array('name' => 'Cumple', 'y' => 55.5, 'color' => '#83A931'),
-							array('name' => 'No cumple', 'y' => 44.5, 'color' => '#EB3737')
-						)
-				),
-				'presencia' =>	array(
-					'type' => 'pie',
-					'name' => 'Presencia',
-					'data' => array(
-							array('name' => 'Cumple', 'y' => 44.5, 'color' => '#83A931'),
-							array('name' => 'No cumple', 'y' => 55.5, 'color' => '#EB3737')
-						)
-				),
-				'ranking' => $ranking
-				
-		);
-		$responseB = array( 
-				'cobertura' =>	array(
-					'type' => 'pie',
-					'name' => 'Cobertura',
-					'data' => array(
-							array('name' => 'Cumple', 'y' => 60, 'color' => '#83A931'),
-							array('name' => 'No cumple', 'y' => 40, 'color' => '#EB3737')
-						)
-				),
-				'atributo' =>	array(
-					'type' => 'pie',
-					'name' => 'Atributo',
-					'data' => array(
-							array('name' => 'Cumple', 'y' => 15.5, 'color' => '#83A931'),
-							array('name' => 'No cumple', 'y' => 84.5, 'color' => '#EB3737')
-						)
-				),
-				'quiebre' =>	array(
-					'type' => 'pie',
-					'name' => 'Quiebre',
-					'data' => array(
-							array('name' => 'Cumple', 'y' => 0, 'color' => '#83A931'),
-							array('name' => 'No cumple', 'y' => 100, 'color' => '#EB3737')
-						)
-				),
-				'presencia' =>	array(
-					'type' => 'pie',
-					'name' => 'Presencia',
-					'data' => array(
-							array('name' => 'Cumple', 'y' => 44.5, 'color' => '#83A931'),
-							array('name' => 'No cumple', 'y' => 55.5, 'color' => '#EB3737')
-						)
-				),
-				'ranking' => $ranking
-		);
-		
-		//RESPONSE
-		if('1' === $data['form']['Periodo']) $response = new JsonResponse($responseA);
-		else $response = new JsonResponse($responseB);
-		
-		//CACHE
-		$response->setPrivate();
-		$response->setMaxAge(1);
-
-
-		return $response;
-    }
 }

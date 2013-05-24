@@ -156,7 +156,10 @@ function construirTabla()
 								fnCallback(data);
 								DatosAdicionales = [];//AL FINAL SE BORRAN
 							}
-				} );
+				} )
+				.done(function() {  })
+				.fail(function() {  })
+				.always(function() { quitarloader(); });
 			},
 			// "oLanguage": {
 						// "sProcessing": "<img src='{{ asset('bundles/cademreporte/images/loader.gif') }}'>"
@@ -268,11 +271,7 @@ $(document).ready(function () {
 
 	callbacks.add( calcularAnchoMaximo() );
 	callbacks.add( construirTabla() );
-	// callbacks.add( fixedColumn() );
-	
-	{#% for item in variables_clientes %#}
-        {#% if loop.index == 1 %#}
-		//{#{"i_"~item.variable.nombre}#} = new Highcharts.Chart({
+
 		i_quiebre = new Highcharts.Chart({
 		chart: {    
 			renderTo: 'i_quiebre',
@@ -324,8 +323,7 @@ $(document).ready(function () {
 			enabled: false
 		}
 	});
-        {#% endif %#}
-	{#% endfor %#}
+
 	
 	cargartooltip();
 			
@@ -406,8 +404,24 @@ $(document).ready(function () {
 		var dataform = cform.serializeArray();
 		
 		DatosAdicionales = dataform;
+		$('form#filtros input').last().after('<img class="loader" alt="" style="float:right" src="/bundles/cademreporte/images/loader.gif">');
 		oTable.fnDraw();//SI NO FUNCIONA ESTO USAR LA DE ABAJO
 		// oTable.fnReloadAjax();
+		
+		//CARGAR EVOLUTIVO
+		$('form#filtros input').last().after('<img class="loader" alt="" style="float:right" src="/bundles/cademreporte/images/loader.gif">');
+		$.get("{{ path('resumen_evolutivo') }}",dataform,function(data_){
+			if (i_quiebre.series.length) {
+				i_quiebre.series[0].remove();
+				i_quiebre.addSeries({
+                    name: '% Quiebre',
+                    data: data_.evo_ejey
+                });
+			}
+		},'json')
+		.done(function() {  })
+		.fail(function() {  })
+		.always(function() { quitarloader(); });
 	}
 	
 	function quitarloader(){
