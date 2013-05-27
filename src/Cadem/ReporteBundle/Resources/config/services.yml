@@ -24,4 +24,8 @@ services:
         class: Cadem\ReporteBundle\Twig\RstExtension
         tags:
             - { name: twig.extension }
-    
+    cadem_reporte.helper.salasmedidas:
+        class: Cadem\ReporteBundle\Helper\SalasMedidasHelper
+        arguments:
+            entityManager: @doctrine.orm.entity_manager
+            security: @security.context
