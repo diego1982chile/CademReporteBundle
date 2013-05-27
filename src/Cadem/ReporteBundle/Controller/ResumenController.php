@@ -243,7 +243,7 @@ class ResumenController extends Controller
 			'tooltip' => $mediciones_tooltip,
 			'data' => $mediciones_data,
 		);
-		$evolutivo= $porc_quiebre;							
+		$evolutivo= $porc_quiebre;
 			
 		//RESPONSE
 		$response = $this->render('CademReporteBundle:Resumen:index.html.twig',
@@ -312,14 +312,26 @@ class ResumenController extends Controller
 			$mediciones_tooltip[] = $m['NOMBRE'];
 		}
 		
+		//SI SE NECESITA AGREGAR UN GRAFICO POR CADENA
+		if(isset($data['cadena'])){
+			$cadena = $data['cadena'];
+			$cadena_join = " INNER JOIN CADENA c on c.ID = s.CADENA_ID ";
+			$cadena_where = " AND c.NOMBRE = '{$cadena}' ";
+		}
+		else{
+			$cadena_join = "";
+			$cadena_where = "";
+		}
+		
 		//DATOS DEL EJE Y EN EVOLUTIVO
 		$sql = "SELECT TOP(12) (SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 END)*1.0)/COUNT(q.ID) as QUIEBRE FROM QUIEBRE q
 			INNER JOIN SALAMEDICION sm on sm.ID = q.SALAMEDICION_ID
 			INNER JOIN MEDICION m on m.ID = sm.MEDICION_ID
 			INNER JOIN SALACLIENTE sc on sc.ID = sm.SALACLIENTE_ID
 			INNER JOIN SALA s on s.ID = sc.SALA_ID
+			{$cadena_join}
 			
-			WHERE sc.CLIENTE_ID = ? AND s.COMUNA_ID IN ( ? )
+			WHERE sc.CLIENTE_ID = ? AND s.COMUNA_ID IN ( ? ) {$cadena_where}
 			GROUP BY m.FECHAINICIO
 			ORDER BY m.FECHAINICIO DESC";
 		$param = array($id_cliente, $array_comuna);
@@ -351,8 +363,8 @@ class ResumenController extends Controller
 		// Recuperar el usuario, parámetros y datos de sesión
 		$user = $this->getUser();
 		$em = $this->getDoctrine()->getManager();
-		$session=$this->get("session");			
-		$cadenas=$session->get("cadenas");			
+		$session=$this->get("session");
+		$cadenas=$session->get("cadenas");
 		
 		$parametros = $request->query->all();
 		// $dataform = $data['f_region'];				

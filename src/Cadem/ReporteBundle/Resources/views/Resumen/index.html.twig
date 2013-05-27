@@ -180,7 +180,7 @@ function construirTabla()
 				// { "sWidth": "20%", "aTargets": [0] }
 			],
 			// "fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {			
-				// $(nRow).attr("data-tt-parent-id",aData[1]);		  
+				// $(nRow).attr("data-tt-parent-id",aData[1]);
 			// },		
 			"aaSortingFixed": [[ 1, 'asc' ]],
 			"fnInitComplete": function() {										
@@ -314,7 +314,7 @@ $(document).ready(function () {
 		legend: {
                layout: 'vertical',
                align: 'center',
-               x: 400,
+               x: 350,
                verticalAlign: 'top',
                y: 0,
                floating: true
@@ -368,24 +368,65 @@ $(document).ready(function () {
 		.fail(function() { alert("Se produjo un error al cargar las comunas"); })
 		.always(function() { /*alert("finished");*/ quitarloader();});
 	});
+	
+	//GRAFICAR COLUMNAS
+	$(document).on('click', 'thead th', function(e) {
+		var label= $(this).attr('tag');
+		if (e.ctrlKey){//AGREGAR OTRA LINEA
+			$(this).addClass("ui-state-active");
+			//GET
+			// $.get("{{ path('resumen_evolutivo') }}",{},function(data){
+				
+			// },"json");
+			var d = {
+                    name: label,
+                    data: [Math.random()*100,29,Math.random()*100,40,53,Math.random()*100,77,81,40,10,65,23]
+                };
+			i_quiebre.addSeries(d);
+		}
+		else{//REEMPLAZAR TODO MENOS LINEA GENERAL
+			$(".ui-state-active").removeClass("ui-state-active");
+			$(this).addClass("ui-state-active");
+			//GET
+			//SE CLONA FORM Y SE ARREGLA LOS ITEM SELECCIONADOS POR USUARIO
+			var cform = $('form#filtros').clone();
+			cform.find('option').removeAttr("selected");
+			var originform = $('form#filtros option');
+			originform.each(function(i) {
+				if($(this).is(':selected')) cform.find('option').eq(i).attr("selected", true);
+			});
+			//SE QUITA REGION Y COMUNA
+			cform.find('#f_region').remove();
+			cform.find('#f_provincia').remove();
+			cform.find('input').remove();
+			
+			var dataform = cform.serialize();
+			dataform = dataform + '&cadena=' + label;
+			
+			
+			$.get("{{ path('resumen_evolutivo') }}",dataform,function(data){
+			
+				var plot = {
+                    name: label,
+                    data: data.evo_ejey
+                };
+				//SE REMUEVEN TODOS y SE AGREGA
+				if (i_quiebre.series.length > 1){
+					var len = i_quiebre.series.length;
+					for(var i=1;i<len;i++) i_quiebre.series[1].remove();
+				}
+				i_quiebre.addSeries(plot);
+				
+			},"json");
+			
+			
+			
+		}
+	});					
 				
 });
 		
-	$('thead th').click(function() {
-		var label= $(this).attr('tag');
 	
-		$(".ui-state-active").removeClass("ui-state-active");
-		$(this).addClass("ui-state-active");
-		$.get( "{#{ path('resumen_evolutivo') }#}", label, function(data) {	
-			{#% for item in variables_clientes %#}
-				{#% if loop.index == 1 %#}
-					i_quiebre.series[0].setData(data); 
-					i_quiebre.setTitle({ text: "Evolucion Quiebre '"+label +"'"});
-				{#% endif %#}
-			{#% endfor %#}
-			cargartooltip();
-		});
-	});					
 	
 	//LOGICA DEL SUBMIT DEL FORMULARIO, SE DEBERIA OCUPAR AJAX
 	function procesarform(){
