@@ -419,44 +419,21 @@ class ResumenController extends Controller
 		$body=array();			
 		$num_regs=count($resumen_quiebre);		
 		$cont_cads=0;
-		$cont_regs=0;
-		$num_cads=count($cadenas);		
-		$matriz_totales=array();
+		$cont_regs=0;		
+		$num_cads=count($cadenas);					
 				
 		if($num_regs>0)
 		{					
 			// Para llevar los cambios del 1er nivel de agregacion
-			$nivel1=$resumen_quiebre[$cont_regs]['SEGMENTO'];
-			$nivel2=$resumen_quiebre[$cont_regs]['CATEGORIA'];
+			$nivel1=$resumen_quiebre[$cont_regs]['SEGMENTO'];			
 			// Lleno la fila con vacios, le agrego 3 posiciones, correspondientes a los niveles de agregación y al total															
-			$fila=array_fill(0,$num_cads+3,'-');
-			// Almacena totales de agregacion			
-			// Lleno la fila con vacios, le agrego 1 posiciones, correspondientes al total																		
-			$totales=array_fill(0,$num_cads+1,0);
-			$total=0;
-			$cont=1;
-			$cont_totales=0;
+			$fila=array_fill(0,$num_cads+3,'-');																				
+			$total=0;								
 			
 			while($cont_regs<$num_regs)
 			{	
 				$columna_quiebre=array_search($resumen_quiebre[$cont_regs]['CADENA'],$cadenas);	
-				// Mientras no cambie el 2o nivel acumulamos totales de agregcion en columnas correspondientes			
-				if($nivel2==$resumen_quiebre[$cont_regs]['CATEGORIA'])
-				{
-					$totales[$columna_quiebre]+=round($resumen_quiebre[$cont_regs]['quiebre'],1);				
-				}
-				else
-				{ // Si cambia el 2o nivel agrego totales del segmento actual a la matriz			
-					for($aux=0;$aux<count($totales);++$aux)
-						$totales[$aux]=round($totales[$aux]/$cont,1);			
-					$totales[$num_cads]=round($totales[$num_cads]/$cont,1);	
-					// Reinicializo contador de segmentos
-					$cont=0;
-					$matriz_totales[$cont_totales]=$totales;
-					$cont_totales++;
-					$nivel2=$resumen_quiebre[$cont_regs]['CATEGORIA'];
-					$totales=array_fill(0,$num_cads+1,0);
-				}			
+		
 				if($nivel1==$resumen_quiebre[$cont_regs]['SEGMENTO'])
 				{ // Mientras no cambie el 1er nivel asignamos los valores de quiebre a las columnas correspondientes				
 					$fila[0]=$resumen_quiebre[$cont_regs]['SEGMENTO'];					
@@ -464,40 +441,72 @@ class ResumenController extends Controller
 					$fila[$columna_quiebre+2]=round($resumen_quiebre[$cont_regs]['quiebre'],1);						
 					$total+=$resumen_quiebre[$cont_regs]['quiebre'];	
 					$cont_regs++;
+					$cont_cads++;
 				}	
 				else
 				{ // Si el primer nivel de agregacion cambió, lo actualizo, agrego la fila al body y reseteo el contador de cadenas
-					$fila[$num_cads+2]=round($total/$num_cads,1);
-					$totales[$num_cads]=$totales[$num_cads]+$total/$num_cads;				
-					$total=0;
-					$cont++;				
+					$fila[$num_cads+2]=round($total/$cont_cads,1);					
+					$cont_cads=0;
+					$total=0;						
 					$nivel1=$resumen_quiebre[$cont_regs]['SEGMENTO'];
 					array_push($body,(object)$fila);
-					$fila=array_fill(0,$num_cads+3,'-');
-					// $cont_regs--;
+					$fila=array_fill(0,$num_cads+3,'-');					
 				}
-				if($cont_regs==$num_regs-1)
-				{
-					$fila[$num_cads+2]=round($total/$num_cads,1);
-					$totales[$num_cads]+=$total/$num_cads;
-					$total=0;
-					// $cont++;
-					// Si el primer nivel de agregacion cambió, lo actualizo, agrego la fila al body y reseteo el contador de cadenas
-					$nivel1=$resumen_quiebre[$cont_regs]['SEGMENTO'];
-					array_push($body,(object)$fila);
-					$fila=array_fill(0,$num_cads+3,'-');
-					// echo "cont=".$cont."\n";
-					for($aux=0;$aux<count($totales);++$aux)
-						$totales[$aux]=round($totales[$aux]/$cont,1);				
-					$cont=0;
-					$matriz_totales[$cont_totales]=$totales;
-					$cont_totales++;
-					$nivel2=$resumen_quiebre[$cont_regs]['CATEGORIA'];
-					$totales=array_fill(0,$num_cads+1,0);				
+				if($cont_regs==$num_regs-1)		
+				{	
+					$fila[$num_cads+2]=round($total/$cont_cads,1);					
+					array_push($body,(object)$fila);						
 				}
-			}		
-		}
-	
+			}
+									
+			// Calculo de totales
+			$matriz_totales=array();
+			$totales=array_fill(0,$num_cads+1,0);
+			$contadores=array_fill(0,$num_cads+1,1);
+			$nivel2=$resumen_quiebre[0]['CATEGORIA'];
+			$cont_fil=0;
+			$num_fil=count($body);
+			$cont=0;
+			
+			foreach($body as $objeto)
+			{	
+				$fila=(array)$objeto;
+				
+				if($nivel2!=$fila[1])			
+				{ // Si cambia el 2o nivel agrego totales del segmento actual a la matriz		
+					for($aux=0;$aux<count($totales);++$aux)								
+						$contadores[$aux]=='-'? $totales[$aux]='-':$totales[$aux]=round($totales[$aux]/$contadores[$aux],1);																						
+					$matriz_totales[$cont]=$totales;
+					$cont++;
+					$totales=array_fill(0,$num_cads+1,0);
+					$contadores=array_fill(0,$num_cads+1,0);
+					$nivel2=$fila[1];	
+						
+				}	
+				$cont_col=0;				
+				foreach(array_slice($fila,2) as $quiebre)
+				{											
+					if($quiebre!='-')
+					{
+						$contadores[$cont_col]++;					
+						$totales[$cont_col]+=$quiebre;
+						$flag=false;
+					}
+					$cont_col++;
+				}		
+				if($cont_fil==$num_fil-1)		
+				{	
+					for($aux=0;$aux<count($totales);++$aux)								
+						$contadores[$aux]==0? $totales[$aux]='-':$totales[$aux]=round($totales[$aux]/$contadores[$aux],1);																						
+					$matriz_totales[$cont]=$totales;
+					$cont++;
+					$totales=array_fill(0,$num_cads+1,0);
+					$contadores=array_fill(0,$num_cads+1,0);
+					$nivel2=$fila[1];						
+				}				
+				$cont_fil++;
+			}			
+		}							
 		/*
 		 * Output
 		 */
