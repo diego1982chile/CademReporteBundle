@@ -215,7 +215,9 @@ class ResumenController extends Controller
 		$mediciones_q = array_reverse($mediciones_q);
 		
 		foreach($mediciones_q as $m){
-			$mediciones_data[] = (new \DateTime($m['FECHAINICIO']))->format('d/m').'-'.(new \DateTime($m['FECHAFIN']))->format('d/m');
+			$fi = new \DateTime($m['FECHAINICIO']);
+			$ff = new \DateTime($m['FECHAFIN']);
+			$mediciones_data[] = $fi->format('d/m').'-'.$ff->format('d/m');
 			$mediciones_tooltip[] = $m['NOMBRE'];
 		}
 		
@@ -241,7 +243,7 @@ class ResumenController extends Controller
 			'tooltip' => $mediciones_tooltip,
 			'data' => $mediciones_data,
 		);
-		$evolutivo= $porc_quiebre;							
+		$evolutivo= $porc_quiebre;
 			
 		//RESPONSE
 		$response = $this->render('CademReporteBundle:Resumen:index.html.twig',
@@ -304,8 +306,35 @@ class ResumenController extends Controller
 		$mediciones_q = array_reverse($mediciones_q);
 		
 		foreach($mediciones_q as $m){
-			$mediciones_data[] = (new \DateTime($m['FECHAINICIO']))->format('d/m').'-'.(new \DateTime($m['FECHAFIN']))->format('d/m');
+			$fi = new \DateTime($m['FECHAINICIO']);
+			$ff = new \DateTime($m['FECHAFIN']);
+			$mediciones_data[] = $fi->format('d/m').'-'.$ff->format('d/m');
 			$mediciones_tooltip[] = $m['NOMBRE'];
+		}
+		
+		//SI SE NECESITA AGREGAR UN GRAFICO POR CADENA
+		if(isset($data['cadena'])){
+			$cadena = $data['cadena'];
+			$cadena_join = " INNER JOIN CADENA c on c.ID = s.CADENA_ID ";
+			$cadena_where = " AND c.NOMBRE = '{$cadena}' ";
+		}
+		else{
+			$cadena_join = "";
+			$cadena_where = "";
+		}
+		
+		//SI SE NECESITA AGREGAR UN GRAFICO POR NIVEL
+		if(isset($data['nivel'])){
+			$nivel = $data['nivel'];
+			$esCategoria = $data['cat'];
+			$nivel_join = " INNER JOIN ITEMCLIENTE ic on ic.ID = q.ITEMCLIENTE_ID ";
+			if($esCategoria === 'true') $nivel_join .= " INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID2 ";
+			else $nivel_join .= " INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID ";
+			$nivel_where = " AND ni.NOMBRE = '{$nivel}' ";
+		}
+		else{
+			$nivel_join = "";
+			$nivel_where = "";
 		}
 		
 		//DATOS DEL EJE Y EN EVOLUTIVO
@@ -314,8 +343,10 @@ class ResumenController extends Controller
 			INNER JOIN MEDICION m on m.ID = sm.MEDICION_ID
 			INNER JOIN SALACLIENTE sc on sc.ID = sm.SALACLIENTE_ID
 			INNER JOIN SALA s on s.ID = sc.SALA_ID
+			{$cadena_join}
+			{$nivel_join}
 			
-			WHERE sc.CLIENTE_ID = ? AND s.COMUNA_ID IN ( ? )
+			WHERE sc.CLIENTE_ID = ? AND s.COMUNA_ID IN ( ? ) {$cadena_where} {$nivel_where}
 			GROUP BY m.FECHAINICIO
 			ORDER BY m.FECHAINICIO DESC";
 		$param = array($id_cliente, $array_comuna);
@@ -347,8 +378,8 @@ class ResumenController extends Controller
 		// Recuperar el usuario, parámetros y datos de sesión
 		$user = $this->getUser();
 		$em = $this->getDoctrine()->getManager();
-		$session=$this->get("session");			
-		$cadenas=$session->get("cadenas");			
+		$session=$this->get("session");
+		$cadenas=$session->get("cadenas");
 		
 		$parametros = $request->query->all();
 		// $dataform = $data['f_region'];				

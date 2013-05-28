@@ -180,7 +180,7 @@ function construirTabla()
 				// { "sWidth": "20%", "aTargets": [0] }
 			],
 			// "fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {			
-				// $(nRow).attr("data-tt-parent-id",aData[1]);		  
+				// $(nRow).attr("data-tt-parent-id",aData[1]);
 			// },		
 			"aaSortingFixed": [[ 1, 'asc' ]],
 			"fnInitComplete": function() {										
@@ -310,7 +310,7 @@ $(document).ready(function () {
 		legend: {
                layout: 'vertical',
                align: 'center',
-               x: 400,
+               x: 350,
                verticalAlign: 'top',
                y: 0,
                floating: true
@@ -364,24 +364,205 @@ $(document).ready(function () {
 		.fail(function() { alert("Se produjo un error al cargar las comunas"); })
 		.always(function() { /*alert("finished");*/ quitarloader();});
 	});
+	
+	
+	//VARIABLES COMPARTIDAS
+	var intento_col = false;
+	var intento_fil = false;
+	var label_col = "";
+	var label_fil = "";
+	var cat_fil = "";
+	//GRAFICAR COLUMNAS
+	$(document).on('click', 'thead th', function(e) {
+		var label= $(this).attr('tag');
+		if (e.ctrlKey){//AGREGAR OTRA LINEA
+			$(this).addClass("ui-state-active");
+			intento_col = false;
+			//GET
+			//SE CLONA FORM Y SE ARREGLA LOS ITEM SELECCIONADOS POR USUARIO
+			var cform = $('form#filtros').clone();
+			cform.find('option').removeAttr("selected");
+			var originform = $('form#filtros option');
+			originform.each(function(i) {
+				if($(this).is(':selected')) cform.find('option').eq(i).attr("selected", true);
+			});
+			//SE QUITA REGION Y COMUNA
+			cform.find('#f_region').remove();
+			cform.find('#f_provincia').remove();
+			cform.find('input').remove();
+			
+			var dataform = cform.serialize();
+			
+			if(intento_fil){//SE AGREGA LINEA CRUZADA
+				//SE REMUEVEN TODOS y SE AGREGA
+				if (i_quiebre.series.length > 1){
+					var len = i_quiebre.series.length;
+					for(var i=1;i<len;i++) i_quiebre.series[1].remove();
+				}
+				
+				dataform = dataform + '&cadena=' + label + '&nivel=' + label_fil + '&cat=' + cat_fil;
+				label = label + '/' + label_fil;
+			}
+			else{
+				dataform = dataform + '&cadena=' + label;
+			}
+			
+			$(this).find('.DataTables_sort_icon').append('<img class="loader" alt="" style="float:left;margin-left:20px" src="/bundles/cademreporte/images/loader-minitrans.gif">');
+			$.get("{{ path('resumen_evolutivo') }}",dataform,function(data){
+			
+				var plot = {
+                    name: label,
+                    data: data.evo_ejey
+                };
+				i_quiebre.addSeries(plot);
+				
+			},"json")
+			.done(function() { /*alert("second success");*/ })
+			.fail(function() { alert("Se produjo un error al cargar"); })
+			.always(function() { /*alert("finished");*/ quitarloader();});
+			
+		}
+		else{//REEMPLAZAR TODO MENOS LINEA GENERAL
+			intento_col = true;
+			label_col = label;
+			$(".ui-state-active").removeClass("ui-state-active");
+			$(this).addClass("ui-state-active");
+			//GET
+			//SE CLONA FORM Y SE ARREGLA LOS ITEM SELECCIONADOS POR USUARIO
+			var cform = $('form#filtros').clone();
+			cform.find('option').removeAttr("selected");
+			var originform = $('form#filtros option');
+			originform.each(function(i) {
+				if($(this).is(':selected')) cform.find('option').eq(i).attr("selected", true);
+			});
+			//SE QUITA REGION Y COMUNA
+			cform.find('#f_region').remove();
+			cform.find('#f_provincia').remove();
+			cform.find('input').remove();
+			
+			var dataform = cform.serialize();
+			dataform = dataform + '&cadena=' + label;
+			
+			$(this).find('.DataTables_sort_icon').append('<img class="loader" alt="" style="float:left;margin-left:20px" src="/bundles/cademreporte/images/loader-minitrans.gif">');
+			$.get("{{ path('resumen_evolutivo') }}",dataform,function(data){
+			
+				var plot = {
+                    name: label,
+                    data: data.evo_ejey
+                };
+				//SE REMUEVEN TODOS y SE AGREGA
+				if (i_quiebre.series.length > 1){
+					var len = i_quiebre.series.length;
+					for(var i=1;i<len;i++) i_quiebre.series[1].remove();
+				}
+				i_quiebre.addSeries(plot);
+				
+			},"json")
+			.done(function() { /*alert("second success");*/ })
+			.fail(function() { alert("Se produjo un error al cargar"); })
+			.always(function() { /*alert("finished");*/ quitarloader();});
+		}
+	});
+
+	
+	//GRAFICAR FILAS
+	$(document).on('click', 'td.tag', function(e) {
+		var categoria = false;
+		if($(this).hasClass('group')) categoria = true;
+		var label= $(this).text();
+		if (e.ctrlKey){//AGREGAR OTRA LINEA
+			intento_fil = false;
+			$(this).addClass("ui-state-active");
+			//GET
+			//SE CLONA FORM Y SE ARREGLA LOS ITEM SELECCIONADOS POR USUARIO
+			var cform = $('form#filtros').clone();
+			cform.find('option').removeAttr("selected");
+			var originform = $('form#filtros option');
+			originform.each(function(i) {
+				if($(this).is(':selected')) cform.find('option').eq(i).attr("selected", true);
+			});
+			//SE QUITA REGION Y COMUNA
+			cform.find('#f_region').remove();
+			cform.find('#f_provincia').remove();
+			cform.find('input').remove();
+			
+			var dataform = cform.serialize();
+			
+			if(intento_col){//SE AGREGA LINEA CRUZADA
+				//SE REMUEVEN TODOS y SE AGREGA
+				if (i_quiebre.series.length > 1){
+					var len = i_quiebre.series.length;
+					for(var i=1;i<len;i++) i_quiebre.series[1].remove();
+				}
+				
+				dataform = dataform + '&cadena=' + label_col + '&nivel=' + label + '&cat=' + categoria;
+				label = label_col + '/' + label;
+			}
+			else{
+				dataform = dataform + '&nivel=' + label + '&cat=' + categoria;
+			}
+			
+			
+			$('.DTFC_Cloned').find('.DataTables_sort_icon').append('<img class="loader" alt="" style="float:left;margin-left:20px" src="/bundles/cademreporte/images/loader-minitrans.gif">');
+			$.get("{{ path('resumen_evolutivo') }}",dataform,function(data){
+			
+				var plot = {
+                    name: label,
+                    data: data.evo_ejey
+                };
+				i_quiebre.addSeries(plot);
+				
+			},"json")
+			.done(function() { /*alert("second success");*/ })
+			.fail(function() { alert("Se produjo un error al cargar"); })
+			.always(function() { /*alert("finished");*/ quitarloader();});
+			
+		}else{//REEMPLAZAR TODO MENOS LINEA GENERAL
+			intento_fil = true;
+			label_fil = label;
+			cat_fil = categoria;
+			$(".ui-state-active").removeClass("ui-state-active");
+			$(this).addClass("ui-state-active");
+			//GET
+			//SE CLONA FORM Y SE ARREGLA LOS ITEM SELECCIONADOS POR USUARIO
+			var cform = $('form#filtros').clone();
+			cform.find('option').removeAttr("selected");
+			var originform = $('form#filtros option');
+			originform.each(function(i) {
+				if($(this).is(':selected')) cform.find('option').eq(i).attr("selected", true);
+			});
+			//SE QUITA REGION Y COMUNA
+			cform.find('#f_region').remove();
+			cform.find('#f_provincia').remove();
+			cform.find('input').remove();
+			
+			var dataform = cform.serialize();
+			dataform = dataform + '&nivel=' + label + '&cat=' + categoria;
+			
+			$('.DTFC_Cloned').find('.DataTables_sort_icon').append('<img class="loader" alt="" style="float:left;margin-left:20px" src="/bundles/cademreporte/images/loader-minitrans.gif">');
+			$.get("{{ path('resumen_evolutivo') }}",dataform,function(data){
+			
+				var plot = {
+                    name: label,
+                    data: data.evo_ejey
+                };
+				//SE REMUEVEN TODOS y SE AGREGA
+				if (i_quiebre.series.length > 1){
+					var len = i_quiebre.series.length;
+					for(var i=1;i<len;i++) i_quiebre.series[1].remove();
+				}
+				i_quiebre.addSeries(plot);
+				
+			},"json")
+			.done(function() { /*alert("second success");*/ })
+			.fail(function() { alert("Se produjo un error al cargar"); })
+			.always(function() { /*alert("finished");*/ quitarloader();});
+		}
+	});
 				
 });
 		
-	$('thead th').click(function() {
-		var label= $(this).attr('tag');
 	
-		$(".ui-state-active").removeClass("ui-state-active");
-		$(this).addClass("ui-state-active");
-		$.get( "{#{ path('resumen_evolutivo') }#}", label, function(data) {	
-			{#% for item in variables_clientes %#}
-				{#% if loop.index == 1 %#}
-					i_quiebre.series[0].setData(data); 
-					i_quiebre.setTitle({ text: "Evolucion Quiebre '"+label +"'"});
-				{#% endif %#}
-			{#% endfor %#}
-			cargartooltip();
-		});
-	});					
 	
 	//LOGICA DEL SUBMIT DEL FORMULARIO, SE DEBERIA OCUPAR AJAX
 	function procesarform(){
@@ -407,13 +588,15 @@ $(document).ready(function () {
 		//CARGAR EVOLUTIVO
 		$('form#filtros input').last().after('<img class="loader" alt="" style="float:right" src="/bundles/cademreporte/images/loader.gif">');
 		$.get("{{ path('resumen_evolutivo') }}",dataform,function(data_){
-			if (i_quiebre.series.length) {
-				i_quiebre.series[0].remove();
-				i_quiebre.addSeries({
-                    name: '% Quiebre',
-                    data: data_.evo_ejey
-                });
+			//SE REMUEVEN TODOS y SE AGREGA
+			if (i_quiebre.series.length > 0){
+				var len = i_quiebre.series.length;
+				for(var i=0;i<len;i++) i_quiebre.series[0].remove();
 			}
+			i_quiebre.addSeries({
+				name: '% Quiebre',
+				data: data_.evo_ejey
+			});
 		},'json')
 		.done(function() {  })
 		.fail(function() {  })

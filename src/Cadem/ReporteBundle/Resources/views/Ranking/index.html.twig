@@ -33,10 +33,12 @@
                           <thead>
                             <tr>
                               <th>#</th>
-                              <th>Sala</th>
-                              <th>% Quiebre ant</th>
-                              <th>% Quiebre act</th>
+                              <th>Cod.</th>
+                              <th>Dirección</th>
+                              <th>%Quiebre ant</th>
+                              <th>%Quiebre act</th>
                               <th>Ptos Dif</th>
+                              <th></th>
                             </tr>
                           </thead>
                           <tbody>
@@ -44,11 +46,18 @@
 							{% for row in ranking_sala %}
                             <tr>
                               <td>{{rank}}</td>
-                              <td title="{{row.calle}} {{row.numerocalle}}">[{{row.codigosala}}] {{row.calle|slice(0,35)}} {{row.numerocalle}}</td>
+                              <td>{{row.codigosala}}</td>
+                              <td title="{{row.calle}} {{row.numerocalle}}">{{row.calle|slice(0,35)}} {{row.numerocalle}}</td>
                               <td>{% if row.quiebre_anterior is not null %} {{row.quiebre_anterior|number_format(1)}} {% else %} NO {% endif %}</td>
                               <td>{% if row.quiebre is not null %} {{row.quiebre|number_format(1)}} {% else %} NO {% endif %}</td>
                               <td>{% if row.diferencia is not null %}
 							  {{row.diferencia|number_format(1)}}
+							  {% else %}
+							  NO
+							  {% endif %}
+							  
+							  </td>
+							  <td>{% if row.diferencia is not null %}
 									{% if row.diferencia > 0 %}
 									<div style="height:20px;display:inline">
 										<img style="height:inherit" src="{{ asset('bundles/cademreporte/images/up_arrow.png') }}" alt="Cadem">
@@ -57,12 +66,8 @@
 									<div style="height:20px;display:inline">
 										<img style="height:inherit" src="{{ asset('bundles/cademreporte/images/down_arrow.png') }}" alt="Cadem">
 									<div>
-									{% else %}
 									{% endif %}
-							  {% else %}
-							  NO
 							  {% endif %}
-							  
 							  </td>
                             </tr>
 							{% set rank = rank+1 %}
@@ -88,10 +93,12 @@
                           <thead>
                             <tr>
                               <th>#</th>
+                              <th>Cod.</th>
                               <th>Producto</th>
-                              <th>% Quiebre ant</th>
-                              <th>% Quiebre act</th>
+                              <th>%Quiebre ant</th>
+                              <th>%Quiebre act</th>
                               <th>Ptos Dif</th>
+                              <th></th>
                             </tr>
                           </thead>
                           <tbody>
@@ -99,11 +106,18 @@
 							{% for row in ranking_item %}
                             <tr>
                               <td>{{rank}}</td>
-                              <td title="{{row.nombre}}">[{{row.codigoitem}}] {{row.nombre|slice(0,42)}}</td>
+                              <td>{{row.codigoitem}}</td>
+                              <td title="{{row.nombre}}">{{row.nombre|slice(0,36)}}</td>
                               <td>{% if row.quiebre_anterior is not null %} {{row.quiebre_anterior|number_format(1)}} {% else %} NO {% endif %}</td>
                               <td>{% if row.quiebre is not null %} {{row.quiebre|number_format(1)}} {% else %} NO {% endif %}</td>
                               <td>{% if row.diferencia is not null %}
 							  {{row.diferencia|number_format(1)}}
+							  {% else %}
+							  NO
+							  {% endif %}
+							  
+							  </td>
+							  <td>{% if row.diferencia is not null %}
 									{% if row.diferencia > 0 %}
 									<div style="height:20px;display:inline">
 										<img style="height:inherit" src="{{ asset('bundles/cademreporte/images/up_arrow.png') }}" alt="Cadem">
@@ -112,12 +126,8 @@
 									<div style="height:20px;display:inline">
 										<img style="height:inherit" src="{{ asset('bundles/cademreporte/images/down_arrow.png') }}" alt="Cadem">
 									<div>
-									{% else %}
 									{% endif %}
-							  {% else %}
-							  NO
 							  {% endif %}
-							  
 							  </td>
                             </tr>
 							{% set rank = rank+1 %}
@@ -143,9 +153,11 @@
                             <tr>
                               <th>#</th>
                               <th>Empleado</th>
-                              <th>% Quiebre ant</th>
-                              <th>% Quiebre act</th>
+                              <th>Cargo</th>
+                              <th>%Quiebre ant</th>
+                              <th>%Quiebre act</th>
                               <th>Ptos Dif</th>
+                              <th></th>
                             </tr>
                           </thead>
                           <tbody>
@@ -154,10 +166,17 @@
                             <tr>
                               <td>{{rank}}</td>
                               <td>{{row.nombre}}</td>
+                              <td>{{row.cargo}}</td>
                               <td>{% if row.quiebre_anterior is not null %} {{row.quiebre_anterior|number_format(1)}} {% else %} NO {% endif %}</td>
                               <td>{% if row.quiebre is not null %} {{row.quiebre|number_format(1)}} {% else %} NO {% endif %}</td>
                               <td>{% if row.diferencia is not null %}
 							  {{row.diferencia|number_format(1)}}
+							  {% else %}
+							  NO
+							  {% endif %}
+							  
+							  </td>
+							  <td>{% if row.diferencia is not null %}
 									{% if row.diferencia > 0 %}
 									<div style="height:20px;display:inline">
 										<img style="height:inherit" src="{{ asset('bundles/cademreporte/images/up_arrow.png') }}" alt="Cadem">
@@ -166,12 +185,8 @@
 									<div style="height:20px;display:inline">
 										<img style="height:inherit" src="{{ asset('bundles/cademreporte/images/down_arrow.png') }}" alt="Cadem">
 									<div>
-									{% else %}
 									{% endif %}
-							  {% else %}
-							  NO
 							  {% endif %}
-							  
 							  </td>
                             </tr>
 							{% set rank = rank+1 %}
@@ -267,7 +282,7 @@ $(document).ready(function () {
 			"bInfo": false,
 			"bPaginate": false,
 			"aoColumnDefs": [
-			  { "sClass": "text-center", "aTargets": [ 2,3,4 ] }
+			  { "sClass": "text-center", "aTargets": [ 3,4,5 ] }
 			],
 			"sDom": '<"H"<"toolbar">Cfr>t<"F"ip>',
 			"bAutoWidth": true
@@ -359,12 +374,14 @@ $(document).ready(function () {
 				{
 					oTables[0].fnAddData([
 						cont,
-						"["+row[i].codigosala+"] "+row[i].calle.substring(0, 35)+" "+row[i].numerocalle,
+						row[i].codigosala,
+						row[i].calle.substring(0, 35)+" "+row[i].numerocalle,
 						(row[i].quiebre_anterior != null)?parseFloat(row[i].quiebre_anterior).toFixed(1):"NO",
 						(row[i].quiebre != null)?parseFloat(row[i].quiebre).toFixed(1):"NO",
-						(row[i].diferencia != null)?parseFloat(row[i].diferencia).toFixed(1)+(
+						(row[i].diferencia != null)?parseFloat(row[i].diferencia).toFixed(1):"NO",
+						(row[i].diferencia != null)?(
 						(parseFloat(row[i].diferencia) > 0)?fechaup:(parseFloat(row[i].diferencia) < 0)?fechadown:""
-						):"NO"
+						):""
 					]);
 					cont++;
 				}
@@ -377,12 +394,14 @@ $(document).ready(function () {
 				{
 					oTables[1].fnAddData([
 						cont,
-						"["+row[i].codigoitem+"] "+row[i].nombre.substring(0, 42),
+						row[i].codigoitem,
+						row[i].nombre.substring(0, 36),
 						(row[i].quiebre_anterior != null)?parseFloat(row[i].quiebre_anterior).toFixed(1):"NO",
 						(row[i].quiebre != null)?parseFloat(row[i].quiebre).toFixed(1):"NO",
-						(row[i].diferencia != null)?parseFloat(row[i].diferencia).toFixed(1)+(
+						(row[i].diferencia != null)?parseFloat(row[i].diferencia).toFixed(1):"NO",
+						(row[i].diferencia != null)?(
 						(parseFloat(row[i].diferencia) > 0)?fechaup:(parseFloat(row[i].diferencia) < 0)?fechadown:""
-						):"NO"
+						):""
 					]);
 					cont++;
 				}
@@ -396,11 +415,13 @@ $(document).ready(function () {
 					oTables[2].fnAddData([
 						cont,
 						row[i].nombre,
+						row[i].cargo,
 						(row[i].quiebre_anterior != null)?parseFloat(row[i].quiebre_anterior).toFixed(1):"NO",
 						(row[i].quiebre != null)?parseFloat(row[i].quiebre).toFixed(1):"NO",
-						(row[i].diferencia != null)?parseFloat(row[i].diferencia).toFixed(1)+(
+						(row[i].diferencia != null)?parseFloat(row[i].diferencia).toFixed(1):"NO",
+						(row[i].diferencia != null)?(
 						(parseFloat(row[i].diferencia) > 0)?fechaup:(parseFloat(row[i].diferencia) < 0)?fechadown:""
-						):"NO"
+						):""
 					]);
 					cont++;
 				}
