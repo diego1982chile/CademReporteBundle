@@ -323,6 +323,20 @@ class ResumenController extends Controller
 			$cadena_where = "";
 		}
 		
+		//SI SE NECESITA AGREGAR UN GRAFICO POR NIVEL
+		if(isset($data['nivel'])){
+			$nivel = $data['nivel'];
+			$esCategoria = $data['cat'];
+			$nivel_join = " INNER JOIN ITEMCLIENTE ic on ic.ID = q.ITEMCLIENTE_ID ";
+			if($esCategoria === 'true') $nivel_join .= " INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID2 ";
+			else $nivel_join .= " INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID ";
+			$nivel_where = " AND ni.NOMBRE = '{$nivel}' ";
+		}
+		else{
+			$nivel_join = "";
+			$nivel_where = "";
+		}
+		
 		//DATOS DEL EJE Y EN EVOLUTIVO
 		$sql = "SELECT TOP(12) (SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 END)*1.0)/COUNT(q.ID) as QUIEBRE FROM QUIEBRE q
 			INNER JOIN SALAMEDICION sm on sm.ID = q.SALAMEDICION_ID
@@ -330,8 +344,9 @@ class ResumenController extends Controller
 			INNER JOIN SALACLIENTE sc on sc.ID = sm.SALACLIENTE_ID
 			INNER JOIN SALA s on s.ID = sc.SALA_ID
 			{$cadena_join}
+			{$nivel_join}
 			
-			WHERE sc.CLIENTE_ID = ? AND s.COMUNA_ID IN ( ? ) {$cadena_where}
+			WHERE sc.CLIENTE_ID = ? AND s.COMUNA_ID IN ( ? ) {$cadena_where} {$nivel_where}
 			GROUP BY m.FECHAINICIO
 			ORDER BY m.FECHAINICIO DESC";
 		$param = array($id_cliente, $array_comuna);

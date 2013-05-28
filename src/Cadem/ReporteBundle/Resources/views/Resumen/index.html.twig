@@ -442,11 +442,85 @@ $(document).ready(function () {
 			.done(function() { /*alert("second success");*/ })
 			.fail(function() { alert("Se produjo un error al cargar"); })
 			.always(function() { /*alert("finished");*/ quitarloader();});
-			
-			
-			
 		}
-	});					
+	});
+
+	//GRAFICAR FILAS
+	$(document).on('click', 'td.tag', function(e) {
+		var categoria = false;
+		if($(this).hasClass('group')) categoria = true;
+		var label= $(this).text();
+		if (e.ctrlKey){//AGREGAR OTRA LINEA
+			$(this).addClass("ui-state-active");
+			//GET
+			//SE CLONA FORM Y SE ARREGLA LOS ITEM SELECCIONADOS POR USUARIO
+			var cform = $('form#filtros').clone();
+			cform.find('option').removeAttr("selected");
+			var originform = $('form#filtros option');
+			originform.each(function(i) {
+				if($(this).is(':selected')) cform.find('option').eq(i).attr("selected", true);
+			});
+			//SE QUITA REGION Y COMUNA
+			cform.find('#f_region').remove();
+			cform.find('#f_provincia').remove();
+			cform.find('input').remove();
+			
+			var dataform = cform.serialize();
+			dataform = dataform + '&nivel=' + label + '&cat=' + categoria;
+			
+			$('.DTFC_Cloned').find('.DataTables_sort_icon').append('<img class="loader" alt="" style="float:left;margin-left:20px" src="/bundles/cademreporte/images/loader-minitrans.gif">');
+			$.get("{{ path('resumen_evolutivo') }}",dataform,function(data){
+			
+				var plot = {
+                    name: label,
+                    data: data.evo_ejey
+                };
+				i_quiebre.addSeries(plot);
+				
+			},"json")
+			.done(function() { /*alert("second success");*/ })
+			.fail(function() { alert("Se produjo un error al cargar"); })
+			.always(function() { /*alert("finished");*/ quitarloader();});
+			
+		}else{//REEMPLAZAR TODO MENOS LINEA GENERAL
+			$(".ui-state-active").removeClass("ui-state-active");
+			$(this).addClass("ui-state-active");
+			//GET
+			//SE CLONA FORM Y SE ARREGLA LOS ITEM SELECCIONADOS POR USUARIO
+			var cform = $('form#filtros').clone();
+			cform.find('option').removeAttr("selected");
+			var originform = $('form#filtros option');
+			originform.each(function(i) {
+				if($(this).is(':selected')) cform.find('option').eq(i).attr("selected", true);
+			});
+			//SE QUITA REGION Y COMUNA
+			cform.find('#f_region').remove();
+			cform.find('#f_provincia').remove();
+			cform.find('input').remove();
+			
+			var dataform = cform.serialize();
+			dataform = dataform + '&nivel=' + label + '&cat=' + categoria;
+			
+			$('.DTFC_Cloned').find('.DataTables_sort_icon').append('<img class="loader" alt="" style="float:left;margin-left:20px" src="/bundles/cademreporte/images/loader-minitrans.gif">');
+			$.get("{{ path('resumen_evolutivo') }}",dataform,function(data){
+			
+				var plot = {
+                    name: label,
+                    data: data.evo_ejey
+                };
+				//SE REMUEVEN TODOS y SE AGREGA
+				if (i_quiebre.series.length > 1){
+					var len = i_quiebre.series.length;
+					for(var i=1;i<len;i++) i_quiebre.series[1].remove();
+				}
+				i_quiebre.addSeries(plot);
+				
+			},"json")
+			.done(function() { /*alert("second success");*/ })
+			.fail(function() { alert("Se produjo un error al cargar"); })
+			.always(function() { /*alert("finished");*/ quitarloader();});
+		}
+	});
 				
 });
 		
