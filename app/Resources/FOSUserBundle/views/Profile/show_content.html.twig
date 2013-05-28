@@ -1,0 +1,26 @@
+<div class="fos_user_user_show">
+	<h2>Perfil</h2>
+	<table class="table table-bordered">
+		<tr>
+			<td>{{ 'profile.show.username'|trans({}, 'FOSUserBundle') }}</td><td>{{ user.username }}</td>
+		</tr>
+		<tr>
+			<td>{{ 'profile.show.email'|trans({}, 'FOSUserBundle') }}</td><td>{{ user.email }}</td>
+		</tr>
+		<tr>
+			<td>Última entrada</td><td>{{ user.lastlogin|date('d/m/Y H:i:s') }}</td>
+		</tr>
+		<tr>
+			<td>¿Ha expirado?</td><td>{{ user.isExpired?'SI':'NO' }}</td>
+		</tr>
+		<tr>
+			<td>Rol(es)</td><td>
+			{% set r = '' %}
+			{% for role in user.getRoles%}
+				{% set r = r~role~',' %}
+			{% endfor %}
+			{{ r|slice(0, r|length - 1) }}
+			</td>
+		</tr>
+	</table>
+</div>
