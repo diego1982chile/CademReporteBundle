@@ -375,14 +375,35 @@ $(document).ready(function () {
 		if (e.ctrlKey){//AGREGAR OTRA LINEA
 			$(this).addClass("ui-state-active");
 			//GET
-			// $.get("{{ path('resumen_evolutivo') }}",{},function(data){
-				
-			// },"json");
-			var d = {
+			//SE CLONA FORM Y SE ARREGLA LOS ITEM SELECCIONADOS POR USUARIO
+			var cform = $('form#filtros').clone();
+			cform.find('option').removeAttr("selected");
+			var originform = $('form#filtros option');
+			originform.each(function(i) {
+				if($(this).is(':selected')) cform.find('option').eq(i).attr("selected", true);
+			});
+			//SE QUITA REGION Y COMUNA
+			cform.find('#f_region').remove();
+			cform.find('#f_provincia').remove();
+			cform.find('input').remove();
+			
+			var dataform = cform.serialize();
+			dataform = dataform + '&cadena=' + label;
+			
+			$(this).find('.DataTables_sort_icon').append('<img class="loader" alt="" style="float:left;margin-left:20px" src="/bundles/cademreporte/images/loader-minitrans.gif">');
+			$.get("{{ path('resumen_evolutivo') }}",dataform,function(data){
+			
+				var plot = {
                     name: label,
-                    data: [Math.random()*100,29,Math.random()*100,40,53,Math.random()*100,77,81,40,10,65,23]
+                    data: data.evo_ejey
                 };
-			i_quiebre.addSeries(d);
+				i_quiebre.addSeries(plot);
+				
+			},"json")
+			.done(function() { /*alert("second success");*/ })
+			.fail(function() { alert("Se produjo un error al cargar"); })
+			.always(function() { /*alert("finished");*/ quitarloader();});
+			
 		}
 		else{//REEMPLAZAR TODO MENOS LINEA GENERAL
 			$(".ui-state-active").removeClass("ui-state-active");
@@ -403,7 +424,7 @@ $(document).ready(function () {
 			var dataform = cform.serialize();
 			dataform = dataform + '&cadena=' + label;
 			
-			
+			$(this).find('.DataTables_sort_icon').append('<img class="loader" alt="" style="float:left;margin-left:20px" src="/bundles/cademreporte/images/loader-minitrans.gif">');
 			$.get("{{ path('resumen_evolutivo') }}",dataform,function(data){
 			
 				var plot = {
@@ -417,7 +438,10 @@ $(document).ready(function () {
 				}
 				i_quiebre.addSeries(plot);
 				
-			},"json");
+			},"json")
+			.done(function() { /*alert("second success");*/ })
+			.fail(function() { alert("Se produjo un error al cargar"); })
+			.always(function() { /*alert("finished");*/ quitarloader();});
 			
 			
 			
