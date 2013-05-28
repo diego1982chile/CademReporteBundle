@@ -239,10 +239,6 @@ function fixedColumn()
 					// Se crea atributo que asocie la fila de agregacion con sus filas hijas
 					var att=document.createAttribute("data-tt-id");
 					att.value=sGroup;
-					nTrs[i].previousSibling.setAttributeNode(att);
-					// Se agrega una clase que permita seleccionar cada fila de agregacion
-					var att=document.createAttribute("class");
-					att.value="parent";
 					// Se añade fila de agregacion para tabla principal
 					nTrs[i].previousSibling.setAttributeNode(att);				
                     

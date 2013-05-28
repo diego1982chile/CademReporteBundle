@@ -55,7 +55,7 @@ div.dataTables_scroll {
 	}
 
 table body tr{ 
-	height: 10px !important;
+	height: 2em !important;
 } 	
 	
 td{
@@ -93,10 +93,6 @@ div.DTFC_Blocker {
 	background-color: white !important;
 }
 
-table {
-	max-width:150% !important;
-}
-
 {% endblock %}
 
 {% block stylesheets %}
@@ -120,11 +116,12 @@ var maxWidth;
 var maxHeight;
 var DatosAdicionales = [];
 var matriz_totales = [];
+var max_largo_cadena = 0;
 
 function calcularAnchoMaximo()
 {
 	// Calcula el ancho máximo de la tabla	
-	var extension={{head|length*10-100}};
+	var extension={{head|length*11-100}};
 	
 	if(extension<0)
 		extension=0;
@@ -133,7 +130,7 @@ function calcularAnchoMaximo()
 	
 	$('table').css('max-width',maxWidth+'%');
 	// alert('maxWidth='+maxWidth);
-	maxHeight=500;	
+	maxHeight=350;	
 }
 
 function construirTabla()
@@ -143,23 +140,24 @@ function construirTabla()
 		"bServerSide": true,
 		"sAjaxSource": "{{ path('evolucion_tabla') }}",
 		"fnServerData": function ( sSource, aoData, fnCallback ) {
-				//AGREGAMOS LOS DATOS SOLO SI HAY
-				if (DatosAdicionales.length > 0) for(i in DatosAdicionales) aoData.push(DatosAdicionales[i]);
-				$.ajax( {
-					"dataType": 'json', 
-					"type": "GET", 
-					"url": sSource, 
-					"data": aoData, 
-					"success": function(data){
-								matriz_totales=data.matriz_totales;					
-								fnCallback(data);
-								DatosAdicionales = [];//AL FINAL SE BORRAN
-							}
-				} )
-				.done(function() {  })
-				.fail(function() {  })
-				.always(function() { quitarloader(); });
-			},		
+			//AGREGAMOS LOS DATOS SOLO SI HAY
+			if (DatosAdicionales.length > 0) for(i in DatosAdicionales) aoData.push(DatosAdicionales[i]);
+			$.ajax( {
+				"dataType": 'json', 
+				"type": "GET", 
+				"url": sSource, 
+				"data": aoData, 
+				"success": function(data){
+							matriz_totales=data.matriz_totales;		
+							max_largo_cadena=parseInt(data.max_largo_cadena);		
+							fnCallback(data);
+							DatosAdicionales = [];//AL FINAL SE BORRAN
+						}
+			} )
+			.done(function() {  })
+			.fail(function() {  })
+			.always(function() { quitarloader(); });
+		},	
 		"sScrollY": maxHeight+'px',
 		"sScrollX": "100%",
  		"sScrollXInner": maxWidth+'%',
@@ -169,13 +167,15 @@ function construirTabla()
 		"bInfo": false,
 		"bPaginate": false,
 		"bJQueryUI": true,
-		"bAutoWidth": false, 
+		"bAutoWidth": true, 
 		"aoColumnDefs": [
 			{ "bVisible": false, "aTargets": [1] },	
-			{ "sWidth": "12%",  "sClass": "tag", "aTargets": [0] }				
+			{ "sWidth": "40%",  "sClass": "tag", "aTargets": [0] }				
 		],
-		"fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {			
-			$(nRow).children(':eq(0)').text(aData[0].substring(0,25));		  
+		"fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {	
+			// str.replace(/\\n/g, '<br />');		
+			// $(nRow).children(':eq(0)').text(aData[0].replace(/ /g,''));		  
+			$(nRow).attr('title',aData[0]);		  
 		},			
 		"aaSortingFixed": [[ 1, 'asc' ]],
 		"fnInitComplete": function() {
@@ -192,7 +192,9 @@ function construirTabla()
 function fixedColumn()
 {				
 		new FixedColumns( oTable, {
-		 "sHeightMatch": "none",
+		// "sLeftWidth": "relative",
+		// "iLeftWidth": 10, // percentage
+		"sHeightMatch": "none",
 		"fnDrawCallback": function ( left, right ) {
 			/////////////////////////// Esta parte añade las filas de agregacion a la tabla //////////////////////////////////
 			var oSettings = oTable.fnSettings();
@@ -237,12 +239,8 @@ function fixedColumn()
 					// Se crea atributo que asocie la fila de agregacion con sus filas hijas
 					var att=document.createAttribute("data-tt-id");
 					att.value=sGroup;
-					nTrs[i].previousSibling.setAttributeNode(att);
-					// Se agrega una clase que permita seleccionar cada fila de agregacion
-					var att=document.createAttribute("class");
-					att.value="parent";
 					// Se añade fila de agregacion para tabla principal
-					nTrs[i].previousSibling.setAttributeNode(att);				
+					nTrs[i].previousSibling.setAttributeNode(att);			
                     
 					// /* Cell to insert into the frozen columns */
 					
