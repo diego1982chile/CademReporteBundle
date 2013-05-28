@@ -56,22 +56,23 @@ div.dataTables_scroll {
 	}
 
 table body tr{ 
-	height: 10px !important;
+	height: 2em !important;
 } 	
 	
 td{
-	font-size: .6em !important;
 	text-align: center !important;
+	font-size: .6em !important;
+	padding: 0em !important;
 }
 
 th{
 	font-size: .6em !important;
 	text-align: center !important;
 }
-
+	
 .head{
 	text-align: left !important;
-}
+}	
 
 span.indenter{
 	padding-left:0em !important;
@@ -79,6 +80,19 @@ span.indenter{
 
 .tag{
 	text-align: left !important;
+}
+
+/* Block out what is behind the fixed column's header and footer */
+table.DTFC_Cloned thead,
+table.DTFC_Cloned tfoot {
+	background-color: white !important;
+}
+
+/* Block out the gap above the scrollbar on the right, when there is a fixed
+ * right column
+ */
+div.DTFC_Blocker {
+	background-color: white !important;
 }
 
 {% endblock %}
@@ -154,7 +168,7 @@ function construirTabla()
 			"bAutoWidth": false, 
 			"aoColumnDefs": [
 				{ "bVisible": false, "aTargets": [1] },
-				{ "sWidth": "1%",  "sClass": "tag", "aTargets": [0] }							
+				{ "sWidth": "2%",  "sClass": "tag", "aTargets": [0] }							
 			],
 			"aaSortingFixed": [[ 1, 'asc' ]],
 			//"sDom": 'T<"clear">lfrtip',		
@@ -185,6 +199,7 @@ function fixedColumn()
 			var nTrs = $('#tabla_resumen tbody tr');
 			// var iColspan = nTrs[0].getElementsByTagName('td').length;
             var cols=oTable.fnSettings().aoColumns.length-1;
+			var row=0;
 			
 			for ( var i=0 ; i<nTrs.length ; i++ )
 			{
@@ -202,20 +217,16 @@ function fixedColumn()
 					{
 						nCells[j] = document.createElement( 'td' );						 
 						nCells[j].className = "group";														
-						nCells[j].innerHTML = 0;
-																	
+						nCells[j].innerHTML = matriz_totales[row][j];																	
 						nGroup.appendChild( nCells[j] );						 
 					}
+                    ++row;
                     nTrs[i].parentNode.insertBefore( nGroup, nTrs[i] );
 					// Se crea atributo que asocie la fila de agregacion con sus filas hijas
 					var att=document.createAttribute("data-tt-id");
 					att.value=sGroup;
-					nTrs[i].previousSibling.setAttributeNode(att);
-					// Se agrega una clase que permita seleccionar cada fila de agregacion
-					var att=document.createAttribute("class");
-					att.value="parent";
 					// Se añade fila de agregacion para tabla principal
-					nTrs[i].previousSibling.setAttributeNode(att);				
+					nTrs[i].previousSibling.setAttributeNode(att);			
                     
 					// /* Cell to insert into the frozen columns */
 					
