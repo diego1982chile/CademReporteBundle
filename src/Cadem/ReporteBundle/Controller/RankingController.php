@@ -214,14 +214,15 @@ class RankingController extends Controller
 		// RANKING POR VENDEDOR--------------------------------------------------
 		$sql = "DECLARE @id_cliente integer = :id_cliente;
 		SELECT *, ROUND(quiebre-quiebre_anterior, 1) as diferencia FROM 
-(SELECT e.id, e.nombre,(SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre FROM SALACLIENTE sc
+(SELECT e.id, e.nombre, car.nombre as cargo, (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre FROM SALACLIENTE sc
 			INNER JOIN SALAMEDICION sm on sm.SALACLIENTE_ID = sc.ID
 			INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
 			INNER JOIN MEDICION m on m.ID = sm.MEDICION_ID
 			INNER JOIN QUIEBRE q on q.SALAMEDICION_ID = sm.ID
 			INNER JOIN EMPLEADO e on e.ID = sc.EMPLEADO_ID
+			INNER JOIN CARGO car on car.ID = e.CARGO_ID
 			WHERE c.ID = @id_cliente AND m.ID = :id_medicion_actual
-			GROUP BY e.ID, e.NOMBRE
+			GROUP BY e.ID, e.NOMBRE, car.nombre
 			) AS A LEFT JOIN
 			
 (SELECT e.id as id2, (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre_anterior FROM SALACLIENTE sc
@@ -230,6 +231,7 @@ class RankingController extends Controller
 			INNER JOIN MEDICION m on m.ID = sm.MEDICION_ID
 			INNER JOIN QUIEBRE q on q.SALAMEDICION_ID = sm.ID
 			INNER JOIN EMPLEADO e on e.ID = sc.EMPLEADO_ID
+			INNER JOIN CARGO car on car.ID = e.CARGO_ID
 			WHERE c.ID = @id_cliente AND m.ID = :id_medicion_anterior
 			GROUP BY e.ID
 			) AS B on A.ID = B.ID2
@@ -408,15 +410,16 @@ class RankingController extends Controller
 		// RANKING POR VENDEDOR--------------------------------------------------
 		$sql = "DECLARE @id_cliente integer = ?;
 		SELECT *, ROUND(quiebre-quiebre_anterior, 1) as diferencia FROM 
-(SELECT e.id, e.nombre,(SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre FROM SALACLIENTE sc
+(SELECT e.id, e.nombre, car.nombre as cargo, (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre FROM SALACLIENTE sc
 			INNER JOIN SALA s on s.ID = sc.SALA_ID
 			INNER JOIN SALAMEDICION sm on sm.SALACLIENTE_ID = sc.ID
 			INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
 			INNER JOIN MEDICION m on m.ID = sm.MEDICION_ID
 			INNER JOIN QUIEBRE q on q.SALAMEDICION_ID = sm.ID
 			INNER JOIN EMPLEADO e on e.ID = sc.EMPLEADO_ID
+			INNER JOIN CARGO car on car.ID = e.CARGO_ID
 			WHERE c.ID = @id_cliente AND m.ID = ? AND s.COMUNA_ID IN ( ? )
-			GROUP BY e.ID, e.NOMBRE
+			GROUP BY e.ID, e.NOMBRE, car.nombre
 			) AS A LEFT JOIN
 			
 (SELECT e.id as id2, (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre_anterior FROM SALACLIENTE sc
