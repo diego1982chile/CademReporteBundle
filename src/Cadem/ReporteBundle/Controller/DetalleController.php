@@ -288,8 +288,8 @@ class DetalleController extends Controller
 		$num_regs=count($detalle_quiebre);		
 		$cont_salas=0;
 		$cont_regs=0;
-		$num_salas=count($salas);						
-		
+		$num_salas=count($salas);							
+	
 		if($num_regs>0)
 		{
 			$nivel1=$detalle_quiebre[$cont_regs]['COD_PRODUCTO'];		
@@ -348,6 +348,8 @@ class DetalleController extends Controller
 			$num_fil=count($body);
 			$cont=0;
 			
+			// print_r($body);
+			
 			foreach($body as $objeto)
 			{	
 				$fila=(array)$objeto;
@@ -365,7 +367,7 @@ class DetalleController extends Controller
 				$cont_col=0;				
 				foreach(array_slice($fila,2) as $quiebre)
 				{											
-					if($quiebre!='-')
+					if(strcmp($quiebre,"<div style='background:grey;height:1.6em'></div>")!=0)
 					{
 						$contadores[$cont_col]++;					
 						$totales[$cont_col]+=$quiebre;

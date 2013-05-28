@@ -37,7 +37,7 @@
 									{% for key,value in head %}
 									{% if loop.index>2 %}
 									<th>
-										{{value|replace({' ':'_'})[0:10]}}...											
+										{{value|replace({' ':'_'})[0:16]}}...											
 									</th>
 									{% endif %}		
 									{% endfor %}
@@ -68,6 +68,7 @@ td{
 th{
 	font-size: .6em !important;
 	text-align: center !important;
+	padding: 0em !important;
 }
 	
 .head{
@@ -150,12 +151,14 @@ function construirTabla()
 					"url": sSource, 
 					"data": aoData, 
 					"success": function(data){//QUE PASA SI FALLA?				
-								matriz_totales=data.matriz_totales;					
+								matriz_totales=data.matriz_totales;		
+								alert(JSON.stringify(matriz_totales));
 								fnCallback(data);
 								DatosAdicionales = [];//AL FINAL SE BORRAN
 							}
 				} );
 			},	
+			"bDeferRender": true,
 			"sScrollY": maxHeight+'px',
 			"sScrollX": "100%",
 			"sScrollXInner": maxWidth+'%',
@@ -168,15 +171,19 @@ function construirTabla()
 			"bAutoWidth": false, 
 			"aoColumnDefs": [
 				{ "bVisible": false, "aTargets": [1] },
-				{ "sWidth": "2%",  "sClass": "tag", "aTargets": [0] }							
+				{ "sWidth": "1.6%",  "sClass": "tag", "aTargets": [0] }							
 			],
 			"aaSortingFixed": [[ 1, 'asc' ]],
 			//"sDom": 'T<"clear">lfrtip',		
 			// "sDom": '<"H"Cfr>t<"F"ip>',	
 			// "sDom": "frtiS",
 			"fnInitComplete": function() {
-				  fixedColumn();
-				}			
+					fixedColumn();
+					$(window).resize(function(){								
+						oTable.fnAdjustColumnSizing();
+					});				  
+				},
+			"bInfo": true				
 		});
 		 $('div.fg-toolbar:first').append("<h5 style='float:left;margin:0em'>Tabla Resumen Quiebre: (%) de Quiebre Categoria/Cadena</h5>");		
 		});	
@@ -198,7 +205,7 @@ function fixedColumn()
 			var sLastGroup = "", iCorrector=0;
 			var nTrs = $('#tabla_resumen tbody tr');
 			// var iColspan = nTrs[0].getElementsByTagName('td').length;
-            var cols=oTable.fnSettings().aoColumns.length-1;
+            var cols=oTable.fnSettings().aoColumns.length-2;
 			var row=0;
 			
 			for ( var i=0 ; i<nTrs.length ; i++ )
@@ -210,6 +217,13 @@ function fixedColumn()
 				if ( sGroup != sLastGroup )
 				{
               		var nGroup = document.createElement('tr');
+					// // Se agrgega una columna correspondiente a la columna oculta
+					var nCells= new Array();   
+					var nCell;
+					nCell = document.createElement( 'td' );						 
+					nCell.className = "group";																									
+					nCell.innerHTML = 0;															
+					nGroup.appendChild( nCell ); 
 					
 					var nCells= new Array();    
                   
