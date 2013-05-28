@@ -369,11 +369,19 @@ $(document).ready(function () {
 		.always(function() { /*alert("finished");*/ quitarloader();});
 	});
 	
+	
+	//VARIABLES COMPARTIDAS
+	var intento_col = false;
+	var intento_fil = false;
+	var label_col = "";
+	var label_fil = "";
+	var cat_fil = "";
 	//GRAFICAR COLUMNAS
 	$(document).on('click', 'thead th', function(e) {
 		var label= $(this).attr('tag');
 		if (e.ctrlKey){//AGREGAR OTRA LINEA
 			$(this).addClass("ui-state-active");
+			intento_col = false;
 			//GET
 			//SE CLONA FORM Y SE ARREGLA LOS ITEM SELECCIONADOS POR USUARIO
 			var cform = $('form#filtros').clone();
@@ -388,7 +396,20 @@ $(document).ready(function () {
 			cform.find('input').remove();
 			
 			var dataform = cform.serialize();
-			dataform = dataform + '&cadena=' + label;
+			
+			if(intento_fil){//SE AGREGA LINEA CRUZADA
+				//SE REMUEVEN TODOS y SE AGREGA
+				if (i_quiebre.series.length > 1){
+					var len = i_quiebre.series.length;
+					for(var i=1;i<len;i++) i_quiebre.series[1].remove();
+				}
+				
+				dataform = dataform + '&cadena=' + label + '&nivel=' + label_fil + '&cat=' + cat_fil;
+				label = label + '/' + label_fil;
+			}
+			else{
+				dataform = dataform + '&cadena=' + label;
+			}
 			
 			$(this).find('.DataTables_sort_icon').append('<img class="loader" alt="" style="float:left;margin-left:20px" src="/bundles/cademreporte/images/loader-minitrans.gif">');
 			$.get("{{ path('resumen_evolutivo') }}",dataform,function(data){
@@ -406,6 +427,8 @@ $(document).ready(function () {
 			
 		}
 		else{//REEMPLAZAR TODO MENOS LINEA GENERAL
+			intento_col = true;
+			label_col = label;
 			$(".ui-state-active").removeClass("ui-state-active");
 			$(this).addClass("ui-state-active");
 			//GET
@@ -445,12 +468,14 @@ $(document).ready(function () {
 		}
 	});
 
+	
 	//GRAFICAR FILAS
 	$(document).on('click', 'td.tag', function(e) {
 		var categoria = false;
 		if($(this).hasClass('group')) categoria = true;
 		var label= $(this).text();
 		if (e.ctrlKey){//AGREGAR OTRA LINEA
+			intento_fil = false;
 			$(this).addClass("ui-state-active");
 			//GET
 			//SE CLONA FORM Y SE ARREGLA LOS ITEM SELECCIONADOS POR USUARIO
@@ -466,7 +491,21 @@ $(document).ready(function () {
 			cform.find('input').remove();
 			
 			var dataform = cform.serialize();
-			dataform = dataform + '&nivel=' + label + '&cat=' + categoria;
+			
+			if(intento_col){//SE AGREGA LINEA CRUZADA
+				//SE REMUEVEN TODOS y SE AGREGA
+				if (i_quiebre.series.length > 1){
+					var len = i_quiebre.series.length;
+					for(var i=1;i<len;i++) i_quiebre.series[1].remove();
+				}
+				
+				dataform = dataform + '&cadena=' + label_col + '&nivel=' + label + '&cat=' + categoria;
+				label = label_col + '/' + label;
+			}
+			else{
+				dataform = dataform + '&nivel=' + label + '&cat=' + categoria;
+			}
+			
 			
 			$('.DTFC_Cloned').find('.DataTables_sort_icon').append('<img class="loader" alt="" style="float:left;margin-left:20px" src="/bundles/cademreporte/images/loader-minitrans.gif">');
 			$.get("{{ path('resumen_evolutivo') }}",dataform,function(data){
@@ -483,6 +522,9 @@ $(document).ready(function () {
 			.always(function() { /*alert("finished");*/ quitarloader();});
 			
 		}else{//REEMPLAZAR TODO MENOS LINEA GENERAL
+			intento_fil = true;
+			label_fil = label;
+			cat_fil = categoria;
 			$(".ui-state-active").removeClass("ui-state-active");
 			$(this).addClass("ui-state-active");
 			//GET
