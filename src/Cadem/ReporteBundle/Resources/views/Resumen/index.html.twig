@@ -592,13 +592,15 @@ $(document).ready(function () {
 		//CARGAR EVOLUTIVO
 		$('form#filtros input').last().after('<img class="loader" alt="" style="float:right" src="/bundles/cademreporte/images/loader.gif">');
 		$.get("{{ path('resumen_evolutivo') }}",dataform,function(data_){
-			if (i_quiebre.series.length) {
-				i_quiebre.series[0].remove();
-				i_quiebre.addSeries({
-                    name: '% Quiebre',
-                    data: data_.evo_ejey
-                });
+			//SE REMUEVEN TODOS y SE AGREGA
+			if (i_quiebre.series.length > 0){
+				var len = i_quiebre.series.length;
+				for(var i=0;i<len;i++) i_quiebre.series[0].remove();
 			}
+			i_quiebre.addSeries({
+				name: '% Quiebre',
+				data: data_.evo_ejey
+			});
 		},'json')
 		.done(function() {  })
 		.fail(function() {  })
