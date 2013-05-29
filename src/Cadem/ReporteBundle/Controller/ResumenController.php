@@ -355,6 +355,7 @@ class ResumenController extends Controller
 		$quiebres_q = array_reverse($quiebres_q);
 		
 		foreach ($quiebres_q as $q) $porc_quiebre[] = round($q['QUIEBRE']*100,1);
+		if(isset($porc_quiebre) === false) $porc_quiebre = -1;//EL FILTRO SELECCIONADO NO TIENE DATOS
 		
 		//RESPONSE
 		$response = array(

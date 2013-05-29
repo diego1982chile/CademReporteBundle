@@ -284,7 +284,7 @@ $(document).ready(function () {
 			text: 'Evolución Quiebre'
 		},
 		tooltip: {
-			pointFormat: '{series.name}: <b>{point.percentage}%</b>',
+			pointFormat: ' <span style="color:{series.color}">{series.name}</span>: <b>{point.y}%</b><br/>',
 			percentageDecimals: 1,
 			enabled: true
 		},
@@ -305,7 +305,7 @@ $(document).ready(function () {
 		},		
 		series: [{
                     name: '% Quiebre',
-                    data: {{ evolutivo }}			
+                    data: {{ evolutivo }}
                 }],
 		legend: {
                layout: 'vertical',
@@ -409,13 +409,12 @@ $(document).ready(function () {
 			
 			$(this).find('.DataTables_sort_icon').append('<img class="loader" alt="" style="float:left;margin-left:20px" src="/bundles/cademreporte/images/loader-minitrans.gif">');
 			$.get("{{ path('resumen_evolutivo') }}",dataform,function(data){
-			
-				var plot = {
-                    name: label,
-                    data: data.evo_ejey
-                };
-				i_quiebre.addSeries(plot);
-				
+				if(data.evo_ejey != -1){//HAY DATOS
+					i_quiebre.addSeries({
+						name: label,
+						data: data.evo_ejey
+					});
+				}
 			},"json")
 			.done(function() { /*alert("second success");*/ })
 			.fail(function() { alert("Se produjo un error al cargar"); })
@@ -445,17 +444,17 @@ $(document).ready(function () {
 			
 			$(this).find('.DataTables_sort_icon').append('<img class="loader" alt="" style="float:left;margin-left:20px" src="/bundles/cademreporte/images/loader-minitrans.gif">');
 			$.get("{{ path('resumen_evolutivo') }}",dataform,function(data){
-			
-				var plot = {
-                    name: label,
-                    data: data.evo_ejey
-                };
-				//SE REMUEVEN TODOS y SE AGREGA
-				if (i_quiebre.series.length > 1){
-					var len = i_quiebre.series.length;
-					for(var i=1;i<len;i++) i_quiebre.series[1].remove();
+				if(data.evo_ejey != -1){//HAY DATOS
+					//SE REMUEVEN TODOS y SE AGREGA
+					if (i_quiebre.series.length > 1){
+						var len = i_quiebre.series.length;
+						for(var i=1;i<len;i++) i_quiebre.series[1].remove();
+					}
+					i_quiebre.addSeries({
+						name: label,
+						data: data.evo_ejey
+					});
 				}
-				i_quiebre.addSeries(plot);
 				
 			},"json")
 			.done(function() { /*alert("second success");*/ })
@@ -505,12 +504,12 @@ $(document).ready(function () {
 			
 			$('.DTFC_Cloned').find('.DataTables_sort_icon').append('<img class="loader" alt="" style="float:left;margin-left:20px" src="/bundles/cademreporte/images/loader-minitrans.gif">');
 			$.get("{{ path('resumen_evolutivo') }}",dataform,function(data){
-			
-				var plot = {
-                    name: label,
-                    data: data.evo_ejey
-                };
-				i_quiebre.addSeries(plot);
+				if(data.evo_ejey != -1){//HAY DATOS
+					i_quiebre.addSeries({
+						name: label,
+						data: data.evo_ejey
+					});
+				}
 				
 			},"json")
 			.done(function() { /*alert("second success");*/ })
@@ -541,18 +540,17 @@ $(document).ready(function () {
 			
 			$('.DTFC_Cloned').find('.DataTables_sort_icon').append('<img class="loader" alt="" style="float:left;margin-left:20px" src="/bundles/cademreporte/images/loader-minitrans.gif">');
 			$.get("{{ path('resumen_evolutivo') }}",dataform,function(data){
-			
-				var plot = {
-                    name: label,
-                    data: data.evo_ejey
-                };
-				//SE REMUEVEN TODOS y SE AGREGA
-				if (i_quiebre.series.length > 1){
-					var len = i_quiebre.series.length;
-					for(var i=1;i<len;i++) i_quiebre.series[1].remove();
+				if(data.evo_ejey != -1){//HAY DATOS
+					//SE REMUEVEN TODOS y SE AGREGA
+					if (i_quiebre.series.length > 1){
+						var len = i_quiebre.series.length;
+						for(var i=1;i<len;i++) i_quiebre.series[1].remove();
+					}
+					i_quiebre.addSeries({
+						name: label,
+						data: data.evo_ejey
+					});
 				}
-				i_quiebre.addSeries(plot);
-				
 			},"json")
 			.done(function() { /*alert("second success");*/ })
 			.fail(function() { alert("Se produjo un error al cargar"); })
