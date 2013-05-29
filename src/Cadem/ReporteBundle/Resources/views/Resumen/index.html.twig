@@ -415,6 +415,7 @@ $(document).ready(function () {
 						data: data.evo_ejey
 					});
 				}
+				else alerta('¡Atención!','El ítem seleccionado no tiene datos para los filtros ocupados.');//NO HAY DATOS
 			},"json")
 			.done(function() { /*alert("second success");*/ })
 			.fail(function() { alert("Se produjo un error al cargar"); })
@@ -455,6 +456,7 @@ $(document).ready(function () {
 						data: data.evo_ejey
 					});
 				}
+				else alerta('¡Atención!','El ítem seleccionado no tiene datos para los filtros ocupados.');//NO HAY DATOS
 				
 			},"json")
 			.done(function() { /*alert("second success");*/ })
@@ -510,6 +512,7 @@ $(document).ready(function () {
 						data: data.evo_ejey
 					});
 				}
+				else alerta('¡Atención!','El ítem seleccionado no tiene datos para los filtros ocupados.');//NO HAY DATOS
 				
 			},"json")
 			.done(function() { /*alert("second success");*/ })
@@ -551,6 +554,7 @@ $(document).ready(function () {
 						data: data.evo_ejey
 					});
 				}
+				else alerta('¡Atención!','El ítem seleccionado no tiene datos para los filtros ocupados.');//NO HAY DATOS
 			},"json")
 			.done(function() { /*alert("second success");*/ })
 			.fail(function() { alert("Se produjo un error al cargar"); })
@@ -665,7 +669,16 @@ $(document).ready(function () {
             fnCallback( oSettings );
         }
     }, oSettings );
-};			
+};
+
+
+	function alerta(strong,text){
+		var alerttipo = '<div class="alert alert-info">' +
+		  '<button type="button" class="close" data-dismiss="alert">×</button>'+
+		  '<strong>'+strong+'</strong> '+text+
+		'</div>';
+		$('#container').prepend(alerttipo);
+	}
 	
  </script>
 {% endblock %}
