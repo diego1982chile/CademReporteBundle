@@ -294,7 +294,7 @@ class DetalleController extends Controller
 		{
 			$nivel1=$detalle_quiebre[$cont_regs]['COD_PRODUCTO'];		
 			// Lleno la fila con vacios, le agrego 1 posiciones, correspondientes al total		
-			$fila=array_fill(0,$num_salas+3,"<div style='background:grey;height:1.6em'></div>");	
+			$fila=array_fill(0,$num_salas+3,"-");	
 							
 			$nivel2=$detalle_quiebre[$cont_regs]['SEGMENTO'];																								
 			$total=0;					
@@ -307,16 +307,17 @@ class DetalleController extends Controller
 				if($nivel1==$detalle_quiebre[$cont_regs]['COD_PRODUCTO'])
 				{									
 					$fila[0]=$detalle_quiebre[$cont_regs]['NOM_PRODUCTO'].' ['.$detalle_quiebre[$cont_regs]['COD_PRODUCTO'].']';					
-					$fila[1]=$detalle_quiebre[$cont_regs]['SEGMENTO'];			
-					switch($detalle_quiebre[$cont_regs]['quiebre'])
-					{
-						case '0':
-							$fila[$columna_quiebre+2]="<div style='background:green;height:1.6em'></div>";	
-							break;
-						case '1':
-							$fila[$columna_quiebre+2]="<div style='background:red;height:1.6em'></div>";	
-							break;
-					}
+					$fila[1]=$detalle_quiebre[$cont_regs]['SEGMENTO'];	
+					$fila[$columna_quiebre+2]=$detalle_quiebre[$cont_regs]['quiebre'];
+					// switch($detalle_quiebre[$cont_regs]['quiebre'])
+					// {
+						// case '0':
+							// $fila[$columna_quiebre+2]="<span style='background:green;height:1.6em'></span>";	
+							// break;
+						// case '1':
+							// $fila[$columna_quiebre+2]="<span style='background:red;height:1.6em'></span>";	
+							// break;
+					// }
 					// $fila[$columna_quiebre+2]=round($detalle_quiebre[$cont_regs]['quiebre'],1);						
 					$total+=$detalle_quiebre[$cont_regs]['quiebre'];	
 					$cont_regs++;	
@@ -330,19 +331,19 @@ class DetalleController extends Controller
 					$total=0;
 					// Si el primer nivel de agregacion cambió, lo actualizo y agrego la fila al body y reseteo el contador de cadenas
 					$nivel1=$detalle_quiebre[$cont_regs]['COD_PRODUCTO'];
-					array_push($body,(object)$fila);
-					$fila=array_fill(0,$num_salas+3,"<div style='background:grey;height:1.6em'></div>");	
+					array_push($body,$fila);
+					$fila=array_fill(0,$num_salas+3,"-");	
 				}
 				if($cont_regs==$num_regs-1)		
 				{	
 					$fila[$num_salas+2]=round($total/$cont_salas,1);					
-					array_push($body,(object)$fila);						
+					array_push($body,$fila);						
 				}			
 			}	
 			// Calculo de totales
 			$matriz_totales=array();
 			$totales=array_fill(0,$num_salas+1,0);
-			$contadores=array_fill(0,$num_salas+1,1);
+			$contadores=array_fill(0,$num_salas+1,0);
 			$nivel2=$detalle_quiebre[0]['SEGMENTO'];
 			$cont_fil=0;
 			$num_fil=count($body);
@@ -352,10 +353,12 @@ class DetalleController extends Controller
 			
 			foreach($body as $objeto)
 			{	
-				$fila=(array)$objeto;
+				// $fila=(array)$objeto;				
+				$fila=$objeto;				
 				
 				if($nivel2!=$fila[1])			
 				{ // Si cambia el 2o nivel agrego totales del segmento actual a la matriz		
+					// print_r($contadores);
 					for($aux=0;$aux<count($totales);++$aux)								
 						$contadores[$aux]==0? $totales[$aux]='-':$totales[$aux]=round($totales[$aux]/$contadores[$aux],1);																						
 					$matriz_totales[$cont]=$totales;
@@ -365,13 +368,28 @@ class DetalleController extends Controller
 					$nivel2=$fila[1];					
 				}	
 				$cont_col=0;				
+								
 				foreach(array_slice($fila,2) as $quiebre)
-				{											
-					if(strcmp($quiebre,"<div style='background:grey;height:1.6em'></div>")!=0)
-					{
+				{						
+					// print_r($body[$cont_fil][$cont_col]);
+					if(strcmp($quiebre,"-")!=0)
+					{						
 						$contadores[$cont_col]++;					
 						$totales[$cont_col]+=$quiebre;
+						switch($quiebre)
+						{
+							case '0':
+								$body[$cont_fil][$cont_col+2]="<div style='background:green;height:1.6em'></div>";	
+								break;
+							case '1':
+								$body[$cont_fil][$cont_col+2]="<div style='background:red;height:1.6em'></div>";	
+								break;
+						}
 					}
+					else
+					{
+						$body[$cont_fil][$cont_col+2]="<div style='background:grey;height:1.6em'></div>";	
+					}					
 					$cont_col++;
 				}		
 				if($cont_fil==$num_fil-1)		
@@ -383,7 +401,8 @@ class DetalleController extends Controller
 					$totales=array_fill(0,$num_salas+1,0);
 					$contadores=array_fill(0,$num_salas+1,0);
 					$nivel2=$fila[1];						
-				}				
+				}	
+				// $body[$cont_fil]=(object)$body[$cont_fil];
 				$cont_fil++;
 			}					
 		}
