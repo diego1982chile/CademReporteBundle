@@ -75,7 +75,7 @@
 							<li class="{% if app.request.attributes.get('_route') == 'ranking_index' %}active{% endif %}"><a href="{{ path('ranking_index')}}">Ranking</a></li>
 							<li class="{% if app.request.attributes.get('_route') == 'evolucion_index' %}active{% endif %}"><a href="{{ path('evolucion_index')}}">Evolución</a></li>
 							<li class="{% if app.request.attributes.get('_route') == 'detalle_index' %}active{% endif %}"><a href="{{ path('detalle_index')}}">Detalle</a></li>
-							<li><div style="width:auto;height:15px;margin-top:10px;margin-left:20px">Salas Medidas (<b>{{ service_salasmedidas.getSalasmedidas }}/{{ service_salasmedidas.getTotalsalas }}</b>)</div></li>
+							<li><div style="width:auto;height:auto;margin-top:10px;margin-left:30px">Salas Medidas (<b>{{ service_salasmedidas.getSalasmedidas }}/{{ service_salasmedidas.getTotalsalas }}</b>)</div></li>
 							<li><div id="progressbar" style="width:100px;height:15px;margin-top:12px;margin-left:5px"><div class="progress-label"></div></div></li>
 						</ul>
 					</div><!--/.nav-collapse -->
@@ -110,7 +110,7 @@
       <hr style="margin:10px 0">
 
       <footer>
-        <p class="pull-right"><a href="#">Back to top</a></p>
+        <!-- <p class="pull-right"><a href="#">Back to top</a></p> -->
         <p style="margin:0"><img class="img-rounded" alt="" style="height: 60px;" src="{{ asset('bundles/cademreporte/images/logocadem.png') }}"><!-- © 2013 Cadem Smart. --> · <a href="#">Privacidad</a> · <a href="#">Términos</a></p>
       </footer>
 
