@@ -46,14 +46,14 @@ class SalasMedidasHelper {
 			$id_ultima_medicion = $medicion_q[0]['id'];
 			//SALAS MEDIDAS
 			$query = $em->createQuery(
-				'SELECT COUNT(p.salaclienteid) FROM CademReporteBundle:Planograma p
+				'SELECT COUNT(p) FROM CademReporteBundle:Planograma p
 				JOIN p.quiebres q
 				WHERE p.medicionid = :idmedicion
 				GROUP BY p.salaclienteid')
 				->setParameter('idmedicion', $id_ultima_medicion);
 				
 			try {
-				$total = $query->getSingleScalarResult();
+				$total = count($query->getArrayResult());
 			} catch (\Doctrine\ORM\NoResultException $e) {//SI NO HAY RESULTADOS PQ LA MEDICION NO TIENE QUIEBRES
 				$total = 0;
 			}
@@ -98,7 +98,7 @@ class SalasMedidasHelper {
 				->setParameter('idmedicion', $id_ultima_medicion);
 			
 			try {
-				$total = $query->getSingleScalarResult();
+				$total = count($query->getArrayResult());
 			} catch (\Doctrine\ORM\NoResultException $e) {//SI NO HAY RESULTADOS PQ LA MEDICION NO TIENE QUIEBRES
 				$total = 0;
 			}

@@ -157,14 +157,14 @@ class ResumenController extends Controller
 		//CONSULTA
 		
 		$sql = "SELECT (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre, ni.NOMBRE as SEGMENTO, ni2.NOMBRE as CATEGORIA, cad.NOMBRE as CADENA FROM QUIEBRE q
-			INNER JOIN SALAMEDICION sm on sm.ID = q.SALAMEDICION_ID
-			INNER JOIN MEDICION m on m.ID = sm.MEDICION_ID and m.ID =17
-			INNER JOIN SALACLIENTE sc on sc.ID = sm.SALACLIENTE_ID
+			INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID
+			INNER JOIN MEDICION m on m.ID = p.MEDICION_ID and m.ID = 6
+			INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
 			INNER JOIN SALA s on s.ID = sc.SALA_ID
 			INNER JOIN CADENA cad on cad.ID = s.CADENA_ID
 			INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
 			INNER JOIN USUARIO u on u.cliente_id=c.id and u.id=".$user->getId()."
-			INNER JOIN ITEMCLIENTE ic on ic.ID = q.ITEMCLIENTE_ID AND ic.CLIENTE_ID = c.ID
+			INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID AND ic.CLIENTE_ID = c.ID
 			INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
 			INNER JOIN NIVELITEM ni2 on ni2.ID = ic.NIVELITEM_ID2			
 			GROUP BY ni2.NOMBRE, ni.NOMBRE, cad.NOMBRE";
@@ -203,8 +203,8 @@ class ResumenController extends Controller
 		
 		//DATOS DEL EJE X EN EVOLUTIVO
 		$sql = "SELECT TOP(12) m.NOMBRE, m.FECHAINICIO, m.FECHAFIN FROM MEDICION m
-			INNER JOIN SALAMEDICION sm on sm.MEDICION_ID = m.ID
-			INNER JOIN SALACLIENTE sc on sc.ID = sm.SALACLIENTE_ID
+			INNER JOIN PLANOGRAMA p on p.MEDICION_ID = m.ID
+			INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
 			INNER JOIN SALA s on s.ID = sc.SALA_ID
 			
 			WHERE sc.CLIENTE_ID = ?
@@ -223,9 +223,9 @@ class ResumenController extends Controller
 		
 		//DATOS DEL EJE Y EN EVOLUTIVO
 		$sql = "SELECT TOP(12) (SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 END)*1.0)/COUNT(q.ID) as QUIEBRE FROM QUIEBRE q
-			INNER JOIN SALAMEDICION sm on sm.ID = q.SALAMEDICION_ID
-			INNER JOIN MEDICION m on m.ID = sm.MEDICION_ID
-			INNER JOIN SALACLIENTE sc on sc.ID = sm.SALACLIENTE_ID
+			INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID
+			INNER JOIN MEDICION m on m.ID = p.MEDICION_ID
+			INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
 			INNER JOIN SALA s on s.ID = sc.SALA_ID
 			
 			WHERE sc.CLIENTE_ID = ?
@@ -238,7 +238,6 @@ class ResumenController extends Controller
 		
 		foreach ($quiebres_q as $q) $porc_quiebre[] = round($q['QUIEBRE']*100,1);
 		
-								
 		$periodos= array(
 			'tooltip' => $mediciones_tooltip,
 			'data' => $mediciones_data,
@@ -402,10 +401,10 @@ class ResumenController extends Controller
 			// return(print_r($comunas,true));
 			
 			$sql = "SELECT (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre, ni.NOMBRE as SEGMENTO, ni2.NOMBRE as CATEGORIA, cad.NOMBRE as CADENA FROM QUIEBRE q
-			INNER JOIN SALAMEDICION sm on sm.ID = q.SALAMEDICION_ID
-			INNER JOIN MEDICION m on m.ID = sm.MEDICION_ID and m.ID = $medicion
-			INNER JOIN SALACLIENTE sc on sc.ID = sm.SALACLIENTE_ID
-			INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in($comunas)
+			INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID
+			INNER JOIN MEDICION m on m.ID = p.MEDICION_ID and m.ID = {$medicion}
+			INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
+			INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )
 			INNER JOIN CADENA cad on cad.ID = s.CADENA_ID
 			INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
 			INNER JOIN USUARIO u on u.cliente_id=c.id and u.id=".$user->getId()."
@@ -414,8 +413,7 @@ class ResumenController extends Controller
 			INNER JOIN NIVELITEM ni2 on ni2.ID = ic.NIVELITEM_ID2				
 			GROUP BY ni2.NOMBRE, ni.NOMBRE, cad.NOMBRE";				
 			
-			$resumen_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();
-			// return(print_r($sql,true));								
+			$resumen_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();							
 		}		
 		$body=array();			
 		$num_regs=count($resumen_quiebre);		
