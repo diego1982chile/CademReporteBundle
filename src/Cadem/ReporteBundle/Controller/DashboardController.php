@@ -61,9 +61,9 @@ class DashboardController extends Controller
 			//QUIEBRE ULTIMA MEDICION
 			$query = $em->createQuery(
 				'SELECT (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q) FROM CademReporteBundle:Quiebre q
-				JOIN q.salamedicion sm
-				JOIN sm.salacliente sc
-				WHERE sc.clienteid = :idcliente AND sm.medicionid = :idmedicion')
+				JOIN q.planograma p
+				JOIN p.salacliente sc
+				WHERE sc.clienteid = :idcliente AND p.medicionid = :idmedicion')
 				->setParameter('idcliente', $cliente->getId())
 				->setParameter('idmedicion', $id_ultima_medicion);
 			$quiebre = $query->getSingleScalarResult();
