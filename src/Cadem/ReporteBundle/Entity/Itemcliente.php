@@ -3,6 +3,7 @@
 namespace Cadem\ReporteBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * Itemcliente
@@ -61,16 +62,16 @@ class Itemcliente
      * })
      */
     private $item;
-
-    /**
-     * @var \Itemcliente
+	
+	/**
+     * @var \Item
      *
-     * @ORM\ManyToOne(targetEntity="Itemcliente")
+     * @ORM\ManyToOne(targetEntity="Item")
      * @ORM\JoinColumns({
-     *   @ORM\JoinColumn(name="ITEMCLIENTE_ID", referencedColumnName="ID")
+     *   @ORM\JoinColumn(name="ITEM_ID2", referencedColumnName="ID")
      * })
      */
-    private $itemcliente;
+    private $item2;
 
     /**
      * @var \Nivelitem
@@ -132,7 +133,17 @@ class Itemcliente
      */
     private $tipocodigo;
 
+	/**
+     * @ORM\OneToMany(targetEntity="Planograma", mappedBy="itemcliente")
+     */
+	 
+	protected $planogramas;
 
+	
+	public function __construct()
+    {
+        $this->planogramas = new ArrayCollection();
+    }
 
     /**
      * Get id
@@ -258,28 +269,28 @@ class Itemcliente
     {
         return $this->item;
     }
-
-    /**
-     * Set itemcliente
+	
+	/**
+     * Set item2
      *
-     * @param \Cadem\ReporteBundle\Entity\Itemcliente $itemcliente
+     * @param \Cadem\ReporteBundle\Entity\Item $item
      * @return Itemcliente
      */
-    public function setItemcliente(\Cadem\ReporteBundle\Entity\Itemcliente $itemcliente = null)
+    public function setItem2(\Cadem\ReporteBundle\Entity\Item $item = null)
     {
-        $this->itemcliente = $itemcliente;
+        $this->item2 = $item;
     
         return $this;
     }
 
     /**
-     * Get itemcliente
+     * Get item2
      *
-     * @return \Cadem\ReporteBundle\Entity\Itemcliente 
+     * @return \Cadem\ReporteBundle\Entity\Item 
      */
-    public function getItemcliente()
+    public function getItem2()
     {
-        return $this->itemcliente;
+        return $this->item2;
     }
 
     /**
@@ -418,5 +429,38 @@ class Itemcliente
     public function getTipocodigo()
     {
         return $this->tipocodigo;
+    }
+	
+	/**
+     * Add planograma
+     *
+     * @param \Cadem\ReporteBundle\Entity\Planograma $planograma
+     * @return Itemcliente
+     */
+    public function addPlanograma(\Cadem\ReporteBundle\Entity\Planograma $planograma)
+    {
+        $this->planogramas[] = $planograma;
+    
+        return $this;
+    }
+
+    /**
+     * Remove planograma
+     *
+     * @param \Cadem\ReporteBundle\Entity\Planograma $planograma
+     */
+    public function removePlanograma(\Cadem\ReporteBundle\Entity\Planograma $planograma)
+    {
+        $this->planogramas->removeElement($planograma);
+    }
+
+    /**
+     * Get planogramas
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getPlanogramas()
+    {
+        return $this->planogramas;
     }
 }

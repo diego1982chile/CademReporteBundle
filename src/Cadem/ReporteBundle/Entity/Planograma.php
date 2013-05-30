@@ -6,12 +6,12 @@ use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 
 /**
- * Salamedicion
+ * Planograma
  *
- * @ORM\Table(name="SALAMEDICION")
+ * @ORM\Table(name="PLANOGRAMA")
  * @ORM\Entity
  */
-class Salamedicion
+class Planograma
 {
     /**
      * @var integer
@@ -28,6 +28,20 @@ class Salamedicion
      * @ORM\Column(name="MEDICION_ID", type="integer", nullable=true)
      */
     private $medicionid;
+	
+	/**
+     * @var integer
+     *
+     * @ORM\Column(name="SALACLIENTE_ID", type="integer", nullable=true)
+     */
+    private $salaclienteid;
+	
+	/**
+     * @var integer
+     *
+     * @ORM\Column(name="ITEMCLIENTE_ID", type="integer", nullable=true)
+     */
+    private $itemclienteid;
 
     /**
      * @var boolean
@@ -39,7 +53,7 @@ class Salamedicion
     /**
      * @var \Medicion
      *
-     * @ORM\ManyToOne(targetEntity="Medicion", inversedBy="salamediciones")
+     * @ORM\ManyToOne(targetEntity="Medicion", inversedBy="planogramas")
      * @ORM\JoinColumns({
      *   @ORM\JoinColumn(name="MEDICION_ID", referencedColumnName="ID")
      * })
@@ -49,16 +63,26 @@ class Salamedicion
     /**
      * @var \Salacliente
      *
-     * @ORM\ManyToOne(targetEntity="Salacliente", inversedBy="salamediciones")
+     * @ORM\ManyToOne(targetEntity="Salacliente", inversedBy="planogramas")
      * @ORM\JoinColumns({
      *   @ORM\JoinColumn(name="SALACLIENTE_ID", referencedColumnName="ID")
      * })
      */
     private $salacliente;
+	
+	/**
+     * @var \Itemcliente
+     *
+     * @ORM\ManyToOne(targetEntity="Itemcliente", inversedBy="planogramas")
+     * @ORM\JoinColumns({
+     *   @ORM\JoinColumn(name="ITEMCLIENTE_ID", referencedColumnName="ID")
+     * })
+     */
+    private $itemcliente;
 
 
 	/**
-     * @ORM\OneToMany(targetEntity="Quiebre", mappedBy="salamedicion")
+     * @ORM\OneToMany(targetEntity="Quiebre", mappedBy="planograma")
      */
 	 
 	protected $quiebres;
@@ -91,14 +115,60 @@ class Salamedicion
     }
 	
 	/**
+     * Get salaclienteid
+     *
+     * @return integer 
+     */
+    public function getSalaclienteId()
+    {
+        return $this->salaclienteid;
+    }
+	
+	/**
+     * Get itemclienteid
+     *
+     * @return integer 
+     */
+    public function getItemclienteId()
+    {
+        return $this->itemclienteid;
+    }
+	
+	/**
      * Set medicionid
      *
 	 * @param integer $medicionid
-     * @return Salamedicion
+     * @return Planograma
      */
-    public function SetClienteId($medicionid)
+    public function SetMedicionId($medicionid)
     {
         $this->medicionid = $medicionid;
+		
+		return $this;
+    }
+	
+	/**
+     * Set salaclienteid
+     *
+	 * @param integer $salaclienteid
+     * @return Planograma
+     */
+    public function SetSalaclienteId($salaclienteid)
+    {
+        $this->salaclienteid = $salaclienteid;
+		
+		return $this;
+    }
+	
+	/**
+     * Set itemclienteid
+     *
+	 * @param integer $itemclienteid
+     * @return Planograma
+     */
+    public function SetItemclienteId($itemclienteid)
+    {
+        $this->itemclienteid = $itemclienteid;
 		
 		return $this;
     }
@@ -107,7 +177,7 @@ class Salamedicion
      * Set activo
      *
      * @param boolean $activo
-     * @return Salamedicion
+     * @return Planograma
      */
     public function setActivo($activo)
     {
@@ -130,7 +200,7 @@ class Salamedicion
      * Set medicion
      *
      * @param \Cadem\ReporteBundle\Entity\Medicion $medicion
-     * @return Salamedicion
+     * @return Planograma
      */
     public function setMedicion(\Cadem\ReporteBundle\Entity\Medicion $medicion = null)
     {
@@ -153,7 +223,7 @@ class Salamedicion
      * Set salacliente
      *
      * @param \Cadem\ReporteBundle\Entity\Salacliente $salacliente
-     * @return Salamedicion
+     * @return Planograma
      */
     public function setSalacliente(\Cadem\ReporteBundle\Entity\Salacliente $salacliente = null)
     {
@@ -171,12 +241,35 @@ class Salamedicion
     {
         return $this->salacliente;
     }
+	
+	/**
+     * Set itemcliente
+     *
+     * @param \Cadem\ReporteBundle\Entity\Itemcliente $itemcliente
+     * @return Planograma
+     */
+    public function setItemcliente(\Cadem\ReporteBundle\Entity\Itemcliente $itemcliente = null)
+    {
+        $this->itemcliente = $itemcliente;
+    
+        return $this;
+    }
+
+    /**
+     * Get itemcliente
+     *
+     * @return \Cadem\ReporteBundle\Entity\Itemcliente 
+     */
+    public function getItemcliente()
+    {
+        return $this->itemcliente;
+    }
 
     /**
      * Add quiebres
      *
      * @param \Cadem\ReporteBundle\Entity\Quiebre $quiebres
-     * @return Salamedicion
+     * @return Planograma
      */
     public function addQuiebre(\Cadem\ReporteBundle\Entity\Quiebre $quiebres)
     {

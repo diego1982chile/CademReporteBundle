@@ -46,10 +46,10 @@ class SalasMedidasHelper {
 			$id_ultima_medicion = $medicion_q[0]['id'];
 			//SALAS MEDIDAS
 			$query = $em->createQuery(
-				'SELECT COUNT(sm.id) FROM CademReporteBundle:SalaMedicion sm
-				JOIN sm.quiebres q
-				WHERE sm.medicionid = :idmedicion
-				GROUP BY sm.id')
+				'SELECT COUNT(p.salaclienteid) FROM CademReporteBundle:Planograma p
+				JOIN p.quiebres q
+				WHERE p.medicionid = :idmedicion
+				GROUP BY p.salaclienteid')
 				->setParameter('idmedicion', $id_ultima_medicion);
 				
 			try {
@@ -92,9 +92,9 @@ class SalasMedidasHelper {
 			$id_ultima_medicion = $medicion_q[0]['id'];
 			//TOTAL DE SALAS
 			$query = $em->createQuery(
-				'SELECT COUNT(sm.id) FROM CademReporteBundle:SalaMedicion sm
-				WHERE sm.medicionid = :idmedicion
-				GROUP BY sm.id')
+				'SELECT COUNT(p.salaclienteid) FROM CademReporteBundle:Planograma p
+				WHERE p.medicionid = :idmedicion
+				GROUP BY p.salaclienteid')
 				->setParameter('idmedicion', $id_ultima_medicion);
 			
 			try {

@@ -50,24 +50,14 @@ class Quiebre
     private $activo;
 
     /**
-     * @var \Itemcliente
+     * @var \Planograma
      *
-     * @ORM\ManyToOne(targetEntity="Itemcliente")
+     * @ORM\ManyToOne(targetEntity="Planograma", inversedBy="quiebres")
      * @ORM\JoinColumns({
-     *   @ORM\JoinColumn(name="ITEMCLIENTE_ID", referencedColumnName="ID")
+     *   @ORM\JoinColumn(name="PLANOGRAMA_ID", referencedColumnName="ID")
      * })
      */
-    private $itemcliente;
-
-    /**
-     * @var \Salamedicion
-     *
-     * @ORM\ManyToOne(targetEntity="Salamedicion", inversedBy="quiebres")
-     * @ORM\JoinColumns({
-     *   @ORM\JoinColumn(name="SALAMEDICION_ID", referencedColumnName="ID")
-     * })
-     */
-    private $salamedicion;
+    private $planograma;
 	
 
 
@@ -174,48 +164,25 @@ class Quiebre
     }
 
     /**
-     * Set itemcliente
+     * Set planograma
      *
-     * @param \Cadem\ReporteBundle\Entity\Itemcliente $itemcliente
+     * @param \Cadem\ReporteBundle\Entity\Planograma $planograma
      * @return Quiebre
      */
-    public function setItemcliente(\Cadem\ReporteBundle\Entity\Itemcliente $itemcliente = null)
+    public function setPlanograma(\Cadem\ReporteBundle\Entity\Planograma $planograma = null)
     {
-        $this->itemcliente = $itemcliente;
+        $this->planograma = $planograma;
     
         return $this;
     }
 
     /**
-     * Get itemcliente
+     * Get planograma
      *
-     * @return \Cadem\ReporteBundle\Entity\Itemcliente 
+     * @return \Cadem\ReporteBundle\Entity\Planograma 
      */
-    public function getItemcliente()
+    public function getPlanograma()
     {
-        return $this->itemcliente;
-    }
-
-    /**
-     * Set salamedicion
-     *
-     * @param \Cadem\ReporteBundle\Entity\Salamedicion $salamedicion
-     * @return Quiebre
-     */
-    public function setSalamedicion(\Cadem\ReporteBundle\Entity\Salamedicion $salamedicion = null)
-    {
-        $this->salamedicion = $salamedicion;
-    
-        return $this;
-    }
-
-    /**
-     * Get salamedicion
-     *
-     * @return \Cadem\ReporteBundle\Entity\Salamedicion 
-     */
-    public function getSalamedicion()
-    {
-        return $this->salamedicion;
+        return $this->planograma;
     }
 }

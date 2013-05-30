@@ -61,15 +61,15 @@ class Medicion
     private $estudio;
 	
 	/**
-     * @ORM\OneToMany(targetEntity="Salamedicion", mappedBy="medicion")
+     * @ORM\OneToMany(targetEntity="Planograma", mappedBy="medicion")
      */
 	 
-	protected $salamediciones;
+	protected $planogramas;
 
 	
 	public function __construct()
     {
-        $this->salamediciones = new ArrayCollection();
+        $this->planogramas = new ArrayCollection();
     }
 
     /**
@@ -198,35 +198,35 @@ class Medicion
     }
 
     /**
-     * Add salamediciones
+     * Add planograma
      *
-     * @param \Cadem\ReporteBundle\Entity\Salamedicion $salamediciones
+     * @param \Cadem\ReporteBundle\Entity\Planograma $planograma
      * @return Medicion
      */
-    public function addSalamedicione(\Cadem\ReporteBundle\Entity\Salamedicion $salamediciones)
+    public function addPlanograma(\Cadem\ReporteBundle\Entity\Planograma $planograma)
     {
-        $this->salamediciones[] = $salamediciones;
+        $this->planogramas[] = $planograma;
     
         return $this;
     }
 
     /**
-     * Remove salamediciones
+     * Remove planograma
      *
-     * @param \Cadem\ReporteBundle\Entity\Salamedicion $salamediciones
+     * @param \Cadem\ReporteBundle\Entity\Planograma $planograma
      */
-    public function removeSalamedicione(\Cadem\ReporteBundle\Entity\Salamedicion $salamediciones)
+    public function removePlanograma(\Cadem\ReporteBundle\Entity\Planograma $planograma)
     {
-        $this->salamediciones->removeElement($salamediciones);
+        $this->planogramas->removeElement($planograma);
     }
 
     /**
-     * Get salamediciones
+     * Get planogramas
      *
      * @return \Doctrine\Common\Collections\Collection 
      */
-    public function getSalamediciones()
+    public function getPlanogramas()
     {
-        return $this->salamediciones;
+        return $this->planogramas;
     }
 }

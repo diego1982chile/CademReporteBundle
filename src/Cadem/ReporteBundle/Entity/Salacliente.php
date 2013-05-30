@@ -74,15 +74,15 @@ class Salacliente
     private $sala;
 
 	/**
-     * @ORM\OneToMany(targetEntity="Salamedicion", mappedBy="salacliente")
+     * @ORM\OneToMany(targetEntity="Planograma", mappedBy="salacliente")
      */
 	 
-	protected $salamediciones;
+	protected $planogramas;
 	
 	
 	public function __construct()
     {
-        $this->salamediciones = new ArrayCollection();
+        $this->planogramas = new ArrayCollection();
     }
 
 
@@ -232,5 +232,38 @@ class Salacliente
     public function getSala()
     {
         return $this->sala;
+    }
+	
+	/**
+     * Add planograma
+     *
+     * @param \Cadem\ReporteBundle\Entity\Planograma $planograma
+     * @return Salacliente
+     */
+    public function addPlanograma(\Cadem\ReporteBundle\Entity\Planograma $planograma)
+    {
+        $this->planogramas[] = $planograma;
+    
+        return $this;
+    }
+
+    /**
+     * Remove planograma
+     *
+     * @param \Cadem\ReporteBundle\Entity\Planograma $planograma
+     */
+    public function removePlanograma(\Cadem\ReporteBundle\Entity\Planograma $planograma)
+    {
+        $this->planogramas->removeElement($planograma);
+    }
+
+    /**
+     * Get planogramas
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getPlanogramas()
+    {
+        return $this->planogramas;
     }
 }
