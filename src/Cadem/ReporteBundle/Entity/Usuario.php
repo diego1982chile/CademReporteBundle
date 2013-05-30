@@ -38,6 +38,12 @@ class Usuario extends BaseUser
      */
     private $cliente;
 
+    /**
+     *
+     * @ORM\Column(name="CLIENTE_ID", type="integer", nullable=true)
+     */
+    private $clienteid;
+
 
 
     /**
@@ -100,5 +106,28 @@ class Usuario extends BaseUser
     {
         parent::__construct();
         // your own logic
+    }
+
+    /**
+     * Get clienteid
+     *
+     * @return integer 
+     */
+    public function getClienteId()
+    {
+        return $this->clienteid;
+    }
+
+    /**
+     * Set clienteid
+     *
+     * @param integer $clienteid
+     * @return Usuaruio
+     */
+    public function SetClienteId($clienteid)
+    {
+        $this->clienteid = $clienteid;
+        
+        return $this;
     }
 }
