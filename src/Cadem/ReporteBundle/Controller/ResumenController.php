@@ -293,8 +293,8 @@ class ResumenController extends Controller
 		
 		//DATOS DEL EJE X EN EVOLUTIVO
 		$sql = "SELECT TOP(12) m.NOMBRE, m.FECHAINICIO, m.FECHAFIN FROM MEDICION m
-			INNER JOIN SALAMEDICION sm on sm.MEDICION_ID = m.ID
-			INNER JOIN SALACLIENTE sc on sc.ID = sm.SALACLIENTE_ID
+			INNER JOIN PLANOGRAMA p on p.MEDICION_ID = m.ID
+			INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
 			INNER JOIN SALA s on s.ID = sc.SALA_ID
 			
 			WHERE sc.CLIENTE_ID = ? AND s.COMUNA_ID IN ( ? )
@@ -326,7 +326,7 @@ class ResumenController extends Controller
 		if(isset($data['nivel'])){
 			$nivel = $data['nivel'];
 			$esCategoria = $data['cat'];
-			$nivel_join = " INNER JOIN ITEMCLIENTE ic on ic.ID = q.ITEMCLIENTE_ID ";
+			$nivel_join = " INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID ";
 			if($esCategoria === 'true') $nivel_join .= " INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID2 ";
 			else $nivel_join .= " INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID ";
 			$nivel_where = " AND ni.NOMBRE = '{$nivel}' ";
@@ -338,9 +338,9 @@ class ResumenController extends Controller
 		
 		//DATOS DEL EJE Y EN EVOLUTIVO
 		$sql = "SELECT TOP(12) (SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 END)*1.0)/COUNT(q.ID) as QUIEBRE FROM QUIEBRE q
-			INNER JOIN SALAMEDICION sm on sm.ID = q.SALAMEDICION_ID
-			INNER JOIN MEDICION m on m.ID = sm.MEDICION_ID
-			INNER JOIN SALACLIENTE sc on sc.ID = sm.SALACLIENTE_ID
+			INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID
+			INNER JOIN MEDICION m on m.ID = p.MEDICION_ID
+			INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
 			INNER JOIN SALA s on s.ID = sc.SALA_ID
 			{$cadena_join}
 			{$nivel_join}
@@ -408,7 +408,7 @@ class ResumenController extends Controller
 			INNER JOIN CADENA cad on cad.ID = s.CADENA_ID
 			INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
 			INNER JOIN USUARIO u on u.cliente_id=c.id and u.id=".$user->getId()."
-			INNER JOIN ITEMCLIENTE ic on ic.ID = q.ITEMCLIENTE_ID AND ic.CLIENTE_ID = c.ID
+			INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID AND ic.CLIENTE_ID = c.ID
 			INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
 			INNER JOIN NIVELITEM ni2 on ni2.ID = ic.NIVELITEM_ID2				
 			GROUP BY ni2.NOMBRE, ni.NOMBRE, cad.NOMBRE";				
