@@ -47,16 +47,9 @@ class DashboardController extends Controller
 		$logostyle = $cliente->getLogostyle();
 		
 		//ULTIMA MEDICION
-		$query = $em->createQuery(
-			'SELECT m.id FROM CademReporteBundle:Medicion m
-			JOIN m.estudio e
-			WHERE e.clienteid = :idcliente
-			ORDER BY m.fechainicio DESC')
-			->setParameter('idcliente', $cliente->getId());
-		$medicion_q = $query->getArrayResult();
+		$id_ultima_medicion = $this->get('cadem_reporte.helper.medicion')->getIdUltimaMedicion();
 		
-		if(count($medicion_q) > 0){
-			$id_ultima_medicion = $medicion_q[0]['id'];
+		if($id_ultima_medicion !== -1){
 		
 			//QUIEBRE ULTIMA MEDICION
 			$query = $em->createQuery(
@@ -159,76 +152,7 @@ class DashboardController extends Controller
 		
 		
 		
-		// $responseB = array( 
-				// 'cobertura' =>	array(
-					// 'type' => 'pie',
-					// 'name' => 'Cobertura',
-					// 'data' => array(
-							// array('name' => 'Cumple', 'y' => 60, 'color' => '#83A931'),
-							// array('name' => 'No cumple', 'y' => 40, 'color' => '#EB3737')
-						// )
-				// ),
-				// 'atributo' =>	array(
-					// 'type' => 'pie',
-					// 'name' => 'Atributo',
-					// 'data' => array(
-							// array('name' => 'Cumple', 'y' => 15.5, 'color' => '#83A931'),
-							// array('name' => 'No cumple', 'y' => 84.5, 'color' => '#EB3737')
-						// )
-				// ),
-				// 'quiebre' =>	array(
-					// 'type' => 'pie',
-					// 'name' => 'Quiebre',
-					// 'data' => array(
-							// array('name' => 'Cumple', 'y' => 5, 'color' => '#83A931'),
-							// array('name' => 'No cumple', 'y' => 95, 'color' => '#EB3737')
-						// )
-				// ),
-				// 'precio' =>	array(
-					// 'type' => 'pie',
-					// 'name' => 'Presencia',
-					// 'data' => array(
-							// array('name' => 'Cumple', 'y' => 44.5, 'color' => '#83A931'),
-							// array('name' => 'No cumple', 'y' => 55.5, 'color' => '#EB3737')
-						// )
-				// ),
-				// 'evo_quiebre_precio' => array(
-					// 'precio' => array(
-						// 'name' => 'Promedio Precio',
-						// 'color' => '#89A54E',
-						// 'yAxis' => 1,
-						// 'type' => 'spline',
-						// 'data' => array(1300.0, 1100.9, 1000.5, 4490.5, 1889.2, 1198.5, 1500.2, 1612.5, 1332.3, 845.3, 1753.9, 1798.6),
-						// 'tooltip' => array(
-							// 'valuePrefix' => '$'
-						// )
-					// ),
-					// 'quiebre' => array(
-						// 'name' => '% Quiebre',
-						// 'color' => '#4572A7',
-						// 'type' => 'spline',
-						// 'data' => array(73.0, 61.9, 20.5, 14.5, 18.2, 21.5, 25.2, 26.5, 23.3, 18.3, 13.9, 39.6),
-						// 'tooltip' => array(
-							// 'valueSuffix' => ' %'
-						// )
-					// )
-				// ),
-				// 'evo_cobertura' => array(
-					// 'cobertura' => array(
-						// 'name' => '% de Cobertura',
-						// 'color' => '#4572A7',
-						// 'type' => 'spline',
-						// 'data' => array(73.0, 11.9, 20.5, 14.5, 18.2, 21.5, 25.2, 26.5, 23.3, 18.3, 13.9, 19.6),
-						// 'tooltip' => array(
-							// 'valueSuffix' => ' %'
-						// )
-					// )
-				// )
-		// );
 		
-		//RESPONSE
-		// if('1' === $data['form']['Estudio']) $response = new JsonResponse($responseA);
-		// else $response = new JsonResponse($responseB);
 		$response = new JsonResponse($response);
 		
 		//CACHE
