@@ -106,7 +106,7 @@
 							{% for row in ranking_item %}
                             <tr>
                               <td>{{rank}}</td>
-                              <td>{{row.codigoitem}}</td>
+                              <td>{{row.codigoitem1}}</td>
                               <td title="{{row.nombre}}">{{row.nombre|slice(0,36)}}</td>
                               <td>{% if row.quiebre_anterior is not null %} {{row.quiebre_anterior|number_format(1)}} {% else %} NO {% endif %}</td>
                               <td>{% if row.quiebre is not null %} {{row.quiebre|number_format(1)}} {% else %} NO {% endif %}</td>
@@ -394,7 +394,7 @@ $(document).ready(function () {
 				{
 					oTables[1].fnAddData([
 						cont,
-						row[i].codigoitem,
+						row[i].codigoitem1,
 						row[i].nombre.substring(0, 36),
 						(row[i].quiebre_anterior != null)?parseFloat(row[i].quiebre_anterior).toFixed(1):"NO",
 						(row[i].quiebre != null)?parseFloat(row[i].quiebre).toFixed(1):"NO",
