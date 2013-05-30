@@ -3,18 +3,21 @@ namespace Cadem\ReporteBundle\Helper;
 
 use Doctrine\ORM\EntityManager;
 use Symfony\Component\Security\Core\SecurityContext;
+// use Symfony\Component\HttpFoundation\Session\Session;
 
 class SalasMedidasHelper {
 
     protected $em;
 	protected $security;
 	protected $user;
+	// protected $session; //SE USARA PARA GUARDAR LAS MEDICION ENTRE VISTAS
 	private $salasmedidas = null;
 	private $totalsalas = null;
 
     public function __construct(EntityManager $entityManager, SecurityContext $security) {
         $this->em = $entityManager;
 		$this->security = $security;
+		// $this->session = $session;
 		if($security->getToken() != null) $this->user = $security->getToken()->getUser();
 		else $this->user = null;
     }
