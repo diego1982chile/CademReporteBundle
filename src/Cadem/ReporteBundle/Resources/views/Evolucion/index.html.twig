@@ -145,7 +145,7 @@ function construirTabla()
 				"success": function(data){
 							matriz_totales=data.matriz_totales;	
 							maxWidth=parseInt(data.max_width);							
-							max_largo_cadena=parseInt(data.max_largo_cadena);		
+							max_largo_cadena=parseInt(data.max_largo_cadena);			
 							fnCallback(data);
 							DatosAdicionales = [];//AL FINAL SE BORRAN
 						}
@@ -161,17 +161,19 @@ function construirTabla()
 		"bFilter": false,
 		"bSort": false,
 		"bInfo": false,
-		"bPaginate": false,
+		"bPaginate": true,
 		"bJQueryUI": true,
 		"bAutoWidth": true, 
 		"aoColumnDefs": [
 			{ "bVisible": false, "aTargets": [1] },	
-			{ "sWidth": "45%",  "sClass": "tag", "aTargets": [0] }				
+			{ "sClass": "tag", "aTargets": [0] }				
 		],
 		"fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {	
 			// str.replace(/\\n/g, '<br />');
-			if(aData[0].length>49)
-				$(nRow).children(':eq(0)').text(aData[0].substring(0,49)+'...');
+			if(aData[0].length>40)
+				$(nRow).children(':eq(0)').text(aData[0].substring(0,40).replace(/ /g,'_')+'...');
+			else
+				$(nRow).children(':eq(0)').text(aData[0].replace(/ /g,'_'));
 			// $(nRow).children(':eq(0)').text(aData[0].replace(/ /g,''));		  
 			$(nRow).attr('title',aData[0]);		  
 		},			
