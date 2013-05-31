@@ -281,6 +281,7 @@ class EvolucionController extends Controller
 			// Calculo de totales			
 			$totales=array_fill(0,$num_meds+1,0);
 			$contadores=array_fill(0,$num_meds+1,1);
+			$medidos=array_fill(0,$num_meds+1,0);
 			$nivel2=$evolucion_quiebre[0]['SEGMENTO'];
 			$cont_fil=0;
 			$num_fil=count($body);
@@ -293,19 +294,21 @@ class EvolucionController extends Controller
 				if($nivel2!=$fila[1])			
 				{ // Si cambia el 2o nivel agrego totales del segmento actual a la matriz		
 					for($aux=0;$aux<count($totales);++$aux)								
-						$contadores[$aux]==0? $totales[$aux]='-':$totales[$aux]=round($totales[$aux]/$contadores[$aux],1);																						
+						$medidos[$aux]==1? $totales[$aux]=round($totales[$aux]/$contadores[$aux],1):$totales[$aux]='-';																						
 					$matriz_totales[$cont]=$totales;
 					$cont++;
 					$totales=array_fill(0,$num_meds+1,0);
 					$contadores=array_fill(0,$num_meds+1,0);
+					$medidos=array_fill(0,$num_meds+1,0);
 					$nivel2=$fila[1];					
 				}	
 				$cont_col=0;				
 				foreach(array_slice($fila,2) as $quiebre)
 				{											
-					if($quiebre!='-')
+					if(strcmp($quiebre,'-')!=0)
 					{
-						$contadores[$cont_col]++;					
+						$contadores[$cont_col]++;	
+						$medidos[$cont_col]=1;							
 						$totales[$cont_col]+=$quiebre;
 					}
 					$cont_col++;

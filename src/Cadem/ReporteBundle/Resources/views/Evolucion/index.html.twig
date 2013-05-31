@@ -61,11 +61,13 @@ table body tr{
 td{
 	text-align: center !important;
 	font-size: .6em !important;
+	padding: 0em !important;
 }
 
 th{
 	font-size: .6em !important;
 	text-align: center !important;
+	// padding: 0em !important;
 }
 	
 .head{
@@ -168,8 +170,8 @@ function construirTabla()
 		],
 		"fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {	
 			// str.replace(/\\n/g, '<br />');
-			if(aData[0].length>55)
-				$(nRow).children(':eq(0)').text(aData[0].substring(0,55)+'...');
+			if(aData[0].length>49)
+				$(nRow).children(':eq(0)').text(aData[0].substring(0,49)+'...');
 			// $(nRow).children(':eq(0)').text(aData[0].replace(/ /g,''));		  
 			$(nRow).attr('title',aData[0]);		  
 		},			
