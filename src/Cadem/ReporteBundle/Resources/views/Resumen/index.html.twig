@@ -119,19 +119,13 @@ var periodo = {{ periodos|raw }};
 var oTable;
 var oFc;
 var maxWidth;
+var maxWidth={{max_width}};
 var DatosAdicionales = [];
 var matriz_totales = [];
 
 function calcularAnchoMaximo()
 {
-	// Calcula el ancho máximo de la tabla	
-	var extension={{head|length*10-100}};
-	
-	if(extension<0)
-		extension=0;
-		
-	maxWidth=100+extension;
-	
+	// Calcula el ancho máximo de la tabla		
 	$('table').css('max-width',maxWidth+'%');
 	// alert('maxWidth='+maxWidth);
 }
@@ -142,7 +136,7 @@ function construirTabla()
 		oTable = $('#tabla_resumen').dataTable({
 			"bProcessing": true,
 			"bServerSide": true,
-			"sAjaxSource": "{{ path('resumen_tabla') }}",
+			"sAjaxSource": "{{ path('resumen_body') }}",
 			"fnServerData": function ( sSource, aoData, fnCallback ) {				
 				//AGREGAMOS LOS DATOS SOLO SI HAY
 				if (DatosAdicionales.length > 0) for(i in DatosAdicionales) aoData.push(DatosAdicionales[i]);
@@ -152,7 +146,8 @@ function construirTabla()
 					"url": sSource, 
 					"data": aoData, 
 					"success": function(data){//QUE PASA SI FALLA?														
-								matriz_totales=data.matriz_totales;																
+								matriz_totales=data.matriz_totales;	
+								maxWidth=parseInt(data.max_width);								
 								fnCallback(data);
 								DatosAdicionales = [];//AL FINAL SE BORRAN
 							}
@@ -584,7 +579,8 @@ $(document).ready(function () {
 		
 		DatosAdicionales = dataform;
 		$('form#filtros input').last().after('<img class="loader" alt="" style="float:right" src="/bundles/cademreporte/images/loader.gif">');
-		oTable.fnDraw();//SI NO FUNCIONA ESTO USAR LA DE ABAJO
+		recargarTabla();
+		// oTable.fnDraw();//SI NO FUNCIONA ESTO USAR LA DE ABAJO		
 		// oTable.fnReloadAjax();
 		
 		//CARGAR EVOLUTIVO
@@ -603,6 +599,42 @@ $(document).ready(function () {
 		.done(function() {  })
 		.fail(function() {  })
 		.always(function() { quitarloader(); });
+	}
+	
+	function recargarTabla()
+	{		
+		$.get("{{ path('resumen_header') }}",DatosAdicionales,function(data){
+		
+			maxWidth=parseInt(data.max_width);
+			// Primero destruimos la tabla si existe (la removemos del DOM)	
+			var ex = document.getElementById('tabla_resumen');
+			if ( $.fn.DataTable.fnIsDataTable( ex ) ) {
+			  oTable.fnDestroy(true);
+			}			
+			// Luego generamos el html de la tabla y lo añadimos al DOM
+			var table= document.createElement( 'table' );
+			var thead= document.createElement( 'thead' );
+			var att=document.createAttribute("id");
+			att.value="tabla_resumen";					
+			table.setAttributeNode(att);
+			var att=document.createAttribute("class");
+			att.value="tabla_resumen table table-bordered display";					
+			table.setAttributeNode(att);			
+			var tableHead = document.createElement( 'tr' );	 //tableheader 							
+			$(data.head).each(function(key,value){				
+				var tableHeading = document.createElement( 'th' );					
+				tableHeading.innerHTML = value;														
+				tableHead.appendChild( tableHeading );				
+			});						
+			table.appendChild( tableHead );	
+			thead.appendChild( tableHead );
+			table.appendChild( thead );						
+			document.getElementById('container').appendChild(table);			
+			// Luego recalculamos el ancho maximo en base a la cardinalidad del head
+			calcularAnchoMaximo();			
+			// Luego volvemos a construir la tabla con dataTables
+			construirTabla();
+		},"json")
 	}
 	
 	function quitarloader(){

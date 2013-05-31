@@ -171,15 +171,9 @@ class ResumenController extends Controller
 		$resumen_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();
 		$niveles=2;
 		
-		// CONSTRUIR EL ENCABEZADO DE LA TABLA
-		
-		if($niveles==1)
-			$head=array('CATEGORIA/CADENA');
-		else
-			$head=array('CATEGORIA/CADENA','SEGMENTO');
-				
-		$cadenas=array();
-		$agregaciones=array();
+			$head=array();
+		$cadenas=array();		
+		$cadenas_aux=array();		
 		
 		// Generamos el head de la tabla, y las cadenas
 		foreach($resumen_quiebre as $registro)
@@ -188,17 +182,43 @@ class ResumenController extends Controller
 			if(!in_array($registro['CADENA'],$head))
 			{
 				array_push($head,$registro['CADENA']);
-				array_push($cadenas,$registro['CADENA']);
+				array_push($cadenas_aux,$registro['CADENA']);
 			}		
-		}									
+		}							
+		// Ordenamos la estructura usando comparador personalizado
+		usort($cadenas_aux, array($this,"sortFunction"));		
+		// CONSTRUIR EL ENCABEZADO DE LA TABLA
+			
+		if($niveles==1)
+			$prefixes=array('SKU/SALA');
+		else
+			$prefixes=array('SKU/SALA','SEGMENTO');
 		
-		array_push($head,'TOTAL');
+		$head=array();		
+		
+		foreach($cadenas_aux as $cadena)
+		{
+			array_push($cadenas,$cadena);
+			array_push($head,$cadena);						
+		}		
+		
+		foreach(array_reverse($prefixes) as $prefix)		
+			array_unshift($head,$prefix);		
+		array_push($head,'TOTAL');	
 		
 		// Guardamos resultado de consulta en variable de sesión para reusarlas en un action posterior
 		$session->set("cadenas",$cadenas);
 		// $session->set("agregaciones",$agregaciones);
 		$session->set("resumen_quiebre",$resumen_quiebre);		
 		// print_r($tabla_resumen);						
+		
+		// Calcula el ancho máximo de la tabla	
+		$extension=count($head)*10-100;
+	
+		if($extension<0)
+			$extension=0;
+			
+		$max_width=100+$extension;
 		
 		
 		//DATOS DEL EJE X EN EVOLUTIVO
@@ -255,6 +275,7 @@ class ResumenController extends Controller
 				'form_comuna' 	=> $form_comuna->createView(),	
 			),
 			'head' => $head,
+			'max_width' => $max_width,
 			'logofilename' => $logofilename,
 			'logostyle' => $logostyle,
 			'evolutivo' => json_encode($evolutivo),
@@ -267,6 +288,11 @@ class ResumenController extends Controller
 
 		return $response;
     }	
+	
+	// Definimos un comparador de cadenas para ordenar las salas
+	function sortFunction( $a, $b ) {		
+		return $a > $b;
+	}	
 	
 	public function evolutivoAction(Request $request)
     {
@@ -373,49 +399,15 @@ class ResumenController extends Controller
 		
 	}
 	
-	public function tablaAction(Request $request)
+	public function bodyAction(Request $request)
 	{	
 		// Recuperar el usuario, parámetros y datos de sesión
-		$user = $this->getUser();
-		$em = $this->getDoctrine()->getManager();
-		$session=$this->get("session");
-		$cadenas=$session->get("cadenas");
-		
-		$parametros = $request->query->all();
-		// $dataform = $data['f_region'];				
-		
-		// // CONSTRUIR EL CUERPO DE LA TABLA
-		if(!array_key_exists('f_estudio',$parametros))
-		{ // Si el action es invocado durante la carga de la pagina obtener el dataset desde la sesion							
-			$resumen_quiebre=$session->get("resumen_quiebre");
-		}
-		else
-		{ // Si es una llamada desde el filtro, entonces se deben recuperar los parametros y regenerar el dataset			
-			$estudio=$parametros['f_estudio']['Estudio'];
-			$medicion=$parametros['f_periodo']['Periodo'];
-			$comunas='';
-			foreach($parametros['f_comuna']['Comuna'] as $comuna)
-				$comunas.=$comuna.',';	
-			$comunas = trim($comunas, ',');
+		$session=$this->get("session");					
+		$resumen_quiebre=$session->get("resumen_quiebre");
+		$cadenas=$session->get("cadenas");		
 				
-			// return(print_r($comunas,true));
-			
-			$sql = "SELECT (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre, ni.NOMBRE as SEGMENTO, ni2.NOMBRE as CATEGORIA, cad.NOMBRE as CADENA FROM QUIEBRE q
-			INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID
-			INNER JOIN MEDICION m on m.ID = p.MEDICION_ID and m.ID = {$medicion}
-			INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
-			INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )
-			INNER JOIN CADENA cad on cad.ID = s.CADENA_ID
-			INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
-			INNER JOIN USUARIO u on u.cliente_id=c.id and u.id=".$user->getId()."
-			INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID AND ic.CLIENTE_ID = c.ID
-			INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
-			INNER JOIN NIVELITEM ni2 on ni2.ID = ic.NIVELITEM_ID2				
-			GROUP BY ni2.NOMBRE, ni.NOMBRE, cad.NOMBRE";				
-			
-			$resumen_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();							
-		}		
-		$body=array();			
+		$body=array();		
+		$matriz_totales=array();		
 		$num_regs=count($resumen_quiebre);		
 		$cont_cads=0;
 		$cont_regs=0;		
@@ -454,12 +446,12 @@ class ResumenController extends Controller
 				if($cont_regs==$num_regs-1)		
 				{	
 					$fila[$num_cads+2]=round($total/$cont_cads,1);					
-					array_push($body,(object)$fila);						
+					array_push($body,(object)$fila);		
+					$cont_regs++;					
 				}
 			}
 									
-			// Calculo de totales
-			$matriz_totales=array();
+			// Calculo de totales			
 			$totales=array_fill(0,$num_cads+1,0);
 			$contadores=array_fill(0,$num_cads+1,1);
 			$nivel2=$resumen_quiebre[0]['CATEGORIA'];
@@ -518,4 +510,95 @@ class ResumenController extends Controller
 		);		
 		return new JsonResponse($output);
 	}
+	
+	public function headerAction(Request $request)
+	{		
+		// Recuperar el usuario, parámetros y datos de sesión
+		$user = $this->getUser();
+		$em = $this->getDoctrine()->getManager();
+		$session=$this->get("session");								
+		$parametros = $request->query->all();							
+			
+		// Como es una llamada desde el filtro, entonces se deben recuperar los parametros y regenerar el dataset			
+		$estudio=$parametros['f_estudio']['Estudio'];	
+		$medicion=$parametros['f_periodo']['Periodo'];			
+		$comunas='';
+		foreach($parametros['f_comuna']['Comuna'] as $comuna)
+			$comunas.=$comuna.',';	
+		$comunas = trim($comunas, ',');											
+
+		$sql = "SELECT (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre, ni.NOMBRE as SEGMENTO, ni2.NOMBRE as CATEGORIA, cad.NOMBRE as CADENA FROM QUIEBRE q
+			INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID
+			INNER JOIN MEDICION m on m.ID = p.MEDICION_ID and m.ID = {$medicion}
+			INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
+			INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )
+			INNER JOIN CADENA cad on cad.ID = s.CADENA_ID
+			INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
+			INNER JOIN USUARIO u on u.cliente_id=c.id and u.id=2
+			INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID AND ic.CLIENTE_ID = c.ID
+			INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
+			INNER JOIN NIVELITEM ni2 on ni2.ID = ic.NIVELITEM_ID2				
+			GROUP BY ni2.NOMBRE, ni.NOMBRE, cad.NOMBRE";				
+				
+		$resumen_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();						
+		
+		// Variable para saber cuantos niveles de agregacion define el cliente, esto debe ser parametrizado en una etapa posterior
+		$niveles=2;										
+				
+		$head=array();
+		$cadenas=array();		
+		$cadenas_aux=array();		
+		
+		// Generamos el head de la tabla, y las cadenas
+		foreach($resumen_quiebre as $registro)
+		{
+			// print_r($resumen_quiebre);
+			if(!in_array($registro['CADENA'],$head))
+			{
+				array_push($head,$registro['CADENA']);
+				array_push($cadenas_aux,$registro['CADENA']);
+			}		
+		}							
+		// Ordenamos la estructura usando comparador personalizado
+		usort($cadenas_aux, array($this,"sortFunction"));		
+		// CONSTRUIR EL ENCABEZADO DE LA TABLA
+			
+		if($niveles==1)
+			$prefixes=array('SKU/SALA');
+		else
+			$prefixes=array('SKU/SALA','SEGMENTO');
+		
+		$head=array();		
+		
+		foreach($cadenas_aux as $cadena)
+		{
+			array_push($cadenas,$cadena);
+			array_push($head,$cadena);						
+		}		
+		
+		foreach(array_reverse($prefixes) as $prefix)		
+			array_unshift($head,$prefix);		
+		array_push($head,'TOTAL');						
+		
+		// Guardamos resultado de consulta en variable de sesión para reusarlas en un action posterior
+		$session->set("cadenas",$cadenas);		
+		$session->set("resumen_quiebre",$resumen_quiebre);	
+		
+		// Calcula el ancho máximo de la tabla	
+		$extension=count($head)*10-100;
+	
+		if($extension<0)
+			$extension=0;
+			
+		$max_width=100+$extension;
+		/*
+		 * Output
+		 */
+		// $session->close();
+		$output = array(
+			"head" => $head,
+			"max_width" => $max_width
+		);		
+		return new JsonResponse($output);		
+	}	
 }
