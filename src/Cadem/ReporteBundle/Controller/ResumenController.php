@@ -153,12 +153,14 @@ class ResumenController extends Controller
 			))
 			->getForm();			
 		
+		//ULTIMA MEDICION
+		$id_ultima_medicion = $this->get('cadem_reporte.helper.medicion')->getIdUltimaMedicion();
 		
 		//CONSULTA
 		
 		$sql = "SELECT (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre, ni.NOMBRE as SEGMENTO, ni2.NOMBRE as CATEGORIA, cad.NOMBRE as CADENA FROM QUIEBRE q
 			INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID
-			INNER JOIN MEDICION m on m.ID = p.MEDICION_ID and m.ID = 6
+			INNER JOIN MEDICION m on m.ID = p.MEDICION_ID and m.ID = {$id_ultima_medicion}
 			INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
 			INNER JOIN SALA s on s.ID = sc.SALA_ID
 			INNER JOIN CADENA cad on cad.ID = s.CADENA_ID
@@ -454,6 +456,7 @@ class ResumenController extends Controller
 			// Calculo de totales			
 			$totales=array_fill(0,$num_cads+1,0);
 			$contadores=array_fill(0,$num_cads+1,1);
+			$medidos=array_fill(0,$num_cads+1,0);
 			$nivel2=$resumen_quiebre[0]['CATEGORIA'];
 			$cont_fil=0;
 			$num_fil=count($body);
@@ -464,24 +467,25 @@ class ResumenController extends Controller
 				$fila=(array)$objeto;
 				
 				if($nivel2!=$fila[1])			
-				{ // Si cambia el 2o nivel agrego totales del segmento actual a la matriz		
+				{ // Si cambia el 2o nivel agrego totales del segmento actual a la matriz
+					// print_r($medidos);
 					for($aux=0;$aux<count($totales);++$aux)								
-						$contadores[$aux]=='-'? $totales[$aux]='-':$totales[$aux]=round($totales[$aux]/$contadores[$aux],1);																						
+						$medidos[$aux]==1? $totales[$aux]=round($totales[$aux]/$contadores[$aux],1):$totales[$aux]='-';																						
 					$matriz_totales[$cont]=$totales;
 					$cont++;
 					$totales=array_fill(0,$num_cads+1,0);
 					$contadores=array_fill(0,$num_cads+1,0);
-					$nivel2=$fila[1];	
-						
+					$medidos=array_fill(0,$num_cads+1,0);
+					$nivel2=$fila[1];							
 				}	
 				$cont_col=0;				
 				foreach(array_slice($fila,2) as $quiebre)
-				{											
-					if($quiebre!='-')
+				{							
+					if(strcmp($quiebre,'-')!=0)
 					{
-						$contadores[$cont_col]++;					
-						$totales[$cont_col]+=$quiebre;
-						$flag=false;
+						$contadores[$cont_col]++;		
+						$medidos[$cont_col]=1;		
+						$totales[$cont_col]+=$quiebre;						
 					}
 					$cont_col++;
 				}		
