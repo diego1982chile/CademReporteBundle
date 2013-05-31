@@ -116,8 +116,8 @@ class DashboardController extends Controller
 		//quiebre join salamedicion join medicion
 		$query = $em->createQuery(
 			'SELECT (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*1.0)/COUNT(q.id) as quiebre FROM CademReporteBundle:Quiebre q
-			JOIN q.salamedicion sm
-			JOIN sm.medicion m
+			JOIN q.planograma p
+			JOIN p.medicion m
 			JOIN m.estudio e
 			JOIN e.cliente c
 			JOIN c.usuarios u
