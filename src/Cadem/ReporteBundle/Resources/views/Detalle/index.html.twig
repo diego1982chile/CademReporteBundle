@@ -17,7 +17,7 @@
 		<div class="container-fluid well" style="padding-top:0">
 			<h4>Detalle Quiebre</h4>
 			<div class="hero-unit" style="padding:15px;margin-bottom:20px">
-				<div class="row-fluid">
+				<div id="container" class="row-fluid">
 						<table id="tabla_resumen" class="tabla_resumen table table-bordered display">                      
 							<thead>
 								<tr>
@@ -115,24 +115,17 @@ div.DTFC_Blocker {
 {#% endfor %#}
 
 var oTable;
-var maxWidth;
+var maxWidth={{max_width}};
 var maxHeight;
 var DatosAdicionales = [];
 var matriz_totales = [];
 
 function calcularAnchoMaximo()
 {
-	// Calcula el ancho máximo de la tabla	
-	var extension={{head|length*15-100}};
-	
-	if(extension<0)
-		extension=0;
-		
-	maxWidth=100+extension;
-	
+	// Calcula el ancho máximo de la tabla		
 	$('table').css('max-width',maxWidth+'%');
-	// alert('maxWidth='+maxWidth);	
-	maxHeight=500;
+	maxHeight=400;
+	// alert('maxWidth='+maxWidth);
 }
 
 function construirTabla()
@@ -141,7 +134,7 @@ function construirTabla()
 		oTable = $('#tabla_resumen').dataTable({
 			"bProcessing": true,
 			"bServerSide": true,
-			"sAjaxSource": "{{ path('detalle_tabla') }}",
+			"sAjaxSource": "{{ path('detalle_body') }}",
 			"fnServerData": function ( sSource, aoData, fnCallback ) {
 				//AGREGAMOS LOS DATOS SOLO SI HAY
 				if (DatosAdicionales.length > 0) for(i in DatosAdicionales) aoData.push(DatosAdicionales[i]);
@@ -150,15 +143,15 @@ function construirTabla()
 					"type": "GET", 
 					"url": sSource, 
 					"data": aoData, 
-					"success": function(data){//QUE PASA SI FALLA?				
-								matriz_totales=data.matriz_totales;		
-								alert(JSON.stringify(matriz_totales));
+					"success": function(data){//QUE PASA SI FALLA?									
+								matriz_totales=data.matriz_totales;										;																
+								// alert(JSON.stringify(matriz_totales));
 								fnCallback(data);
 								DatosAdicionales = [];//AL FINAL SE BORRAN
 							}
 				} );
 			},	
-			"bDeferRender": true,
+			// "bDeferRender": true,
 			"sScrollY": maxHeight+'px',
 			"sScrollX": "100%",
 			"sScrollXInner": maxWidth+'%',
@@ -171,7 +164,7 @@ function construirTabla()
 			"bAutoWidth": false, 
 			"aoColumnDefs": [
 				{ "bVisible": false, "aTargets": [1] },
-				{ "sWidth": "1.6%",  "sClass": "tag", "aTargets": [0] }							
+				{ "sWidth": "1%",  "sClass": "tag", "aTargets": [0] }							
 			],
 			"aaSortingFixed": [[ 1, 'asc' ]],
 			//"sDom": 'T<"clear">lfrtip',		
@@ -179,9 +172,9 @@ function construirTabla()
 			// "sDom": "frtiS",
 			"fnInitComplete": function() {
 					fixedColumn();
-					$(window).resize(function(){								
-						oTable.fnAdjustColumnSizing();
-					});				  
+					// $(window).resize(function(){								
+						// oTable.fnAdjustColumnSizing();
+					// });				  
 				},
 			"bInfo": true				
 		});
@@ -217,23 +210,20 @@ function fixedColumn()
 				if ( sGroup != sLastGroup )
 				{
               		var nGroup = document.createElement('tr');
-					// // Se agrgega una columna correspondiente a la columna oculta
-					var nCells= new Array();   
+					// // Se agrgega una columna correspondiente a la columna oculta					
 					var nCell;
 					nCell = document.createElement( 'td' );						 
 					nCell.className = "group";																									
 					nCell.innerHTML = 0;															
-					nGroup.appendChild( nCell ); 
-					
-					var nCells= new Array();    
-                  
+					nGroup.appendChild( nCell ); 										
+                  					
                     for(var j=0 ; j< cols ; j++)
 					{
-						nCells[j] = document.createElement( 'td' );						 
-						nCells[j].className = "group";														
-						nCells[j].innerHTML = matriz_totales[row][j];																	
-						nGroup.appendChild( nCells[j] );						 
-					}
+						nCell = document.createElement( 'td' );						 
+						nCell.className = "group";														
+						nCell.innerHTML = matriz_totales[row][j];																	
+						nGroup.appendChild( nCell );						 
+					}					
                     ++row;
                     nTrs[i].parentNode.insertBefore( nGroup, nTrs[i] );
 					// Se crea atributo que asocie la fila de agregacion con sus filas hijas
@@ -263,7 +253,7 @@ function fixedColumn()
 $(document).ready(function () {
 	
 	var callbacks = $.Callbacks();
-
+	alert(maxWidth);
 	callbacks.add( calcularAnchoMaximo() );
 	callbacks.add( construirTabla() );
 	// callbacks.add( fixedColumn() );	
@@ -361,11 +351,76 @@ $(document).ready(function () {
 		var dataform = cform.serializeArray();
 		
 		DatosAdicionales = dataform;
-		oTable.fnDraw();//SI NO FUNCIONA ESTO USAR LA DE ABAJO
+		recargarTabla();
+		// oTable.fnDraw();//SI NO FUNCIONA ESTO USAR LA DE ABAJO
 		// oTable.fnReloadAjax();
 	}
+	
+	function recargarTabla()
+	{		
+		$.get("{{ path('detalle_header') }}",DatosAdicionales,function(data){
+			maxWidth=parseInt(data.max_width);
+			// Primero destruimos la tabla si existe (la removemos del DOM)	
+			var ex = document.getElementById('tabla_resumen');
+			if ( $.fn.DataTable.fnIsDataTable( ex ) ) {
+			  oTable.fnDestroy(true);
+			}			
+			// Luego generamos el html de la tabla y lo añadimos al DOM
+			var table= document.createElement( 'table' );
+			var thead= document.createElement( 'thead' );
+			var att=document.createAttribute("id");
+			att.value="tabla_resumen";					
+			table.setAttributeNode(att);
+			var att=document.createAttribute("class");
+			att.value="tabla_resumen table table-bordered display";					
+			table.setAttributeNode(att);			
+			var tableHead = document.createElement( 'tr' );	 //tableheader 		
+			console.log(data);
+			// $(data.head).each(function(key,value){	
+				// alert(value['cod_sala']+','+value['nom_sala']);
+			// });			
+			$(data.head).each(function(key,value){				
+				var tableHeading = document.createElement( 'th' );							
+				switch(key)
+				{
+					case '0':
+					case '1':
+						tableHeading.innerHTML = value;
+						var att=document.createAttribute("rowspan");
+						att.value=2;					
+						tableHeading.setAttributeNode(att);						
+						break;					
+					default:
+						tableHeading.innerHTML = value['cod_sala'];
+						break;						
+				}												
+				tableHead.appendChild( tableHeading );				
+			});	
+			thead.appendChild( tableHead );
+			tableHead = document.createElement( 'tr' );	 //tableheader 	
+			$(data.head).each(function(key,value){
+				var tableHeading = document.createElement( 'th' );								
+				switch(key)
+				{
+					case '0':
+					case '1':					
+						break;					
+					default:
+						tableHeading.innerHTML = value['nom_sala'];
+						break;						
+				}												
+				tableHead.appendChild( tableHeading );				
+			});							
+			thead.appendChild( tableHead );
+			table.appendChild( thead );				
+			document.getElementById('container').appendChild(table);			
+			// Luego recalculamos el ancho maximo en base a la cardinalidad del head
+			calcularAnchoMaximo();			
+			// Luego volvemos a construir la tabla con dataTables
+			construirTabla();
+		},"json")
+	}
 		
-
 	function quitarloader(){
 		if($('.loader').length > 0) $('.loader').remove();
 	}

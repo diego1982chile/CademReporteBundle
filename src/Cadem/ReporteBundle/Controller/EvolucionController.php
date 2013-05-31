@@ -129,16 +129,16 @@ class EvolucionController extends Controller
 		//CONSULTA
 		
 		$sql = "SELECT (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre, i.NOMBRE as PRODUCTO,  ni.NOMBRE as SEGMENTO, m.NOMBRE, m.FECHAINICIO FROM QUIEBRE q
-				INNER JOIN SALAMEDICION sm on sm.ID = q.SALAMEDICION_ID
-				INNER JOIN MEDICION m on m.ID = sm.MEDICION_ID AND m.ID IN (SELECT TOP(12) m2.ID FROM MEDICION m2 WHERE m2.ID = sm.MEDICION_ID ORDER BY m2.FECHAINICIO ASC)
-				INNER JOIN SALACLIENTE sc on sc.ID = sm.SALACLIENTE_ID
-				INNER JOIN ITEMCLIENTE ic on ic.ID = q.ITEMCLIENTE_ID
+				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID
+				INNER JOIN MEDICION m on m.ID = p.MEDICION_ID AND m.ID IN (SELECT TOP(12) m2.ID FROM MEDICION m2 WHERE m2.ID = p.MEDICION_ID ORDER BY m2.FECHAINICIO ASC)
+				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
+				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
 				INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
 				INNER JOIN USUARIO u on u.cliente_id=c.id and u.id=".$user->getId()."
 				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
 				INNER JOIN ITEM i on i.ID = ic.ITEM_ID
 				GROUP BY  ni.NOMBRE,i.NOMBRE,m.NOMBRE,m.FECHAINICIO
-				ORDER BY ni.NOMBRE,i.NOMBRE";
+				ORDER BY ni.NOMBRE,i.NOMBRE";							
 		
 		$evolucion_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();
 		$niveles=2;
@@ -177,6 +177,14 @@ class EvolucionController extends Controller
 
 		array_push($head,'TOTAL');
 		
+		// Calcula el ancho máximo de la tabla	
+		$extension=count($head)*10-100;
+	
+		if($extension<0)
+			$extension=0;
+			
+		$max_width=100+$extension;
+		
 		// Guardamos resultado de consulta en variable de sesión para reusarlas en un action posterior
 		$session->set("mediciones",$mediciones2);
 		// $session->set("agregaciones",$agregaciones);
@@ -192,6 +200,7 @@ class EvolucionController extends Controller
 				'form_comuna' 	=> $form_comuna->createView(),
 			),
 			'head' => $head,
+			'max_width' => $max_width,
 			'logofilename' => $logofilename,
 			'logostyle' => $logostyle,			
 			// 'evolutivo' => json_encode($evolutivo),
@@ -210,53 +219,19 @@ class EvolucionController extends Controller
 		return strtotime($a['fecha']) - strtotime($b['fecha']);
 	}		
 	
-	public function tablaAction(Request $request)
+	public function bodyAction(Request $request)
 	{		
-		// Recuperar el usuario, parámetros y datos de sesión
-		$user = $this->getUser();
-		$em = $this->getDoctrine()->getManager();
+		// Recuperar datos de sesión
 		$session=$this->get("session");			
-		$mediciones=$session->get("mediciones");			
-		
-		$parametros = $request->query->all();
-		// $dataform = $data['f_region'];				
-		
-		// // CONSTRUIR EL CUERPO DE LA TABLA
-		if(!array_key_exists('f_estudio',$parametros))
-		{ // Si el action es invocado durante la carga de la pagina obtener el dataset desde la sesion							
-			$evolucion_quiebre=$session->get("evolucion_quiebre");
-		}
-		else
-		{ // Si es una llamada desde el filtro, entonces se deben recuperar los parametros y regenerar el dataset			
-			$estudio=$parametros['f_estudio']['Estudio'];			
-			$comunas='';
-			foreach($parametros['f_comuna']['Comuna'] as $comuna)
-				$comunas.=$comuna.',';	
-			$comunas = trim($comunas, ',');
+		$mediciones=$session->get("mediciones");							
 				
-			// return(print_r($comunas,true));
-			
-			$sql = "SELECT (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre, i.NOMBRE as PRODUCTO,  ni.NOMBRE as SEGMENTO, m.NOMBRE, m.FECHAINICIO FROM QUIEBRE q				
-				INNER JOIN SALAMEDICION sm on sm.ID = q.SALAMEDICION_ID
-				INNER JOIN MEDICION m on m.ID = sm.MEDICION_ID AND m.ID IN (SELECT TOP(12) m2.ID FROM MEDICION m2 WHERE m2.ID = sm.MEDICION_ID ORDER BY m2.FECHAINICIO ASC)
-				INNER JOIN SALACLIENTE sc on sc.ID = sm.SALACLIENTE_ID
-				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in($comunas)
-				INNER JOIN ITEMCLIENTE ic on ic.ID = q.ITEMCLIENTE_ID
-				INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
-				INNER JOIN USUARIO u on u.cliente_id=c.id and u.id=".$user->getId()."
-				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
-				INNER JOIN ITEM i on i.ID = ic.ITEM_ID
-				GROUP BY  ni.NOMBRE,i.NOMBRE,m.NOMBRE,m.FECHAINICIO
-				ORDER BY ni.NOMBRE,i.NOMBRE";				
-			
-			$evolucion_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();
-			// return(print_r($sql,true));								
-		}	
+		$evolucion_quiebre=$session->get("evolucion_quiebre");			
 				
 		/* Recorrer vector de mediciones, y resultado de la consulta de forma sincrona; cada vez que se encuentre coincidencia hacer 
 		fetch en resultado consulta, si no, asignar vacio */
 		
-		$body=array();			
+		$body=array();		
+		$matriz_totales=array();		
 		$num_regs=count($evolucion_quiebre);
 		$cont_meds=0;
 		$cont_regs=0;
@@ -298,13 +273,12 @@ class EvolucionController extends Controller
 				}
 				if($cont_regs==$num_regs-1)		
 				{	
-					$fila[$num_meds+2]=round($total/$cont_meds,1);					
-					array_push($body,(object)$fila);						
+					$fila[$num_meds+2]=round($total/($cont_meds+1),1);					
+					array_push($body,(object)$fila);
+					$cont_regs++;
 				}		
-			}
-			
-			// Calculo de totales
-			$matriz_totales=array();
+			}			
+			// Calculo de totales			
 			$totales=array_fill(0,$num_meds+1,0);
 			$contadores=array_fill(0,$num_meds+1,1);
 			$nivel2=$evolucion_quiebre[0]['SEGMENTO'];
@@ -363,6 +337,98 @@ class EvolucionController extends Controller
 		);		
 		return new JsonResponse($output);
 	}
+	
+	public function headerAction(Request $request)
+	{		
+		// Recuperar el usuario, parámetros y datos de sesión
+		$user = $this->getUser();
+		$em = $this->getDoctrine()->getManager();
+		$session=$this->get("session");									
+		$parametros = $request->query->all();							
+			
+		// Como es una llamada desde el filtro, entonces se deben recuperar los parametros y regenerar el dataset			
+		$estudio=$parametros['f_estudio']['Estudio'];			
+		$comunas='';
+		foreach($parametros['f_comuna']['Comuna'] as $comuna)
+			$comunas.=$comuna.',';	
+		$comunas = trim($comunas, ',');								
+
+		$sql = "SELECT (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre, i.NOMBRE as PRODUCTO,  ni.NOMBRE as SEGMENTO, m.NOMBRE, m.FECHAINICIO FROM QUIEBRE q
+				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID
+				INNER JOIN MEDICION m on m.ID = p.MEDICION_ID AND m.ID IN (SELECT TOP(12) m2.ID FROM MEDICION m2 WHERE m2.ID = p.MEDICION_ID ORDER BY m2.FECHAINICIO ASC)
+				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
+				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )
+				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
+				INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
+				INNER JOIN USUARIO u on u.cliente_id=c.id and u.id=".$user->getId()."
+				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
+				INNER JOIN ITEM i on i.ID = ic.ITEM_ID
+				GROUP BY  ni.NOMBRE,i.NOMBRE,m.NOMBRE,m.FECHAINICIO
+				ORDER BY ni.NOMBRE,i.NOMBRE";			
+				
+		$evolucion_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();						
+		
+		// Variable para saber cuantos niveles de agregacion define el cliente, esto debe ser parametrizado en una etapa posterior
+		$niveles=2;										
+				
+		$head=array();
+		$mediciones=array();		
+		$mediciones_aux=array();		
+		
+		// Generamos el head de la tabla, y las mediciones
+		foreach($evolucion_quiebre as $registro)
+		{
+			$fila=array();
+			// print_r($resumen_quiebre);
+			if(!in_array($registro['NOMBRE'],$head))
+			{
+				array_push($head,$registro['NOMBRE']);
+				$fila['nombre']=$registro['NOMBRE'];
+				$fila['fecha']=$registro['FECHAINICIO'];
+				array_push($mediciones_aux,$fila);
+			}		
+		}	
+		// Ordenamos la estructura usando comparador personalizado
+		usort($mediciones_aux, array($this,"sortFunction"));	
+		// CONSTRUIR EL ENCABEZADO DE LA TABLA
+
+		if($niveles==1)
+			$prefixes=array('SKU/MEDICION');
+		else
+			$prefixes=array('SKU/MEDICION','SEGMENTO');
+		
+		$head=array();																
+		
+		foreach($mediciones_aux as $medicion)
+		{
+			array_push($mediciones,$medicion['nombre']);					
+			array_push($head,$medicion['nombre']);											
+		}										
+		foreach(array_reverse($prefixes) as $prefix)		
+			array_unshift($head,$prefix);		
+		array_push($head,'TOTAL');				
+		
+		// Guardamos resultado de consulta en variable de sesión para reusarlas en un action posterior
+		$session->set("mediciones",$mediciones);		
+		$session->set("evolucion_quiebre",$evolucion_quiebre);	
+		
+		// Calcula el ancho máximo de la tabla	
+		$extension=count($head)*10-100;
+	
+		if($extension<0)
+			$extension=0;
+			
+		$max_width=100+$extension;
+		/*
+		 * Output
+		 */
+		// $session->close();
+		$output = array(
+			"head" => $head,
+			"max_width" => $max_width
+		);		
+		return new JsonResponse($output);		
+	}		
 	
 	public function periodoAction(Request $request)
 	{

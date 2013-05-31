@@ -36,9 +36,7 @@ class DetalleController extends Controller
 		
 		$logofilename = $cliente->getLogofilename();
 		$logostyle = $cliente->getLogostyle();
-		
-		
-			
+						
 		//REGIONES
 		$query = $em->createQuery(
 			'SELECT DISTINCT r FROM CademReporteBundle:Region r
@@ -108,9 +106,7 @@ class DetalleController extends Controller
 			if(count($mediciones) > 1) list(,$id_medicion_anterior) = array_keys($mediciones);
 			else $id_medicion_anterior = $id_medicion_actual;
 		}
-		else $ultima_medicion = null;
-		
-		
+		else $ultima_medicion = null;				
 		
 		$form_estudio = $this->get('form.factory')->createNamedBuilder('f_estudio', 'form')
 			->add('Estudio', 'choice', array(
@@ -157,54 +153,80 @@ class DetalleController extends Controller
 				'data' => array_keys($choices_comunas)
 			))
 			->getForm();
+				
+		//CONSULTA
 		
-			
-			//CONSULTA
-		
-		$sql = "SELECT (case when q.hayquiebre = 1 then 1 else 0 END) as quiebre, ic.CODIGOITEM as COD_PRODUCTO,i.NOMBRE as NOM_PRODUCTO,ni.NOMBRE as SEGMENTO, sc.CODIGOSALA as COD_SALA, s.CALLE as CALLE_SALA, s.NUMEROCALLE as NUM_SALA, cad.NOMBRE as CAD_SALA, com.NOMBRE as COM_SALA FROM QUIEBRE q
-		INNER JOIN SALAMEDICION sm on sm.ID = q.SALAMEDICION_ID
-		INNER JOIN MEDICION m on m.ID = sm.MEDICION_ID and m.ID=17
-		INNER JOIN SALACLIENTE sc on sc.ID = sm.SALACLIENTE_ID
+		$sql = "SELECT (case when q.hayquiebre = 1 then 1 else 0 END) as quiebre, ic.CODIGOITEM1 as COD_PRODUCTO,i.NOMBRE as NOM_PRODUCTO,ni.NOMBRE as SEGMENTO, sc.CODIGOSALA as COD_SALA, s.CALLE as CALLE_SALA, s.NUMEROCALLE as NUM_SALA, cad.NOMBRE as CAD_SALA, com.NOMBRE as COM_SALA FROM QUIEBRE q
+		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID
+		INNER JOIN MEDICION m on m.ID = p.MEDICION_ID and m.ID=6
+		INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
 		INNER JOIN SALA s on s.ID = sc.SALA_ID
 		INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
 		INNER JOIN USUARIO u on u.cliente_id=c.id and u.id=".$user->getId()."
-		INNER JOIN ITEMCLIENTE ic on ic.ID = q.ITEMCLIENTE_ID AND ic.CLIENTE_ID = c.ID
+		INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID AND ic.CLIENTE_ID = c.ID
 		INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
 		INNER JOIN COMUNA com on s.COMUNA_ID=com.ID
 		INNER JOIN CADENA cad on s.CADENA_ID=cad.ID	
 		INNER JOIN ITEM i on i.ID = ic.ITEM_ID	
-		ORDER BY NOM_PRODUCTO,SEGMENTO";
+		ORDER BY SEGMENTO,NOM_PRODUCTO,CAD_SALA,COM_SALA,CALLE_SALA";
+		
 		$detalle_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();
-		$niveles=2;
 				
-		// print_r($resumen_quiebre);
-		
-		// CONSTRUIR EL ENCABEZADO DE LA TABLA
-		
-		if($niveles==1)
-			$head=array('SKU/SALA');
-		else
-			$head=array('SKU/SALA','SEGMENTO');
+		// Variable para saber cuantos niveles de agregacion define el cliente, esto debe ser parametrizado en una etapa posterior
+		$niveles=2;										
 				
+		$head=array();
 		$salas=array();		
+		$salas_aux=array();		
 		
-		// Generamos el head de la tabla, y las salas
+		// // Generamos el head de la tabla, y las salas
 		foreach($detalle_quiebre as $registro)
+		{			
+			$fila=array();
+			
+			if(!in_array($registro['COD_SALA'],$head))
+			{
+				array_push($head,$registro['COD_SALA']);
+				$fila['COD_SALA']=$registro['COD_SALA'];
+				$fila['NOM_SALA']=$registro['CAD_SALA'].' '.strtoupper($registro['COM_SALA']).' '.$registro['CALLE_SALA'].' '.$registro['NUM_SALA'];
+				array_push($salas_aux,$fila);
+			}					
+		}				
+		
+		usort($salas_aux, array($this,"sortFunction"));		
+		// CONSTRUIR EL ENCABEZADO DE LA TABLA
+			
+		if($niveles==1)
+			$prefixes=array('SKU/SALA');
+		else
+			$prefixes=array('SKU/SALA','SEGMENTO');
+		
+		$head=array();
+		
+		foreach($salas_aux as $sala)
 		{
-			// print_r($resumen_quiebre);
-			if(!array_key_exists($registro['COD_SALA'],$head))
-			{				
-				$head[$registro['COD_SALA']]=$registro['CAD_SALA'].' '.$registro['CALLE_SALA'].' '.$registro['NUM_SALA'].' '.$registro['COM_SALA'];				
-				array_push($salas,$registro['COD_SALA']);				
-			}		
-		}											
-		array_push($head,'TOTAL');
-		// print_r($head);
+			array_push($salas,$sala['COD_SALA']);	
+			$head[$sala['COD_SALA']]=$sala['NOM_SALA'];						
+		}		
+						
+		foreach(array_reverse($prefixes) as $prefix)		
+			array_unshift($head,$prefix);		
+		array_push($head,'TOTAL');			
 		
 		// Guardamos resultado de consulta en variable de sesión para reusarlas en un action posterior
-		$session->set("salas",$salas);		
+		$session->set("salas",$salas);				
 		$session->set("detalle_quiebre",$detalle_quiebre);		
-				
+
+		// Calcula el ancho máximo de la tabla	
+		$extension=count($head)*15-100;
+	
+		if($extension<0)
+			$extension=0;
+			
+		$max_width=100+$extension;		
+
+		echo "max_width=".$max_width;
+		
 		//RESPONSE
 		$response = $this->render('CademReporteBundle:Detalle:index.html.twig',
 		array(
@@ -216,11 +238,12 @@ class DetalleController extends Controller
 				'form_comuna' 	=> $form_comuna->createView(),	
 			),
 			'head' => $head,
+			'max_width' => $max_width,
 			'logofilename' => $logofilename,
 			'logostyle' => $logostyle,
 			)
 		);
-
+		
 		//CACHE
 		$response->setPrivate();
 		$response->setMaxAge(1);
@@ -237,58 +260,27 @@ class DetalleController extends Controller
       return $text;
     }
 	
-	public function tablaAction(Request $request)
+	// Definimos un comparador de cadenas para ordenar las salas
+	function sortFunction( $a, $b ) {		
+		return $a['NOM_SALA'] > $b['NOM_SALA'];
+	}		
+	
+	public function bodyAction(Request $request)
 	{		
-		// Recuperar el usuario, parámetros y datos de sesión
+		// Recuperar el usuario y datos de sesión
 		$user = $this->getUser();
 		$em = $this->getDoctrine()->getManager();
 		$session=$this->get("session");			
-		$salas=$session->get("salas");			
+		$salas=$session->get("salas");									
+		$detalle_quiebre=$session->get("detalle_quiebre");
 		
-		$parametros = $request->query->all();
-		// $dataform = $data['f_region'];				
-		
-		// // CONSTRUIR EL CUERPO DE LA TABLA
-		if(!array_key_exists('f_estudio',$parametros))
-		{ // Si el action es invocado durante la carga de la pagina obtener el dataset desde la sesion							
-			$detalle_quiebre=$session->get("detalle_quiebre");
-		}
-		else
-		{ // Si es una llamada desde el filtro, entonces se deben recuperar los parametros y regenerar el dataset			
-			$estudio=$parametros['f_estudio']['Estudio'];	
-			$medicion=$parametros['f_periodo']['Periodo'];			
-			$comunas='';
-			foreach($parametros['f_comuna']['Comuna'] as $comuna)
-				$comunas.=$comuna.',';	
-			$comunas = trim($comunas, ',');
-				
-			// return(print_r($comunas,true));
-			
-			$sql = "SELECT (case when q.hayquiebre = 1 then 1 else 0 END) as quiebre, ic.CODIGOITEM as COD_PRODUCTO,i.NOMBRE as NOM_PRODUCTO,ni.NOMBRE as SEGMENTO, sc.CODIGOSALA as COD_SALA, s.CALLE as CALLE_SALA, s.NUMEROCALLE as NUM_SALA, cad.NOMBRE as CAD_SALA, com.NOMBRE as COM_SALA FROM QUIEBRE q
-					INNER JOIN SALAMEDICION sm on sm.ID = q.SALAMEDICION_ID
-					INNER JOIN MEDICION m on m.ID = sm.MEDICION_ID and m.ID=$medicion
-					INNER JOIN SALACLIENTE sc on sc.ID = sm.SALACLIENTE_ID
-					INNER JOIN SALA s on s.ID = sc.SALA_ID
-					INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
-					INNER JOIN USUARIO u on u.cliente_id=c.id and u.id=".$user->getId()."
-					INNER JOIN ITEMCLIENTE ic on ic.ID = q.ITEMCLIENTE_ID AND ic.CLIENTE_ID = c.ID
-					INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
-					INNER JOIN COMUNA com on s.COMUNA_ID=com.ID and com.ID in ($comunas)
-					INNER JOIN CADENA cad on s.CADENA_ID=cad.ID	
-					INNER JOIN ITEM i on i.ID = ic.ITEM_ID	
-					ORDER BY NOM_PRODUCTO,SEGMENTO";				
-			
-			$detalle_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();
-			// return(print_r($sql,true));								
-		}		
-	
-		// CONSTRUIR EL CUERPO DE LA TABLA		
-				
+		// CONSTRUIR EL CUERPO DE LA TABLA						
 		$body=array();									
 		$num_regs=count($detalle_quiebre);		
 		$cont_salas=0;
 		$cont_regs=0;
-		$num_salas=count($salas);							
+		$num_salas=count($salas);			
+		$matriz_totales=array();		
 	
 		if($num_regs>0)
 		{
@@ -303,33 +295,23 @@ class DetalleController extends Controller
 			{	// Lleno la fila con vacios, le agrego 3 posiciones, correspondientes a los niveles de agregación y al total	
 				$columna_quiebre=array_search($detalle_quiebre[$cont_regs]['COD_SALA'],$salas);	
 						
-				// // Mientras el primer nivel de agregación no cambie			
+				// Mientras el primer nivel de agregación no cambie			
 				if($nivel1==$detalle_quiebre[$cont_regs]['COD_PRODUCTO'])
 				{									
 					$fila[0]=$detalle_quiebre[$cont_regs]['NOM_PRODUCTO'].' ['.$detalle_quiebre[$cont_regs]['COD_PRODUCTO'].']';					
 					$fila[1]=$detalle_quiebre[$cont_regs]['SEGMENTO'];	
 					$fila[$columna_quiebre+2]=$detalle_quiebre[$cont_regs]['quiebre'];
-					// switch($detalle_quiebre[$cont_regs]['quiebre'])
-					// {
-						// case '0':
-							// $fila[$columna_quiebre+2]="<span style='background:green;height:1.6em'></span>";	
-							// break;
-						// case '1':
-							// $fila[$columna_quiebre+2]="<span style='background:red;height:1.6em'></span>";	
-							// break;
-					// }
-					// $fila[$columna_quiebre+2]=round($detalle_quiebre[$cont_regs]['quiebre'],1);						
+					
 					$total+=$detalle_quiebre[$cont_regs]['quiebre'];	
 					$cont_regs++;	
 					$cont_salas++;
 				}	
 				else
-				{		
-					// print_r($fila);
+				{							
 					$fila[$num_salas+2]=round($total/$cont_salas,1);
 					$cont_salas=0;
 					$total=0;
-					// Si el primer nivel de agregacion cambió, lo actualizo y agrego la fila al body y reseteo el contador de cadenas
+					// Si el primer nivel de agregacion cambió, lo actualizo, agrego la fila al body y reseteo el contador de cadenas
 					$nivel1=$detalle_quiebre[$cont_regs]['COD_PRODUCTO'];
 					array_push($body,$fila);
 					$fila=array_fill(0,$num_salas+3,"-");	
@@ -340,25 +322,20 @@ class DetalleController extends Controller
 					array_push($body,$fila);						
 				}			
 			}	
-			// Calculo de totales
-			$matriz_totales=array();
+			// Calculo de totales			
 			$totales=array_fill(0,$num_salas+1,0);
 			$contadores=array_fill(0,$num_salas+1,0);
 			$nivel2=$detalle_quiebre[0]['SEGMENTO'];
 			$cont_fil=0;
 			$num_fil=count($body);
-			$cont=0;
-			
-			// print_r($body);
+			$cont=0;						
 			
 			foreach($body as $objeto)
-			{	
-				// $fila=(array)$objeto;				
+			{									
 				$fila=$objeto;				
 				
 				if($nivel2!=$fila[1])			
-				{ // Si cambia el 2o nivel agrego totales del segmento actual a la matriz		
-					// print_r($contadores);
+				{ // Si cambia el 2o nivel agrego totales del segmento actual a la matriz							
 					for($aux=0;$aux<count($totales);++$aux)								
 						$contadores[$aux]==0? $totales[$aux]='-':$totales[$aux]=round($totales[$aux]/$contadores[$aux],1);																						
 					$matriz_totales[$cont]=$totales;
@@ -370,8 +347,7 @@ class DetalleController extends Controller
 				$cont_col=0;				
 								
 				foreach(array_slice($fila,2) as $quiebre)
-				{						
-					// print_r($body[$cont_fil][$cont_col]);
+				{											
 					if(strcmp($quiebre,"-")!=0)
 					{						
 						$contadores[$cont_col]++;					
@@ -401,8 +377,7 @@ class DetalleController extends Controller
 					$totales=array_fill(0,$num_salas+1,0);
 					$contadores=array_fill(0,$num_salas+1,0);
 					$nivel2=$fila[1];						
-				}	
-				// $body[$cont_fil]=(object)$body[$cont_fil];
+				}					
 				$cont_fil++;
 			}					
 		}
@@ -419,6 +394,106 @@ class DetalleController extends Controller
 		);		
 		return new JsonResponse($output);		
 	}
+	
+	public function headerAction(Request $request)
+	{		
+		// Recuperar el usuario, parámetros y datos de sesión
+		$user = $this->getUser();
+		$em = $this->getDoctrine()->getManager();
+		$session=$this->get("session");			
+		// $salas=$session->get("salas");					
+		$parametros = $request->query->all();							
+			
+		// Como es una llamada desde el filtro, entonces se deben recuperar los parametros y regenerar el dataset			
+		$estudio=$parametros['f_estudio']['Estudio'];	
+		$medicion=$parametros['f_periodo']['Periodo'];			
+		$comunas='';
+		foreach($parametros['f_comuna']['Comuna'] as $comuna)
+			$comunas.=$comuna.',';	
+		$comunas = trim($comunas, ',');						
+			
+		$sql = "SELECT (case when q.hayquiebre = 1 then 1 else 0 END) as quiebre, ic.CODIGOITEM1 as COD_PRODUCTO,i.NOMBRE as NOM_PRODUCTO,ni.NOMBRE as SEGMENTO, sc.CODIGOSALA as COD_SALA, s.CALLE as CALLE_SALA, s.NUMEROCALLE as NUM_SALA, cad.NOMBRE as CAD_SALA, com.NOMBRE as COM_SALA FROM QUIEBRE q
+				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID
+				INNER JOIN MEDICION m on m.ID = p.MEDICION_ID and m.ID=$medicion
+				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
+				INNER JOIN SALA s on s.ID = sc.SALA_ID
+				INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
+				INNER JOIN USUARIO u on u.cliente_id=c.id and u.id=".$user->getId()."
+				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID AND ic.CLIENTE_ID = c.ID
+				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
+				INNER JOIN COMUNA com on s.COMUNA_ID=com.ID and com.ID in ($comunas)
+				INNER JOIN CADENA cad on s.CADENA_ID=cad.ID	
+				INNER JOIN ITEM i on i.ID = ic.ITEM_ID	
+				ORDER BY SEGMENTO,NOM_PRODUCTO,CAD_SALA,COM_SALA,CALLE_SALA";																		
+				
+		$detalle_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();						
+		
+		// Variable para saber cuantos niveles de agregacion define el cliente, esto debe ser parametrizado en una etapa posterior
+		$niveles=2;										
+				
+		$head=array();
+		$salas=array();		
+		$salas_aux=array();		
+		
+		// Generamos el head de la tabla, y las salas
+		foreach($detalle_quiebre as $registro)
+		{			
+			$fila=array();
+			
+			if(!in_array($registro['COD_SALA'],$head))
+			{
+				array_push($head,$registro['COD_SALA']);
+				$fila['COD_SALA']=$registro['COD_SALA'];
+				$fila['NOM_SALA']=$registro['CAD_SALA'].' '.strtoupper($registro['COM_SALA']).' '.$registro['CALLE_SALA'].' '.$registro['NUM_SALA'];
+				array_push($salas_aux,$fila);
+			}					
+		}						
+		// Ordenamos la estructura usando comparador personalizado
+		usort($salas_aux, array($this,"sortFunction"));		
+		// CONSTRUIR EL ENCABEZADO DE LA TABLA
+			
+		if($niveles==1)
+			$prefixes=array('SKU/SALA');
+		else
+			$prefixes=array('SKU/SALA','SEGMENTO');
+		
+		$head=array();
+		
+		foreach($salas_aux as $sala)
+		{
+			$fila=array();
+			$fila['cod_sala']=$sala['COD_SALA'];
+			$fila['nom_sala']=$sala['NOM_SALA'];			
+			array_push($salas,$sala['COD_SALA']);		
+			array_push($head,$fila);
+			// $head[$sala['COD_SALA']]=$sala['NOM_SALA'];											
+		}		
+		
+		foreach(array_reverse($prefixes) as $prefix)		
+			array_unshift($head,$prefix);		
+		array_push($head,'TOTAL');						
+		
+		// Guardamos resultado de consulta en variable de sesión para reusarlas en un action posterior
+		$session->set("salas",$salas);		
+		$session->set("detalle_quiebre",$detalle_quiebre);	
+		
+		// Calcula el ancho máximo de la tabla	
+		$extension=count($head)*10-100;
+	
+		if($extension<0)
+			$extension=0;
+			
+		$max_width=100+$extension;	
+		/*
+		 * Output
+		 */
+		// $session->close();
+		$output = array(
+			"head" => (array)$head,
+			"max_width" => $max_width,
+		);		
+		return new JsonResponse($output);		
+	}	
 		
 	public function indicadoresAction(Request $request)
     {
