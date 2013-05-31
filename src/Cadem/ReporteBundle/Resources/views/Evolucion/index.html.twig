@@ -167,7 +167,9 @@ function construirTabla()
 			{ "sWidth": "45%",  "sClass": "tag", "aTargets": [0] }				
 		],
 		"fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {	
-			// str.replace(/\\n/g, '<br />');		
+			// str.replace(/\\n/g, '<br />');
+			if(aData[0].length>55)
+				$(nRow).children(':eq(0)').text(aData[0].substring(0,55)+'...');
 			// $(nRow).children(':eq(0)').text(aData[0].replace(/ /g,''));		  
 			$(nRow).attr('title',aData[0]);		  
 		},			
@@ -382,7 +384,7 @@ $(document).ready(function () {
 			var tableHead = document.createElement( 'tr' );	 //tableheader 							
 			$(data.head).each(function(key,value){				
 				var tableHeading = document.createElement( 'th' );					
-				tableHeading.innerHTML = value;														
+				tableHeading.innerHTML = value.replace(/ /g,'');												
 				tableHead.appendChild( tableHeading );				
 			});						
 			table.appendChild( tableHead );	
