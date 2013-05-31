@@ -623,6 +623,9 @@ $(document).ready(function () {
 			var tableHead = document.createElement( 'tr' );	 //tableheader 							
 			$(data.head).each(function(key,value){				
 				var tableHeading = document.createElement( 'th' );					
+				att=document.createAttribute("tag");
+				att.value=value;
+				tableHeading.setAttributeNode(att);
 				tableHeading.innerHTML = value;														
 				tableHead.appendChild( tableHeading );				
 			});						
