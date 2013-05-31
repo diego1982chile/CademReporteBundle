@@ -16,9 +16,12 @@ resumen_index:
 resumen_evolutivo:
     pattern: /resumen/evolutivo
     defaults: { _controller: CademReporteBundle:Resumen:evolutivo }	
-resumen_tabla:
-    pattern: /resumen/tabla
-    defaults: { _controller: CademReporteBundle:Resumen:tabla }	
+resumen_header:
+    pattern: /resumen/header
+    defaults: { _controller: CademReporteBundle:Resumen:header }		
+resumen_body:
+    pattern: /resumen/body
+    defaults: { _controller: CademReporteBundle:Resumen:body }	
 ranking_index:
     pattern:  /ranking
     defaults: { _controller: CademReporteBundle:Ranking:index }
@@ -29,15 +32,21 @@ ranking_filtros:
 evolucion_index:
     pattern:  /evolucion
     defaults: { _controller: CademReporteBundle:Evolucion:index }
-evolucion_tabla:
-    pattern:  /evolucion/tabla
-    defaults: { _controller: CademReporteBundle:Evolucion:tabla }	
+evolucion_header:
+    pattern:  /evolucion/header
+    defaults: { _controller: CademReporteBundle:Evolucion:header }		
+evolucion_body:
+    pattern:  /evolucion/body
+    defaults: { _controller: CademReporteBundle:Evolucion:body }	
 detalle_index:
     pattern:  /detalle
     defaults: { _controller: CademReporteBundle:Detalle:index }	
-detalle_tabla:
-    pattern:  /detalle/tabla
-    defaults: { _controller: CademReporteBundle:Detalle:tabla }	
+detalle_header:
+    pattern:  /detalle/header
+    defaults: { _controller: CademReporteBundle:Detalle:header }		
+detalle_body:
+    pattern:  /detalle/body
+    defaults: { _controller: CademReporteBundle:Detalle:body }		
 #RUTAS GENERALES Y AYUDANTES
 helper_filtro_region:
     pattern:  /h/filtro/region
