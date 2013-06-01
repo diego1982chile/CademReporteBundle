@@ -160,14 +160,15 @@ class RankingController extends Controller
 		//RANKING POR SALA--------------------------------------------------------------------
 		$sql = "DECLARE @id_cliente integer = :id_cliente;
 		SELECT TOP(20)*, ROUND(quiebre-quiebre_anterior, 1) as diferencia FROM 
-(SELECT s.id, s.calle, s.numerocalle, sc.codigosala, (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre FROM SALA s
+(SELECT s.id, s.calle, s.numerocalle, sc.codigosala, cad.nombre as cadena, (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre FROM SALA s
 			INNER JOIN SALACLIENTE sc on s.ID = sc.SALA_ID
+			INNER JOIN CADENA cad on cad.ID = s.CADENA_ID
 			INNER JOIN PLANOGRAMA p on p.SALACLIENTE_ID = sc.ID
 			INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
 			INNER JOIN MEDICION m on m.ID = p.MEDICION_ID
 			INNER JOIN QUIEBRE q on q.PLANOGRAMA_ID = p.ID
 			WHERE c.id = @id_cliente AND m.id = :id_medicion_actual
-			GROUP BY sc.id, s.id, s.calle, s.numerocalle, sc.codigosala
+			GROUP BY sc.id, s.id, s.calle, s.numerocalle, sc.codigosala, cad.nombre
 			) AS A LEFT JOIN
 			
 (SELECT s.id as id2, (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre_anterior FROM SALA s
@@ -306,14 +307,15 @@ class RankingController extends Controller
 		//RANKING POR SALA--------------------------------------------------------------------
 		$sql = "DECLARE @id_cliente_ integer = ? ;
 		SELECT TOP(20)*, ROUND(quiebre-quiebre_anterior, 1) as diferencia FROM 
-(SELECT s.id, s.calle, s.numerocalle, sc.codigosala, (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre FROM SALA s
+(SELECT s.id, s.calle, s.numerocalle, sc.codigosala, cad.nombre as cadena, (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre FROM SALA s
 			INNER JOIN SALACLIENTE sc on s.ID = sc.SALA_ID
+			INNER JOIN CADENA cad on cad.ID = s.CADENA_ID
 			INNER JOIN PLANOGRAMA p on p.SALACLIENTE_ID = sc.ID
 			INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
 			INNER JOIN MEDICION m on m.ID = p.MEDICION_ID
 			INNER JOIN QUIEBRE q on q.PLANOGRAMA_ID = p.ID
 			WHERE c.id = @id_cliente_ AND m.id = ? AND s.COMUNA_ID IN ( ? )
-			GROUP BY sc.id, s.id, s.calle, s.numerocalle, sc.codigosala
+			GROUP BY sc.id, s.id, s.calle, s.numerocalle, sc.codigosala, cad.nombre
 			) AS A LEFT JOIN
 			
 (SELECT s.id as id2, (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre_anterior FROM SALA s
