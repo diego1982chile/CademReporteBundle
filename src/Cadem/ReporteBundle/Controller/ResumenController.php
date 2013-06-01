@@ -208,11 +208,74 @@ class ResumenController extends Controller
 			array_unshift($head,$prefix);		
 		array_push($head,'TOTAL');	
 		
+// Obtener totales horizontales por segmento
+			
+		$sql =	"SELECT ni.NOMBRE as segmento, ni2.NOMBRE as categoria, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as quiebre FROM QUIEBRE q
+		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$id_ultima_medicion}
+		INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
+		INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
+		INNER JOIN NIVELITEM ni2 on ni2.ID = ic.NIVELITEM_ID2
+		INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
+		INNER JOIN SALA s on s.ID = sc.SALA_ID
+		INNER JOIN CADENA c on c.ID = s.CADENA_ID
+		GROUP BY ni.NOMBRE, ni2.NOMBRE
+		ORDER BY categoria";
+	
+		$totales_segmento = $em->getConnection()->executeQuery($sql)->fetchAll();		
+
+		// Obtener totales verticales por categoria
+					
+		$sql =	"SELECT ni.NOMBRE as CATEGORIA, c.NOMBRE as CADENA, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
+		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$id_ultima_medicion}
+		INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
+		INNER JOIN SALA s on s.ID = sc.SALA_ID
+		INNER JOIN CADENA c on c.ID = s.CADENA_ID
+		INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
+		INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID2
+		GROUP BY ni.NOMBRE, c.NOMBRE
+		ORDER BY CATEGORIA,CADENA";
+	
+		$totales_categoria = $em->getConnection()->executeQuery($sql)->fetchAll();
+		
+		// Obtener totales horizontales por totales segmento (ultima columna de totales verticales por categoria)
+		
+		$sql =	"SELECT ni.NOMBRE as CATEGORIA, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
+				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$id_ultima_medicion}
+				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
+				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID2
+				GROUP BY ni.NOMBRE
+				ORDER BY CATEGORIA";
+			
+		$totales_horizontales_categoria = $em->getConnection()->executeQuery($sql)->fetchAll();	
+		
+		// Obtener totales verticales por totales categoria
+		
+		$sql = "SELECT  c.NOMBRE as CADENA, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
+		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$id_ultima_medicion}
+		INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
+		INNER JOIN SALA s on s.ID = sc.SALA_ID
+		INNER JOIN CADENA c on c.ID = s.CADENA_ID
+		GROUP BY c.NOMBRE
+		ORDER BY CADENA";
+		
+		$totales_verticales_categoria = $em->getConnection()->executeQuery($sql)->fetchAll();							
+		
+		// Obtener total horizontal por totales verticales por totales categoria
+		
+		$sql = "SELECT SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
+		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$id_ultima_medicion}";			
+
+		$total = $em->getConnection()->executeQuery($sql)->fetchAll();											
+		
 		// Guardamos resultado de consulta en variable de sesión para reusarlas en un action posterior
-		$session->set("cadenas",$cadenas);
-		// $session->set("agregaciones",$agregaciones);
+		$session->set("cadenas",$cadenas);		
 		$session->set("resumen_quiebre",$resumen_quiebre);		
-		// print_r($tabla_resumen);						
+		$session->set("totales_segmento",$totales_segmento);		
+		$session->set("totales_categoria",$totales_categoria);	
+		$session->set("totales_horizontales_categoria",$totales_horizontales_categoria);	
+		$session->set("totales_verticales_categoria",$totales_verticales_categoria);	
+		$session->set("total",$total);			
+				
 		
 		// Calcula el ancho máximo de la tabla	
 		$extension=count($head)*10-100;
@@ -404,24 +467,30 @@ class ResumenController extends Controller
 	public function bodyAction(Request $request)
 	{	
 		// Recuperar el usuario, parámetros y datos de sesión
-		$session=$this->get("session");					
+		$session=$this->get("session");			
 		$resumen_quiebre=$session->get("resumen_quiebre");
 		$cadenas=$session->get("cadenas");		
+		$totales_segmento=$session->get("totales_segmento");		
+		$totales_categoria=$session->get("totales_categoria");	
+		$totales_horizontales_categoria=$session->get("totales_horizontales_categoria");	
+		$totales_verticales_categoria=$session->get("totales_verticales_categoria");	
+		$total=$session->get("total");	
 				
 		$body=array();		
 		$matriz_totales=array();		
 		$num_regs=count($resumen_quiebre);		
 		$cont_cads=0;
 		$cont_regs=0;		
-		$num_cads=count($cadenas);					
+		$num_cads=count($cadenas);			
+		
+		$cont_totales_segmento=0;
 				
 		if($num_regs>0)
 		{					
 			// Para llevar los cambios del 1er nivel de agregacion
 			$nivel1=$resumen_quiebre[$cont_regs]['SEGMENTO'];			
 			// Lleno la fila con vacios, le agrego 3 posiciones, correspondientes a los niveles de agregación y al total															
-			$fila=array_fill(0,$num_cads+3,'-');																				
-			$total=0;								
+			$fila=array_fill(0,$num_cads+3,'-');																														
 			
 			while($cont_regs<$num_regs)
 			{	
@@ -431,76 +500,79 @@ class ResumenController extends Controller
 				{ // Mientras no cambie el 1er nivel asignamos los valores de quiebre a las columnas correspondientes				
 					$fila[0]=$resumen_quiebre[$cont_regs]['SEGMENTO'];					
 					$fila[1]=$resumen_quiebre[$cont_regs]['CATEGORIA'];												
-					$fila[$columna_quiebre+2]=round($resumen_quiebre[$cont_regs]['quiebre'],1);						
-					$total+=$resumen_quiebre[$cont_regs]['quiebre'];	
+					$fila[$columna_quiebre+2]=round($resumen_quiebre[$cont_regs]['quiebre'],1);											
 					$cont_regs++;
 					$cont_cads++;
 				}	
 				else
 				{ // Si el primer nivel de agregacion cambió, lo actualizo, agrego la fila al body y reseteo el contador de cadenas
-					$fila[$num_cads+2]=round($total/$cont_cads,1);					
-					$cont_cads=0;
-					$total=0;						
+					$fila[$num_cads+2]=round($totales_segmento[$cont_totales_segmento]['quiebre']*100,1);					
+					$cont_totales_segmento++;
+					$cont_cads=0;					
 					$nivel1=$resumen_quiebre[$cont_regs]['SEGMENTO'];
 					array_push($body,(object)$fila);
 					$fila=array_fill(0,$num_cads+3,'-');					
 				}
 				if($cont_regs==$num_regs-1)		
 				{	
-					$fila[$num_cads+2]=round($total/$cont_cads,1);					
+					$fila[$num_cads+2]=round($totales_segmento[$cont_totales_segmento]['quiebre']*100,1);					
 					array_push($body,(object)$fila);		
 					$cont_regs++;					
 				}
-			}
-									
-			// Calculo de totales			
-			$totales=array_fill(0,$num_cads+1,0);
-			$contadores=array_fill(0,$num_cads+1,1);
-			$medidos=array_fill(0,$num_cads+1,0);
-			$nivel2=$resumen_quiebre[0]['CATEGORIA'];
-			$cont_fil=0;
-			$num_fil=count($body);
-			$cont=0;
+			}							
+								
+			// Calculo de totales
+			$fila=array_fill(0,$num_cads+1,"-");	
+			$num_regs=count($totales_categoria);
+			$cont_regs=0;
+			$total=0;												
+			$nivel2=$totales_categoria[$cont_regs]['CATEGORIA'];	
+			$cont_totales_horizontales_categoria=0;						
 			
-			foreach($body as $objeto)
-			{	
-				$fila=(array)$objeto;
-				
-				if($nivel2!=$fila[1])			
-				{ // Si cambia el 2o nivel agrego totales del segmento actual a la matriz
-					// print_r($medidos);
-					for($aux=0;$aux<count($totales);++$aux)								
-						$medidos[$aux]==1? $totales[$aux]=round($totales[$aux]/$contadores[$aux],1):$totales[$aux]='-';																						
-					$matriz_totales[$cont]=$totales;
-					$cont++;
-					$totales=array_fill(0,$num_cads+1,0);
-					$contadores=array_fill(0,$num_cads+1,0);
-					$medidos=array_fill(0,$num_cads+1,0);
-					$nivel2=$fila[1];							
-				}	
-				$cont_col=0;				
-				foreach(array_slice($fila,2) as $quiebre)
-				{							
-					if(strcmp($quiebre,'-')!=0)
-					{
-						$contadores[$cont_col]++;		
-						$medidos[$cont_col]=1;		
-						$totales[$cont_col]+=$quiebre;						
-					}
-					$cont_col++;
-				}		
-				if($cont_fil==$num_fil-1)		
+			while($cont_regs<$num_regs)
+			{
+				$columna_quiebre=array_search($totales_categoria[$cont_regs]['CADENA'],$cadenas);					
+				// Mientras no cambie la categoria
+				if($nivel2==$totales_categoria[$cont_regs]['CATEGORIA'])
+				{
+					$fila[$columna_quiebre]=round($totales_categoria[$cont_regs]['QUIEBRE']*100,1);					
+					$cont_regs++;
+				}
+				else
+				{
+					$fila[$num_cads]=round($totales_horizontales_categoria[$cont_totales_horizontales_categoria]['QUIEBRE']*100,1);
+					$cont_totales_horizontales_categoria++;
+					array_push($matriz_totales,$fila);
+					$fila=array_fill(0,$num_cads+1,"-");
+					$nivel2=$totales_categoria[$cont_regs]['CATEGORIA'];					
+				}
+				if($cont_regs==$num_regs-1)		
 				{	
-					for($aux=0;$aux<count($totales);++$aux)								
-						$contadores[$aux]==0? $totales[$aux]='-':$totales[$aux]=round($totales[$aux]/$contadores[$aux],1);																						
-					$matriz_totales[$cont]=$totales;
-					$cont++;
-					$totales=array_fill(0,$num_cads+1,0);
-					$contadores=array_fill(0,$num_cads+1,0);
-					$nivel2=$fila[1];						
+					$fila[$num_cads]=round($totales_horizontales_categoria[$cont_totales_horizontales_categoria]['QUIEBRE']*100,1);
+					array_push($matriz_totales,(object)$fila);		
+					$cont_regs++;					
 				}				
-				$cont_fil++;
-			}			
+			}	
+
+			$cont_regs=0;
+			$num_regs=count($totales_verticales_categoria);
+			$fila=array_fill(0,$num_cads+1,"-");				
+			
+			while($cont_regs<$num_regs)
+			{
+				$columna_quiebre=array_search($totales_verticales_categoria[$cont_regs]['CADENA'],$cadenas);					
+				// Mientras no cambie la cadena  
+				$fila[$columna_quiebre]=round($totales_verticales_categoria[$cont_regs]['QUIEBRE']*100,1);					
+				$cont_regs++;
+			}	
+			
+			$fila[$num_cads+1]=round($total[0]['QUIEBRE']*100,1);
+			
+			// print_r($fila);
+			
+			array_push($matriz_totales,$fila);			
+			
+			// print_r($matriz_totales);	
 		}							
 		/*
 		 * Output
@@ -582,11 +654,75 @@ class ResumenController extends Controller
 		
 		foreach(array_reverse($prefixes) as $prefix)		
 			array_unshift($head,$prefix);		
-		array_push($head,'TOTAL');						
+		array_push($head,'TOTAL');				
+				
+		// Obtener totales horizontales por segmento
+			
+		$sql =	"SELECT ni.NOMBRE as segmento, ni2.NOMBRE as categoria, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as quiebre FROM QUIEBRE q
+		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$medicion}
+		INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
+		INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
+		INNER JOIN NIVELITEM ni2 on ni2.ID = ic.NIVELITEM_ID2
+		INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
+		INNER JOIN SALA s on s.ID = sc.SALA_ID
+		INNER JOIN CADENA c on c.ID = s.CADENA_ID
+		GROUP BY ni.NOMBRE, ni2.NOMBRE
+		ORDER BY categoria";
+	
+		$totales_segmento = $em->getConnection()->executeQuery($sql)->fetchAll();		
+
+		// Obtener totales verticales por categoria
+					
+		$sql =	"SELECT ni.NOMBRE as CATEGORIA, c.NOMBRE as CADENA, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
+		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$medicion}
+		INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
+		INNER JOIN SALA s on s.ID = sc.SALA_ID
+		INNER JOIN CADENA c on c.ID = s.CADENA_ID
+		INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
+		INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID2
+		GROUP BY ni.NOMBRE, c.NOMBRE
+		ORDER BY CATEGORIA,CADENA";
+	
+		$totales_categoria = $em->getConnection()->executeQuery($sql)->fetchAll();
 		
-		// Guardamos resultado de consulta en variable de sesión para reusarlas en un action posterior
+		// Obtener totales horizontales por totales segmento (ultima columna de totales verticales por categoria)
+		
+		$sql =	"SELECT ni.NOMBRE as CATEGORIA, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
+				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$medicion}
+				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
+				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID2
+				GROUP BY ni.NOMBRE
+				ORDER BY CATEGORIA";
+			
+		$totales_horizontales_categoria = $em->getConnection()->executeQuery($sql)->fetchAll();	
+		
+		// Obtener totales verticales por totales categoria
+		
+		$sql = "SELECT  c.NOMBRE as CADENA, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
+		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$medicion}
+		INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
+		INNER JOIN SALA s on s.ID = sc.SALA_ID
+		INNER JOIN CADENA c on c.ID = s.CADENA_ID
+		GROUP BY c.NOMBRE
+		ORDER BY CADENA";
+		
+		$totales_verticales_categoria = $em->getConnection()->executeQuery($sql)->fetchAll();							
+		
+		// Obtener total horizontal por totales verticales por totales categoria
+		
+		$sql = "SELECT SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
+		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$medicion}";			
+
+		$total = $em->getConnection()->executeQuery($sql)->fetchAll();									
+		
+		// Guardamos resultado de consulta en variables de sesión para reusarlas en un action posterior
 		$session->set("cadenas",$cadenas);		
 		$session->set("resumen_quiebre",$resumen_quiebre);	
+		$session->set("totales_segmento",$totales_segmento);		
+		$session->set("totales_categoria",$totales_categoria);	
+		$session->set("totales_horizontales_categoria",$totales_horizontales_categoria);	
+		$session->set("totales_verticales_categoria",$totales_verticales_categoria);	
+		$session->set("total",$total);	
 		
 		// Calcula el ancho máximo de la tabla	
 		$extension=count($head)*10-100;
