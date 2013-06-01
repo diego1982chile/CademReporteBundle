@@ -182,8 +182,7 @@ function construirTabla()
 			  fixedColumn();
 			},
 		"bDeferRender": true,
-		"bSortClasses": false,
-		"bInfo": true
+		"bSortClasses": false,		
 		// "sDom": "frtiS",
 	//	"sDom": '<"H"Cfr>t<"F"ip>',	
 	});
@@ -219,8 +218,7 @@ function fixedColumn()
 				if ( sGroup != sLastGroup )
 				{
               		var nGroup = document.createElement('tr');
-					// Se agrgega una columna correspondiente a la columna oculta
-					var nCells= new Array();   
+					// Se agrgega una columna correspondiente a la columna oculta					 
 					var nCell;
 					nCell = document.createElement( 'td' );						 
 					nCell.className = "group";																									
@@ -229,11 +227,11 @@ function fixedColumn()
 					
                     for(var j=0 ; j< cols ; ++j)
 					{
-						nCells[j] = document.createElement( 'td' );						 
-						nCells[j].className = "group";																				
+						nCell = document.createElement( 'td' );						 
+						nCell.className = "group";																				
 						// alert(matriz_totales[row][j]);
-						nCells[j].innerHTML = matriz_totales[row][j];																
-						nGroup.appendChild( nCells[j] );						 
+						nCell.innerHTML = matriz_totales[row][j];																
+						nGroup.appendChild( nCell );						 
 					}
 					++row;
                     nTrs[i].parentNode.insertBefore( nGroup, nTrs[i] );
@@ -257,6 +255,40 @@ function fixedColumn()
 					sLastGroup = sGroup;
 				}
 			}
+			
+			var nGroup = document.createElement('tr');
+			// Se agrgega una columna correspondiente a la columna oculta			
+			var nCell;
+			nCell = document.createElement( 'td' );						 
+			nCell.className = "group";																									
+			nCell.innerHTML = 0;															
+			nGroup.appendChild( nCell ); 				
+			
+			for(var j=0 ; j< cols ; ++j)
+			{
+				nCell = document.createElement( 'td' );						 
+				nCell.className = "group";																				
+				// alert(matriz_totales[row][j]);
+				nCell.innerHTML = matriz_totales[row][j];																
+				nGroup.appendChild( nCell );						 
+			}			
+			nTrs[0].parentNode.insertBefore( nGroup, nTrs[0] );
+			// Se crea atributo que asocie la fila de agregacion con sus filas hijas
+			var att=document.createAttribute("data-tt-id");
+			att.value="TOTALES";
+			// Se añade fila de agregacion para tabla principal
+			nTrs[0].previousSibling.setAttributeNode(att);				
+			
+			// /* Cell to insert into the frozen columns */
+			
+			nGroup = document.createElement( 'tr' );
+			nCell = document.createElement( 'td' );
+			nCell.className = "group tag";
+			nCell.innerHTML = "TOTAL GENERAL";
+			nGroup.appendChild( nCell );
+			// Se añade fila de agregacion para tabla fija
+			$(nGroup).insertBefore( $('tbody tr:eq(0)', left.body)[0] );
+			matriz_totales=[];			
 		}
 	});
 }
@@ -265,8 +297,7 @@ $(document).ready(function () {
 
 	var callbacks = $.Callbacks();
 
-	callbacks.add( calcularAnchoMaximo() );
-	alert(maxWidth);
+	callbacks.add( calcularAnchoMaximo() );	
 	callbacks.add( construirTabla() );
 	// callbacks.add( fixedColumn() );	
 		
