@@ -178,7 +178,7 @@ class EvolucionController extends Controller
 		array_push($head,'TOTAL');
 		
 		// Calcula el ancho máximo de la tabla	
-		$extension=count($head)*10-100;
+		$extension=count($head)*12-100;
 	
 		if($extension<0)
 			$extension=0;
@@ -416,7 +416,7 @@ class EvolucionController extends Controller
 		$session->set("evolucion_quiebre",$evolucion_quiebre);	
 		
 		// Calcula el ancho máximo de la tabla	
-		$extension=count($head)*10-100;
+		$extension=count($head)*15-100;
 	
 		if($extension<0)
 			$extension=0;

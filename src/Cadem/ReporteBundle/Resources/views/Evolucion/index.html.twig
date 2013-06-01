@@ -161,12 +161,12 @@ function construirTabla()
 		"bFilter": false,
 		"bSort": false,
 		"bInfo": false,
-		"bPaginate": true,
+		"bPaginate": false,
 		"bJQueryUI": true,
 		"bAutoWidth": true, 
 		"aoColumnDefs": [
 			{ "bVisible": false, "aTargets": [1] },	
-			{ "sClass": "tag", "aTargets": [0] }				
+			{ "sClass": "tag", "aTargets": [0], "sWidth": "12%" }				
 		],
 		"fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {	
 			// str.replace(/\\n/g, '<br />');
@@ -266,6 +266,7 @@ $(document).ready(function () {
 	var callbacks = $.Callbacks();
 
 	callbacks.add( calcularAnchoMaximo() );
+	alert(maxWidth);
 	callbacks.add( construirTabla() );
 	// callbacks.add( fixedColumn() );	
 		
