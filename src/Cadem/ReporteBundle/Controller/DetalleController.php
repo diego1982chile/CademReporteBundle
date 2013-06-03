@@ -330,7 +330,12 @@ class DetalleController extends Controller
 		$user = $this->getUser();
 		$em = $this->getDoctrine()->getManager();
 		$session=$this->get("session");			
-		$salas=$session->get("salas");									
+		$salas=$session->get("salas");		
+		$totales_producto=$session->get("totales_producto");		
+		$totales_segmento=$session->get("totales_segmento");	
+		$totales_horizontales_segmento=$session->get("totales_horizontales_segmento");	
+		$totales_verticales_segmento=$session->get("totales_verticales_segmento");	
+		$total=$session->get("total");			
 		$detalle_quiebre=$session->get("detalle_quiebre");		
 		
 		// CONSTRUIR EL CUERPO DE LA TABLA						
@@ -345,7 +350,7 @@ class DetalleController extends Controller
 		{
 			$nivel1=$detalle_quiebre[$cont_regs]['COD_PRODUCTO'];		
 			// Lleno la fila con vacios, le agrego 1 posiciones, correspondientes al total					
-			$fila=array_fill(0,$num_salas+3,"-");								
+			$fila=array_fill(0,$num_salas+3,"<div style='background:grey;height:1.6em'></div>");								
 			$nivel2=$detalle_quiebre[$cont_regs]['SEGMENTO'];																								
 			$cont_totales_producto=0;				
 		
@@ -358,26 +363,29 @@ class DetalleController extends Controller
 				{									
 					$fila[0]=$detalle_quiebre[$cont_regs]['NOM_PRODUCTO'];//.' ['.$detalle_quiebre[$cont_regs]['COD_PRODUCTO'].']';					
 					$fila[1]=$detalle_quiebre[$cont_regs]['SEGMENTO'];	
-					$fila[$columna_quiebre+2]=$detalle_quiebre[$cont_regs]['quiebre'];
-					
-					$total+=$detalle_quiebre[$cont_regs]['quiebre'];	
-					$cont_regs++;	
-					$cont_salas++;
+					switch($detalle_quiebre[$cont_regs]['quiebre'])
+					{
+						case '0':
+							$fila[$columna_quiebre+2]="<div style='background:green;height:1.6em'></div>";	
+							break;
+						case '1':
+							$fila[$columna_quiebre+2]="<div style='background:red;height:1.6em'></div>";	
+							break;
+					}																			
+					$cont_regs++;						
 				}	
 				else
-				{												
+				{ // Si el primer nivel de agregacion cambió, lo actualizo, agrego la fila al body y reseteo el contador de cadenas												
 					$fila[$num_salas+2]=round($totales_producto[$cont_totales_producto]['QUIEBRE']*100,1);					
-					$cont_totales_producto++;														
-					// Si el primer nivel de agregacion cambió, lo actualizo, agrego la fila al body y reseteo el contador de cadenas
+					$cont_totales_producto++;																			
 					$nivel1=$detalle_quiebre[$cont_regs]['COD_PRODUCTO'];
 					array_push($body,$fila);
-					$fila=array_fill(0,$num_salas+3,"-");	
+					$fila=array_fill(0,$num_salas+3,"<div style='background:grey;height:1.6em'></div>");	
 				}
 				if($cont_regs==$num_regs-1)		
 				{	
 					$fila[$num_salas+2]=round($totales_producto[$cont_totales_producto]['QUIEBRE']*100,1);					
-					$cont_totales_producto++;
-					$fila[$num_salas+2]=round($total/$cont_salas,1);					
+					$cont_totales_producto++;								
 					array_push($body,$fila);						
 				}			
 			}	
@@ -730,7 +738,6 @@ class DetalleController extends Controller
 		//CACHE
 		$response->setPrivate();
 		$response->setMaxAge(1);
-
 
 		return $response;
     }

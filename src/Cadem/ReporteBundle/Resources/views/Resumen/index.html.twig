@@ -265,6 +265,7 @@ function fixedColumn()
 				nCell.innerHTML = matriz_totales[row][j];																
 				nGroup.appendChild( nCell );						 
 			}						
+			
 			$(nGroup).insertBefore( $('tbody tr:eq('+(0)+')', right.body)[0] );
 			// Se crea atributo que asocie la fila de agregacion con sus filas hijas
 			var att=document.createAttribute("data-tt-id");
