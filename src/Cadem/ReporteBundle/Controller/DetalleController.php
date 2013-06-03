@@ -161,7 +161,7 @@ class DetalleController extends Controller
 		
 		$sql = "SELECT (case when q.hayquiebre = 1 then 1 else 0 END) as quiebre, ic.CODIGOITEM1 as COD_PRODUCTO,i.NOMBRE as NOM_PRODUCTO,ni.NOMBRE as SEGMENTO, sc.CODIGOSALA as COD_SALA, s.CALLE as CALLE_SALA, s.NUMEROCALLE as NUM_SALA, cad.NOMBRE as CAD_SALA, com.NOMBRE as COM_SALA FROM QUIEBRE q
 		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID
-		INNER JOIN MEDICION m on m.ID = p.MEDICION_ID and m.ID=6
+		INNER JOIN MEDICION m on m.ID = p.MEDICION_ID and m.ID={$id_ultima_medicion}
 		INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
 		INNER JOIN SALA s on s.ID = sc.SALA_ID
 		INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
@@ -174,6 +174,59 @@ class DetalleController extends Controller
 		ORDER BY SEGMENTO,NOM_PRODUCTO,CAD_SALA,COM_SALA,CALLE_SALA";
 		
 		$detalle_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();
+		
+		// Obtener totales horizontales por producto
+			
+		$sql =	"SELECT  i.NOMBRE, ni.NOMBRE, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
+				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$id_ultima_medicion}
+				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
+				INNER JOIN ITEM i on i.ID = ic.ITEM_ID
+				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID				
+				GROUP BY i.NOMBRE, ni.NOMBRE
+				ORDER BY ni.NOMBRE,i.NOMBRE";
+			
+		$totales_producto = $em->getConnection()->executeQuery($sql)->fetchAll();		
+
+		// Obtener totales verticales por segmento
+					
+		$sql =	"SELECT ni.NOMBRE as SEGMENTO, sc.CODIGOSALA as COD_SALA, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
+				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$id_ultima_medicion}
+				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
+				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
+				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
+				GROUP BY ni.NOMBRE, sc.CODIGOSALA
+				ORDER BY ni.NOMBRE";
+	
+		$totales_segmento = $em->getConnection()->executeQuery($sql)->fetchAll();		
+		
+		// Obtener totales horizontales por totales segmento (ultima columna de totales verticales por categoria)
+		
+		$sql =	"SELECT ni.NOMBRE as SEGMENTO, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
+				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$id_ultima_medicion}
+				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
+				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
+				GROUP BY ni.NOMBRE
+				ORDER BY ni.NOMBRE";
+			
+		$totales_horizontales_segmento = $em->getConnection()->executeQuery($sql)->fetchAll();	
+		
+		// Obtener totales verticales por totales categoria
+		
+		$sql = "SELECT sc.CODIGOSALA as COD_SALA, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
+				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$id_ultima_medicion}
+				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
+				GROUP BY sc.CODIGOSALA";
+		
+		$totales_verticales_segmento = $em->getConnection()->executeQuery($sql)->fetchAll();							
+		
+		// Obtener total horizontal por totales verticales por totales categoria
+		
+		$sql = "SELECT SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
+				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$id_ultima_medicion}";			
+
+		$total = $em->getConnection()->executeQuery($sql)->fetchAll();				
+
+		$total = $em->getConnection()->executeQuery($sql)->fetchAll();			
 				
 		// Variable para saber cuantos niveles de agregacion define el cliente, esto debe ser parametrizado en una etapa posterior
 		$niveles=2;										
@@ -219,7 +272,11 @@ class DetalleController extends Controller
 		// Guardamos resultado de consulta en variable de sesión para reusarlas en un action posterior
 		$session->set("salas",$salas);				
 		$session->set("detalle_quiebre",$detalle_quiebre);	
-		$session->set("offSet",0);	
+		$session->set("totales_producto",$totales_producto);		
+		$session->set("totales_segmento",$totales_segmento);		
+		$session->set("totales_horizontales_segmento",$totales_horizontales_segmento);	
+		$session->set("totales_verticales_segmento",$totales_verticales_segmento);	
+		$session->set("total",$total);	
 
 		// Calcula el ancho máximo de la tabla	
 		$extension=count($head)*18-100;
@@ -282,23 +339,15 @@ class DetalleController extends Controller
 		$cont_salas=0;
 		$cont_regs=0;
 		$num_salas=count($salas);			
-		$matriz_totales=array();	
-		
-		// // Parámetros de paginación
-		// if ( isset( $_GET['iDisplayStart'] ) && $_GET['iDisplayLength'] != '-1' )
-		// {			
-			// $offSet=$_GET['iDisplayStart'];
-			// $length=$_GET['iDisplayLength'];			
-		// }		
+		$matriz_totales=array();					
 	
 		if($num_regs>0)
 		{
 			$nivel1=$detalle_quiebre[$cont_regs]['COD_PRODUCTO'];		
 			// Lleno la fila con vacios, le agrego 1 posiciones, correspondientes al total					
-			$fila=array_fill(0,$num_salas+3,"-");	
-							
+			$fila=array_fill(0,$num_salas+3,"-");								
 			$nivel2=$detalle_quiebre[$cont_regs]['SEGMENTO'];																								
-			$total=0;					
+			$cont_totales_producto=0;				
 		
 			while($cont_regs<$num_regs)
 			{	// Lleno la fila con vacios, le agrego 3 posiciones, correspondientes a los niveles de agregación y al total	
@@ -316,10 +365,9 @@ class DetalleController extends Controller
 					$cont_salas++;
 				}	
 				else
-				{							
-					$fila[$num_salas+2]=round($total/$cont_salas,1);
-					$cont_salas=0;
-					$total=0;
+				{												
+					$fila[$num_salas+2]=round($totales_producto[$cont_totales_producto]['QUIEBRE']*100,1);					
+					$cont_totales_producto++;														
 					// Si el primer nivel de agregacion cambió, lo actualizo, agrego la fila al body y reseteo el contador de cadenas
 					$nivel1=$detalle_quiebre[$cont_regs]['COD_PRODUCTO'];
 					array_push($body,$fila);
@@ -327,103 +375,60 @@ class DetalleController extends Controller
 				}
 				if($cont_regs==$num_regs-1)		
 				{	
+					$fila[$num_salas+2]=round($totales_producto[$cont_totales_producto]['QUIEBRE']*100,1);					
+					$cont_totales_producto++;
 					$fila[$num_salas+2]=round($total/$cont_salas,1);					
 					array_push($body,$fila);						
 				}			
 			}	
-			// Calculo de totales			
-			$totales=array_fill(0,$num_salas+1,0);
-			$contadores=array_fill(0,$num_salas+1,0);
-			$nivel2=$detalle_quiebre[0]['SEGMENTO'];
-			$cont_fil=0;
-			$num_fil=count($body);
-			$cont=0;																	
-			
-			foreach($body as $objeto)
-			{									
-				$fila=$objeto;				
-				
-				if($nivel2!=$fila[1])			
-				{ // Si cambia el 2o nivel agrego totales del segmento actual a la matriz							
-					for($aux=0;$aux<count($totales);++$aux)								
-						$contadores[$aux]==0? $totales[$aux]='-':$totales[$aux]=round($totales[$aux]/$contadores[$aux],1);																						
-					$matriz_totales[$cont]=$totales;
-					$cont++;
-					$totales=array_fill(0,$num_salas+1,0);
-					$contadores=array_fill(0,$num_salas+1,0);
-					$nivel2=$fila[1];					
-				}	
-				$cont_col=0;				
-								
-				foreach(array_slice($fila,2) as $quiebre)
-				{											
-					if(strcmp($quiebre,"-")!=0)
-					{						
-						$contadores[$cont_col]++;					
-						$totales[$cont_col]+=$quiebre;
-						switch($quiebre)
-						{
-							case '0':
-								$body[$cont_fil][$cont_col+2]="<div style='background:green;height:1.6em'></div>";	
-								break;
-							case '1':
-								$body[$cont_fil][$cont_col+2]="<div style='background:red;height:1.6em'></div>";	
-								break;
-						}
-					}
-					else
-					{
-						$body[$cont_fil][$cont_col+2]="<div style='background:grey;height:1.6em'></div>";	
-					}					
-					$cont_col++;
-				}		
-				if($cont_fil==$num_fil-1)		
+			// Calculo de totales		
+			$fila=array_fill(0,$num_salas+1,"-");	
+			$num_regs=count($totales_segmento);
+			$cont_regs=0;														
+			$nivel2=$totales_segmento[$cont_regs]['SEGMENTO'];	
+			$cont_totales_horizontales_segmento=0;	
+
+			while($cont_regs<$num_regs)
+			{
+				$columna_quiebre=array_search($totales_segmento[$cont_regs]['COD_SALA'],$salas);					
+				// Mientras no cambie el segmento
+				if($nivel2==$totales_segmento[$cont_regs]['SEGMENTO'])
+				{
+					$fila[$columna_quiebre]=round($totales_segmento[$cont_regs]['QUIEBRE']*100,1);					
+					$cont_regs++;
+				}
+				else
+				{
+					$fila[$num_salas]=round($totales_horizontales_segmento[$cont_totales_horizontales_segmento]['QUIEBRE']*100,1);
+					$cont_totales_horizontales_segmento++;
+					array_push($matriz_totales,$fila);
+					$fila=array_fill(0,$num_salas+1,"-");
+					$nivel2=$totales_segmento[$cont_regs]['SEGMENTO'];					
+				}
+				if($cont_regs==$num_regs-1)		
 				{	
-					for($aux=0;$aux<count($totales);++$aux)								
-						$contadores[$aux]==0? $totales[$aux]='-':$totales[$aux]=round($totales[$aux]/$contadores[$aux],1);																						
-					$matriz_totales[$cont]=$totales;
-					$cont++;
-					$totales=array_fill(0,$num_salas+1,0);
-					$contadores=array_fill(0,$num_salas+1,0);
-					$nivel2=$fila[1];						
-				}					
-				$cont_fil++;
-			}					
-		}
-		
-		// $aaData= array();
-		
-		// // print_r($body);						
-		
-		// $offSet=$session->get("offSet");	
-		
-		// $contRegs=$offSet;
-		// $numRegs=$offSet+$length;		
+					$fila[$num_salas]=round($totales_horizontales_segmento[$cont_totales_horizontales_segmento]['QUIEBRE']*100,1);
+					array_push($matriz_totales,(object)$fila);		
+					$cont_regs++;					
+				}				
+			}
+
+			$cont_regs=0;
+			$num_regs=count($totales_verticales_segmento);
+			$fila=array_fill(0,$num_salas+1,"-");				
 			
-		// $nivel1=$body[$contRegs][1];
-		// // echo "nivel1=".$nivel1;				
-		
-		// while($contRegs<=$numRegs)
-		// {
-			// // mientras no cambie de segmento mantenemos el flag levantado
-			// if($nivel1==$body[$contRegs][1])
-			// {
-				// array_push($aaData,$body[$contRegs]);				
-			// }
-			// // Si cambia de segmento bajamos el flag
-			// else
-			// {
-				// array_push($aaData,$body[$contRegs]);				
-				// if($contRegs>$numRegs)
-					// break;
-				// $nivel1=$body[$contRegs][1];				
-			// }			
-			// ++$contRegs;
-		// }
-		
-		// print_r($aaData);
-		
-		// $session->set("offSet",$contRegs);	
+			while($cont_regs<$num_regs)
+			{
+				$columna_quiebre=array_search($totales_verticales_segmento[$cont_regs]['COD_SALA'],$salas);					
+				// Mientras no cambie la cadena  
+				$fila[$columna_quiebre]=round($totales_verticales_segmento[$cont_regs]['QUIEBRE']*100,1);					
+				$cont_regs++;
+			}	
+			
+			$fila[$num_salas]=round($total[0]['QUIEBRE']*100,1);			
+			
+			array_push($matriz_totales,$fila);				
+		}				
 		/*
 		 * Output
 		 */
@@ -470,6 +475,57 @@ class DetalleController extends Controller
 				ORDER BY SEGMENTO,NOM_PRODUCTO,CAD_SALA,COM_SALA,CALLE_SALA";																		
 				
 		$detalle_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();	
+		
+		// Obtener totales horizontales por producto
+			
+		$sql =	"SELECT  i.NOMBRE, ni.NOMBRE, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
+				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$medicion}
+				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
+				INNER JOIN ITEM i on i.ID = ic.ITEM_ID
+				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID				
+				GROUP BY i.NOMBRE, ni.NOMBRE
+				ORDER BY ni.NOMBRE,i.NOMBRE";
+			
+		$totales_producto = $em->getConnection()->executeQuery($sql)->fetchAll();		
+
+		// Obtener totales verticales por segmento
+					
+		$sql =	"SELECT ni.NOMBRE as SEGMENTO, sc.CODIGOSALA as COD_SALA, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
+				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$medicion}
+				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
+				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
+				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
+				GROUP BY ni.NOMBRE, sc.CODIGOSALA
+				ORDER BY ni.NOMBRE";
+	
+		$totales_segmento = $em->getConnection()->executeQuery($sql)->fetchAll();
+		
+		// Obtener totales horizontales por totales segmento (ultima columna de totales verticales por categoria)
+		
+		$sql =	"SELECT ni.NOMBRE as SEGMENTO, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
+				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID =6
+				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
+				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
+				GROUP BY ni.NOMBRE
+				ORDER BY ni.NOMBRE";				
+			
+		$totales_horizontales_segmento = $em->getConnection()->executeQuery($sql)->fetchAll();	
+		
+		// Obtener totales verticales por totales categoria
+		
+		$sql = "SELECT sc.CODIGOSALA as COD_SALA, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
+				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$medicion}
+				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
+				GROUP BY sc.CODIGOSALA";
+		
+		$totales_verticales_segmento = $em->getConnection()->executeQuery($sql)->fetchAll();							
+		
+		// Obtener total horizontal por totales verticales por totales categoria
+		
+		$sql = "SELECT SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
+				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$medicion}";			
+
+		$total = $em->getConnection()->executeQuery($sql)->fetchAll();		
 				
 		// Variable para saber cuantos niveles de agregacion define el cliente, esto debe ser parametrizado en una etapa posterior
 		$niveles=2;												
@@ -518,7 +574,12 @@ class DetalleController extends Controller
 		
 		// Guardamos resultado de consulta en variable de sesión para reusarlas en un action posterior
 		$session->set("salas",$salas);		
-		$session->set("detalle_quiebre",$detalle_quiebre);			
+		$session->set("detalle_quiebre",$detalle_quiebre);	
+		$session->set("totales_producto",$totales_producto);		
+		$session->set("totales_segmento",$totales_segmento);			
+		$session->set("totales_horizontales_segmento",$totales_horizontales_segmento);	
+		$session->set("totales_verticales_segmento",$totales_verticales_segmento);	
+		$session->set("total",$total);		
 		// Calcula el ancho máximo de la tabla	
 		$extension=count($head)*20-100;
 	
