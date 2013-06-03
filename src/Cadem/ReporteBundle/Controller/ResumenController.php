@@ -524,8 +524,7 @@ class ResumenController extends Controller
 			// Calculo de totales
 			$fila=array_fill(0,$num_cads+1,"-");	
 			$num_regs=count($totales_categoria);
-			$cont_regs=0;
-			$total=0;												
+			$cont_regs=0;														
 			$nivel2=$totales_categoria[$cont_regs]['CATEGORIA'];	
 			$cont_totales_horizontales_categoria=0;						
 			
@@ -566,7 +565,7 @@ class ResumenController extends Controller
 				$cont_regs++;
 			}	
 			
-			$fila[$num_cads+1]=round($total[0]['QUIEBRE']*100,1);
+			$fila[$num_cads]=round($total[0]['QUIEBRE']*100,1);
 			
 			// print_r($fila);
 			
