@@ -14,6 +14,7 @@ class EvolucionController extends Controller
     
 	public function indexAction()
     {
+		
 		$session = $this->get("session");
 	
 		$user = $this->getUser();
@@ -131,16 +132,25 @@ class EvolucionController extends Controller
 		$sql = "SELECT (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre, i.NOMBRE as PRODUCTO,  ni.NOMBRE as SEGMENTO, m.NOMBRE, m.FECHAINICIO FROM QUIEBRE q
 				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID
 				INNER JOIN MEDICION m on m.ID = p.MEDICION_ID AND m.ID IN (SELECT TOP(12) m2.ID FROM MEDICION m2 WHERE m2.ID = p.MEDICION_ID ORDER BY m2.FECHAINICIO ASC)
-				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
+				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
 				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
 				INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
-				INNER JOIN USUARIO u on u.cliente_id=c.id and u.id=".$user->getId()."
 				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
 				INNER JOIN ITEM i on i.ID = ic.ITEM_ID
 				GROUP BY  ni.NOMBRE,i.NOMBRE,m.NOMBRE,m.FECHAINICIO
-				ORDER BY ni.NOMBRE,i.NOMBRE";							
+				ORDER BY ni.NOMBRE,i.NOMBRE";
 		
-		$evolucion_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();
+		$sha1 = sha1($sql);
+
+		if(!$session->has($sha1)){
+			$evolucion_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();
+			$session->set($sha1,$evolucion_quiebre);
+		}
+		else $evolucion_quiebre = $session->get($sha1);
+		
+		
+
+		
 		$niveles=2;
 				
 		$head=array();
@@ -176,6 +186,8 @@ class EvolucionController extends Controller
 		}
 
 		array_push($head,'TOTAL');
+
+
 		
 		// Obtener totales horizontales por producto
 			
@@ -187,10 +199,19 @@ class EvolucionController extends Controller
 		GROUP BY i.NOMBRE, ni.NOMBRE
 		ORDER BY ni.NOMBRE,i.NOMBRE";
 			
-		$totales_producto = $em->getConnection()->executeQuery($sql)->fetchAll();		
+		
+		$sha1 = sha1($sql);
+
+		if(!$session->has($sha1)){
+			$totales_producto = $em->getConnection()->executeQuery($sql)->fetchAll();
+			$session->set($sha1,$totales_producto);
+		}
+		else $totales_producto = $session->get($sha1);
+
+		
 
 		// Obtener totales verticales por segmento
-					
+		
 		$sql =	"SELECT ni.NOMBRE as SEGMENTO, m.FECHAINICIO, m.NOMBRE as MEDICION, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
 		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID IN (SELECT TOP(12) m2.ID FROM MEDICION m2 WHERE m2.ID = p.MEDICION_ID ORDER BY m2.FECHAINICIO ASC)
 		INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
@@ -199,8 +220,16 @@ class EvolucionController extends Controller
 		GROUP BY ni.NOMBRE, m.FECHAINICIO, m.NOMBRE
 		ORDER BY ni.NOMBRE";
 	
-		$totales_segmento = $em->getConnection()->executeQuery($sql)->fetchAll();
 		
+		$sha1 = sha1($sql);
+
+		if(!$session->has($sha1)){
+			$totales_segmento = $em->getConnection()->executeQuery($sql)->fetchAll();
+			$session->set($sha1,$totales_segmento);
+		}
+		else $totales_segmento = $session->get($sha1);
+		
+
 		// Obtener totales horizontales por totales segmento (ultima columna de totales verticales por categoria)
 		
 		$sql =	"SELECT ni.NOMBRE as SEGMENTO, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
@@ -212,6 +241,8 @@ class EvolucionController extends Controller
 			
 		$totales_horizontales_segmento = $em->getConnection()->executeQuery($sql)->fetchAll();	
 		
+		
+
 		// Obtener totales verticales por totales categoria
 		
 		$sql = "SELECT  m.FECHAINICIO, m.NOMBRE as MEDICION, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
@@ -220,7 +251,16 @@ class EvolucionController extends Controller
 		GROUP BY m.FECHAINICIO, m.NOMBRE
 		ORDER BY FECHAINICIO";
 		
-		$totales_verticales_segmento = $em->getConnection()->executeQuery($sql)->fetchAll();							
+		
+		$sha1 = sha1($sql);
+
+		if(!$session->has($sha1)){
+			$totales_verticales_segmento = $em->getConnection()->executeQuery($sql)->fetchAll();
+			$session->set($sha1,$totales_verticales_segmento);
+		}
+		else $totales_verticales_segmento = $session->get($sha1);
+
+		
 		
 		// Obtener total horizontal por totales verticales por totales categoria
 		
@@ -229,6 +269,9 @@ class EvolucionController extends Controller
 
 		$total = $em->getConnection()->executeQuery($sql)->fetchAll();					
 		
+
+		
+
 		// Calcula el ancho máximo de la tabla	
 		$extension=count($head)*12-100;
 	
@@ -244,7 +287,9 @@ class EvolucionController extends Controller
 		$session->set("totales_segmento",$totales_segmento);	
 		$session->set("totales_horizontales_segmento",$totales_horizontales_segmento);	
 		$session->set("totales_verticales_segmento",$totales_verticales_segmento);	
-		$session->set("total",$total);		
+		$session->set("total",$total);
+
+		
 				
 		//RESPONSE
 		$response = $this->render('CademReporteBundle:Evolucion:index.html.twig',
@@ -266,7 +311,7 @@ class EvolucionController extends Controller
 		//CACHE
 		$response->setPrivate();
 		$response->setMaxAge(1);
-
+		
 		return $response;
     }
 	
@@ -418,17 +463,22 @@ class EvolucionController extends Controller
 		$sql = "SELECT (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre, i.NOMBRE as PRODUCTO,  ni.NOMBRE as SEGMENTO, m.NOMBRE, m.FECHAINICIO FROM QUIEBRE q
 				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID
 				INNER JOIN MEDICION m on m.ID = p.MEDICION_ID AND m.ID IN (SELECT TOP(12) m2.ID FROM MEDICION m2 WHERE m2.ID = p.MEDICION_ID ORDER BY m2.FECHAINICIO ASC)
-				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
+				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
 				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )
 				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
 				INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
-				INNER JOIN USUARIO u on u.cliente_id=c.id and u.id=".$user->getId()."
 				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
 				INNER JOIN ITEM i on i.ID = ic.ITEM_ID
 				GROUP BY  ni.NOMBRE,i.NOMBRE,m.NOMBRE,m.FECHAINICIO
 				ORDER BY ni.NOMBRE,i.NOMBRE";			
 				
-		$evolucion_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();						
+		
+		$sha1 = sha1($sql);
+		if(!$session->has($sha1)){
+			$evolucion_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();
+			$session->set($sha1,$evolucion_quiebre);
+		}
+		else $evolucion_quiebre = $session->get($sha1);
 		
 		// Variable para saber cuantos niveles de agregacion define el cliente, esto debe ser parametrizado en una etapa posterior
 		$niveles=2;										
@@ -480,7 +530,14 @@ class EvolucionController extends Controller
 		GROUP BY i.NOMBRE, ni.NOMBRE
 		ORDER BY ni.NOMBRE,i.NOMBRE";
 			
-		$totales_producto = $em->getConnection()->executeQuery($sql)->fetchAll();		
+		
+
+		$sha1 = sha1($sql);
+		if(!$session->has($sha1)){
+			$totales_producto = $em->getConnection()->executeQuery($sql)->fetchAll();
+			$session->set($sha1,$totales_producto);
+		}
+		else $totales_producto = $session->get($sha1);
 
 		// Obtener totales verticales por segmento
 					
@@ -492,7 +549,12 @@ class EvolucionController extends Controller
 		GROUP BY ni.NOMBRE, m.FECHAINICIO, m.NOMBRE
 		ORDER BY ni.NOMBRE";
 	
-		$totales_segmento = $em->getConnection()->executeQuery($sql)->fetchAll();
+		$sha1 = sha1($sql);
+		if(!$session->has($sha1)){
+			$totales_segmento = $em->getConnection()->executeQuery($sql)->fetchAll();
+			$session->set($sha1,$totales_segmento);
+		}
+		else $totales_segmento = $session->get($sha1);
 		
 		// Obtener totales horizontales por totales segmento (ultima columna de totales verticales por categoria)
 		
@@ -503,7 +565,13 @@ class EvolucionController extends Controller
 		GROUP BY ni.NOMBRE
 		ORDER BY ni.NOMBRE";
 			
-		$totales_horizontales_segmento = $em->getConnection()->executeQuery($sql)->fetchAll();	
+		
+		$sha1 = sha1($sql);
+		if(!$session->has($sha1)){
+			$totales_horizontales_segmento = $em->getConnection()->executeQuery($sql)->fetchAll();
+			$session->set($sha1,$totales_horizontales_segmento);
+		}
+		else $totales_horizontales_segmento = $session->get($sha1);
 		
 		// Obtener totales verticales por totales categoria
 		
@@ -513,7 +581,13 @@ class EvolucionController extends Controller
 		GROUP BY m.FECHAINICIO, m.NOMBRE
 		ORDER BY FECHAINICIO";
 		
-		$totales_verticales_segmento = $em->getConnection()->executeQuery($sql)->fetchAll();							
+		
+		$sha1 = sha1($sql);
+		if(!$session->has($sha1)){
+			$totales_verticales_segmento = $em->getConnection()->executeQuery($sql)->fetchAll();
+			$session->set($sha1,$totales_verticales_segmento);
+		}
+		else $totales_verticales_segmento = $session->get($sha1);					
 		
 		// Obtener total horizontal por totales verticales por totales categoria
 		
