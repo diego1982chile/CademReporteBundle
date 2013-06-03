@@ -146,8 +146,7 @@ function construirTabla()
 					"url": sSource, 
 					"data": aoData, 
 					"success": function(data){//QUE PASA SI FALLA?														
-								matriz_totales=data.matriz_totales;	
-								maxWidth=parseInt(data.max_width);								
+								matriz_totales=data.matriz_totales;																
 								fnCallback(data);
 								DatosAdicionales = [];//AL FINAL SE BORRAN
 							}
@@ -251,7 +250,40 @@ function fixedColumn()
 					sLastGroup = sGroup;
 				}
 			}
-			// matriz_totales=[];
+			var nGroup = document.createElement('tr');
+			// Se agrgega una columna correspondiente a la columna oculta
+			var nCells= new Array();   
+			var nCell;
+			nCell = document.createElement( 'td' );						 
+			nCell.className = "group";																									
+			nCell.innerHTML = 0;															
+			nGroup.appendChild( nCell ); 					
+			
+			for(var j=0 ; j< cols ; ++j)
+			{
+				nCells[j] = document.createElement( 'td' );						 
+				nCells[j].className = "group";																				
+				// alert(matriz_totales[row][j]);
+				nCells[j].innerHTML = matriz_totales[row][j];																
+				nGroup.appendChild( nCells[j] );						 
+			}			
+			nTrs[0].parentNode.insertBefore( nGroup, nTrs[0] );
+			// Se crea atributo que asocie la fila de agregacion con sus filas hijas
+			var att=document.createAttribute("data-tt-id");
+			att.value="TOTALES";
+			// Se añade fila de agregacion para tabla principal
+			nTrs[0].previousSibling.setAttributeNode(att);				
+			
+			// /* Cell to insert into the frozen columns */
+			
+			nGroup = document.createElement( 'tr' );
+			nCell = document.createElement( 'td' );
+			nCell.className = "group tag";
+			nCell.innerHTML = "TOTAL GENERAL";
+			nGroup.appendChild( nCell );
+			// Se añade fila de agregacion para tabla fija
+			$(nGroup).insertBefore( $('tbody tr:eq(0)', left.body)[0] );
+			matriz_totales=[];
 		}
 	});
 }

@@ -153,7 +153,10 @@ class DetalleController extends Controller
 				'data' => array_keys($choices_comunas)
 			))
 			->getForm();
-				
+		
+		//ULTIMA MEDICION
+		$id_ultima_medicion = $this->get('cadem_reporte.helper.medicion')->getIdUltimaMedicion();
+		
 		//CONSULTA
 		
 		$sql = "SELECT (case when q.hayquiebre = 1 then 1 else 0 END) as quiebre, ic.CODIGOITEM1 as COD_PRODUCTO,i.NOMBRE as NOM_PRODUCTO,ni.NOMBRE as SEGMENTO, sc.CODIGOSALA as COD_SALA, s.CALLE as CALLE_SALA, s.NUMEROCALLE as NUM_SALA, cad.NOMBRE as CAD_SALA, com.NOMBRE as COM_SALA FROM QUIEBRE q
@@ -215,17 +218,16 @@ class DetalleController extends Controller
 		
 		// Guardamos resultado de consulta en variable de sesión para reusarlas en un action posterior
 		$session->set("salas",$salas);				
-		$session->set("detalle_quiebre",$detalle_quiebre);		
+		$session->set("detalle_quiebre",$detalle_quiebre);	
+		$session->set("offSet",0);	
 
 		// Calcula el ancho máximo de la tabla	
-		$extension=count($head)*15-100;
+		$extension=count($head)*18-100;
 	
 		if($extension<0)
 			$extension=0;
 			
-		$max_width=100+$extension;		
-
-		echo "max_width=".$max_width;
+		$max_width=100+$extension;				
 		
 		//RESPONSE
 		$response = $this->render('CademReporteBundle:Detalle:index.html.twig',
@@ -272,7 +274,7 @@ class DetalleController extends Controller
 		$em = $this->getDoctrine()->getManager();
 		$session=$this->get("session");			
 		$salas=$session->get("salas");									
-		$detalle_quiebre=$session->get("detalle_quiebre");
+		$detalle_quiebre=$session->get("detalle_quiebre");		
 		
 		// CONSTRUIR EL CUERPO DE LA TABLA						
 		$body=array();									
@@ -280,12 +282,19 @@ class DetalleController extends Controller
 		$cont_salas=0;
 		$cont_regs=0;
 		$num_salas=count($salas);			
-		$matriz_totales=array();		
+		$matriz_totales=array();	
+		
+		// // Parámetros de paginación
+		// if ( isset( $_GET['iDisplayStart'] ) && $_GET['iDisplayLength'] != '-1' )
+		// {			
+			// $offSet=$_GET['iDisplayStart'];
+			// $length=$_GET['iDisplayLength'];			
+		// }		
 	
 		if($num_regs>0)
 		{
 			$nivel1=$detalle_quiebre[$cont_regs]['COD_PRODUCTO'];		
-			// Lleno la fila con vacios, le agrego 1 posiciones, correspondientes al total		
+			// Lleno la fila con vacios, le agrego 1 posiciones, correspondientes al total					
 			$fila=array_fill(0,$num_salas+3,"-");	
 							
 			$nivel2=$detalle_quiebre[$cont_regs]['SEGMENTO'];																								
@@ -298,7 +307,7 @@ class DetalleController extends Controller
 				// Mientras el primer nivel de agregación no cambie			
 				if($nivel1==$detalle_quiebre[$cont_regs]['COD_PRODUCTO'])
 				{									
-					$fila[0]=$detalle_quiebre[$cont_regs]['NOM_PRODUCTO'].' ['.$detalle_quiebre[$cont_regs]['COD_PRODUCTO'].']';					
+					$fila[0]=$detalle_quiebre[$cont_regs]['NOM_PRODUCTO'];//.' ['.$detalle_quiebre[$cont_regs]['COD_PRODUCTO'].']';					
 					$fila[1]=$detalle_quiebre[$cont_regs]['SEGMENTO'];	
 					$fila[$columna_quiebre+2]=$detalle_quiebre[$cont_regs]['quiebre'];
 					
@@ -328,7 +337,7 @@ class DetalleController extends Controller
 			$nivel2=$detalle_quiebre[0]['SEGMENTO'];
 			$cont_fil=0;
 			$num_fil=count($body);
-			$cont=0;						
+			$cont=0;																	
 			
 			foreach($body as $objeto)
 			{									
@@ -381,14 +390,48 @@ class DetalleController extends Controller
 				$cont_fil++;
 			}					
 		}
+		
+		// $aaData= array();
+		
+		// // print_r($body);						
+		
+		// $offSet=$session->get("offSet");	
+		
+		// $contRegs=$offSet;
+		// $numRegs=$offSet+$length;		
+			
+		// $nivel1=$body[$contRegs][1];
+		// // echo "nivel1=".$nivel1;				
+		
+		// while($contRegs<=$numRegs)
+		// {
+			// // mientras no cambie de segmento mantenemos el flag levantado
+			// if($nivel1==$body[$contRegs][1])
+			// {
+				// array_push($aaData,$body[$contRegs]);				
+			// }
+			// // Si cambia de segmento bajamos el flag
+			// else
+			// {
+				// array_push($aaData,$body[$contRegs]);				
+				// if($contRegs>$numRegs)
+					// break;
+				// $nivel1=$body[$contRegs][1];				
+			// }			
+			// ++$contRegs;
+		// }
+		
+		// print_r($aaData);
+		
+		// $session->set("offSet",$contRegs);	
 		/*
 		 * Output
 		 */
 		// $session->close();
 		$output = array(
 			"sEcho" => intval($_GET['sEcho']),
-			"iTotalRecords" => $num_regs,
-			"iTotalDisplayRecords" => $num_regs,
+			"iTotalRecords" => count($detalle_quiebre),
+			"iTotalDisplayRecords" => count($body),
 			"aaData" => $body,
 			"matriz_totales" => $matriz_totales
 		);		
@@ -426,11 +469,11 @@ class DetalleController extends Controller
 				INNER JOIN ITEM i on i.ID = ic.ITEM_ID	
 				ORDER BY SEGMENTO,NOM_PRODUCTO,CAD_SALA,COM_SALA,CALLE_SALA";																		
 				
-		$detalle_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();						
-		
-		// Variable para saber cuantos niveles de agregacion define el cliente, esto debe ser parametrizado en una etapa posterior
-		$niveles=2;										
+		$detalle_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();	
 				
+		// Variable para saber cuantos niveles de agregacion define el cliente, esto debe ser parametrizado en una etapa posterior
+		$niveles=2;												
+						
 		$head=array();
 		$salas=array();		
 		$salas_aux=array();		
@@ -475,10 +518,9 @@ class DetalleController extends Controller
 		
 		// Guardamos resultado de consulta en variable de sesión para reusarlas en un action posterior
 		$session->set("salas",$salas);		
-		$session->set("detalle_quiebre",$detalle_quiebre);	
-		
+		$session->set("detalle_quiebre",$detalle_quiebre);			
 		// Calcula el ancho máximo de la tabla	
-		$extension=count($head)*10-100;
+		$extension=count($head)*20-100;
 	
 		if($extension<0)
 			$extension=0;

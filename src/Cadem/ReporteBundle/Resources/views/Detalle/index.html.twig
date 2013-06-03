@@ -144,7 +144,8 @@ function construirTabla()
 					"url": sSource, 
 					"data": aoData, 
 					"success": function(data){//QUE PASA SI FALLA?									
-								matriz_totales=data.matriz_totales;										;																
+								matriz_totales=data.matriz_totales;	
+								maxWidth=parseInt(data.max_width);																							
 								// alert(JSON.stringify(matriz_totales));
 								fnCallback(data);
 								DatosAdicionales = [];//AL FINAL SE BORRAN
@@ -159,24 +160,35 @@ function construirTabla()
 			"bFilter": false,
 			"bSort": false,
 			"bInfo": false,
-			"bPaginate": false,
+			"bPaginate": false,			
 			"bJQueryUI": true,
 			"bAutoWidth": false, 
+			// "bScrollInfinite": true,
 			"aoColumnDefs": [
 				{ "bVisible": false, "aTargets": [1] },
-				{ "sWidth": "1%",  "sClass": "tag", "aTargets": [0] }							
+				{ "sWidth": "1.2%",  "sClass": "tag", "aTargets": [0] }							
 			],
 			"aaSortingFixed": [[ 1, 'asc' ]],
+			"sPaginationType": "full_numbers",
+			// "sDom": '<"top"i>rt<"bottom"flp><"clear">',
 			//"sDom": 'T<"clear">lfrtip',		
 			// "sDom": '<"H"Cfr>t<"F"ip>',	
 			// "sDom": "frtiS",
+			"fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {	
+						// str.replace(/\\n/g, '<br />');
+						if(aData[0].length>40)
+							$(nRow).children(':eq(0)').text(aData[0].substring(0,40).replace(/ /g,'_')+'...');
+						else
+							$(nRow).children(':eq(0)').text(aData[0].replace(/ /g,'_'));
+						// $(nRow).children(':eq(0)').text(aData[0].replace(/ /g,''));		  
+						$(nRow).attr('title',aData[0]);		  
+					},						
 			"fnInitComplete": function() {
 					fixedColumn();
 					// $(window).resize(function(){								
 						// oTable.fnAdjustColumnSizing();
 					// });				  
-				},
-			"bInfo": true				
+				},					
 		});
 		 $('div.fg-toolbar:first').append("<h5 style='float:left;margin:0em'>Tabla Resumen Quiebre: (%) de Quiebre Categoria/Cadena</h5>");		
 		});	
@@ -252,8 +264,7 @@ function fixedColumn()
 
 $(document).ready(function () {
 	
-	var callbacks = $.Callbacks();
-	alert(maxWidth);
+	var callbacks = $.Callbacks();	
 	callbacks.add( calcularAnchoMaximo() );
 	callbacks.add( construirTabla() );
 	// callbacks.add( fixedColumn() );	
@@ -358,13 +369,16 @@ $(document).ready(function () {
 	
 	function recargarTabla()
 	{		
-		$.get("{{ path('detalle_header') }}",DatosAdicionales,function(data){
+		$.get("{{ path('detalle_header') }}",DatosAdicionales,function(data){			
 			maxWidth=parseInt(data.max_width);
+			alert(maxWidth);
 			// Primero destruimos la tabla si existe (la removemos del DOM)	
 			var ex = document.getElementById('tabla_resumen');
 			if ( $.fn.DataTable.fnIsDataTable( ex ) ) {
 			  oTable.fnDestroy(true);
 			}			
+			// Luego recalculamos el ancho maximo en base a la cardinalidad del head
+			calcularAnchoMaximo();	
 			// Luego generamos el html de la tabla y lo añadimos al DOM
 			var table= document.createElement( 'table' );
 			var thead= document.createElement( 'thead' );
@@ -374,17 +388,15 @@ $(document).ready(function () {
 			var att=document.createAttribute("class");
 			att.value="tabla_resumen table table-bordered display";					
 			table.setAttributeNode(att);			
-			var tableHead = document.createElement( 'tr' );	 //tableheader 		
-			console.log(data);
-			// $(data.head).each(function(key,value){	
-				// alert(value['cod_sala']+','+value['nom_sala']);
-			// });			
+			var tableHead = document.createElement( 'tr' );	 //tableheader 					
+			var cols=data.head.length-1;
 			$(data.head).each(function(key,value){				
-				var tableHeading = document.createElement( 'th' );							
+				var tableHeading = document.createElement( 'th' );											
 				switch(key)
 				{
-					case '0':
-					case '1':
+					case 0:
+					case 1:
+					case cols:
 						tableHeading.innerHTML = value;
 						var att=document.createAttribute("rowspan");
 						att.value=2;					
@@ -397,25 +409,24 @@ $(document).ready(function () {
 				tableHead.appendChild( tableHeading );				
 			});	
 			thead.appendChild( tableHead );
-			tableHead = document.createElement( 'tr' );	 //tableheader 	
-			$(data.head).each(function(key,value){
-				var tableHeading = document.createElement( 'th' );								
+			tableHead = document.createElement( 'tr' );	 //tableheader 				
+			$(data.head).each(function(key,value){										
 				switch(key)
 				{
-					case '0':
-					case '1':					
+					case 0:
+					case 1:			
+					case cols:
 						break;					
-					default:
-						tableHeading.innerHTML = value['nom_sala'];
+					default: 		
+						var tableHeading = document.createElement( 'th' );						
+						tableHeading.innerHTML = value['nom_sala'].substring(0,49).replace(/ /g,'_');
+						tableHead.appendChild( tableHeading );	
 						break;						
-				}												
-				tableHead.appendChild( tableHeading );				
+				}																		
 			});							
 			thead.appendChild( tableHead );
 			table.appendChild( thead );				
-			document.getElementById('container').appendChild(table);			
-			// Luego recalculamos el ancho maximo en base a la cardinalidad del head
-			calcularAnchoMaximo();			
+			document.getElementById('container').appendChild(table);								
 			// Luego volvemos a construir la tabla con dataTables
 			construirTabla();
 		},"json")

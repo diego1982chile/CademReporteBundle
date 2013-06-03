@@ -177,6 +177,58 @@ class EvolucionController extends Controller
 
 		array_push($head,'TOTAL');
 		
+		// Obtener totales horizontales por producto
+			
+		$sql =	"SELECT i.NOMBRE, ni.NOMBRE, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
+		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID IN (SELECT TOP(12) m2.ID FROM MEDICION m2 WHERE m2.ID = p.MEDICION_ID ORDER BY m2.FECHAINICIO ASC)
+		INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
+		INNER JOIN ITEM i on i.ID = ic.ITEM_ID
+		INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
+		GROUP BY i.NOMBRE, ni.NOMBRE
+		ORDER BY ni.NOMBRE,i.NOMBRE";
+			
+		$totales_producto = $em->getConnection()->executeQuery($sql)->fetchAll();		
+
+		// Obtener totales verticales por segmento
+					
+		$sql =	"SELECT ni.NOMBRE as SEGMENTO, m.FECHAINICIO, m.NOMBRE as MEDICION, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
+		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID IN (SELECT TOP(12) m2.ID FROM MEDICION m2 WHERE m2.ID = p.MEDICION_ID ORDER BY m2.FECHAINICIO ASC)
+		INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
+		INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
+		INNER JOIN MEDICION m on m.ID = p.MEDICION_ID
+		GROUP BY ni.NOMBRE, m.FECHAINICIO, m.NOMBRE
+		ORDER BY ni.NOMBRE";
+	
+		$totales_segmento = $em->getConnection()->executeQuery($sql)->fetchAll();
+		
+		// Obtener totales horizontales por totales segmento (ultima columna de totales verticales por categoria)
+		
+		$sql =	"SELECT ni.NOMBRE as SEGMENTO, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
+		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID IN (SELECT TOP(12) m2.ID FROM MEDICION m2 WHERE m2.ID = p.MEDICION_ID ORDER BY m2.FECHAINICIO ASC)
+		INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
+		INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
+		GROUP BY ni.NOMBRE
+		ORDER BY ni.NOMBRE";
+			
+		$totales_horizontales_segmento = $em->getConnection()->executeQuery($sql)->fetchAll();	
+		
+		// Obtener totales verticales por totales categoria
+		
+		$sql = "SELECT  m.FECHAINICIO, m.NOMBRE as MEDICION, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
+		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID IN (SELECT TOP(12) m2.ID FROM MEDICION m2 WHERE m2.ID = p.MEDICION_ID ORDER BY m2.FECHAINICIO ASC)	
+		INNER JOIN MEDICION m on m.ID = p.MEDICION_ID
+		GROUP BY m.FECHAINICIO, m.NOMBRE
+		ORDER BY FECHAINICIO";
+		
+		$totales_verticales_segmento = $em->getConnection()->executeQuery($sql)->fetchAll();							
+		
+		// Obtener total horizontal por totales verticales por totales categoria
+		
+		$sql = "SELECT  SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
+		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID IN (SELECT TOP(12) m2.ID FROM MEDICION m2 WHERE m2.ID = p.MEDICION_ID ORDER BY m2.FECHAINICIO ASC)";			
+
+		$total = $em->getConnection()->executeQuery($sql)->fetchAll();					
+		
 		// Calcula el ancho máximo de la tabla	
 		$extension=count($head)*12-100;
 	
@@ -185,10 +237,14 @@ class EvolucionController extends Controller
 			
 		$max_width=100+$extension;
 		
-		// Guardamos resultado de consulta en variable de sesión para reusarlas en un action posterior
+		// Guardamos resultado de consulta en variables de sesión para reusarlas en un action posterior
 		$session->set("mediciones",$mediciones2);
-		// $session->set("agregaciones",$agregaciones);
-		$session->set("evolucion_quiebre",$evolucion_quiebre);
+		$session->set("evolucion_quiebre",$evolucion_quiebre);	
+		$session->set("totales_producto",$totales_producto);		
+		$session->set("totales_segmento",$totales_segmento);	
+		$session->set("totales_horizontales_segmento",$totales_horizontales_segmento);	
+		$session->set("totales_verticales_segmento",$totales_verticales_segmento);	
+		$session->set("total",$total);		
 				
 		//RESPONSE
 		$response = $this->render('CademReporteBundle:Evolucion:index.html.twig',
@@ -223,9 +279,15 @@ class EvolucionController extends Controller
 	{		
 		// Recuperar datos de sesión
 		$session=$this->get("session");			
-		$mediciones=$session->get("mediciones");							
-				
-		$evolucion_quiebre=$session->get("evolucion_quiebre");			
+		$mediciones=$session->get("mediciones");	
+		$totales_producto=$session->get("totales_producto");		
+		$totales_segmento=$session->get("totales_segmento");	
+		$totales_horizontales_segmento=$session->get("totales_horizontales_segmento");	
+		$totales_verticales_segmento=$session->get("totales_verticales_segmento");	
+		$total=$session->get("total");							
+		$evolucion_quiebre=$session->get("evolucion_quiebre");	
+
+		// print_r($evolucion_quiebre);
 				
 		/* Recorrer vector de mediciones, y resultado de la consulta de forma sincrona; cada vez que se encuentre coincidencia hacer 
 		fetch en resultado consulta, si no, asignar vacio */
@@ -243,88 +305,85 @@ class EvolucionController extends Controller
 			$nivel1=$evolucion_quiebre[$cont_regs]['PRODUCTO'];			
 			// Lleno la fila con vacios, le agrego 3 posiciones, correspondientes a los niveles de agregación y al total															
 			$fila=array_fill(0,$num_meds+3,'-');																				
-			$total=0;								
+			$cont_totales_producto=0;			
 		
 			while($cont_regs<$num_regs)
-			{	// Lleno la fila con vacios, le agrego 3 posiciones, correspondientes a los niveles de agregación y al total
+			{	
 				$columna_quiebre=array_search($evolucion_quiebre[$cont_regs]['NOMBRE'],$mediciones);	
 					
 				// Mientras el primer nivel de agregación no cambie
 				if($nivel1==$evolucion_quiebre[$cont_regs]['PRODUCTO'])
 				{					
-					// if(strlen(trim($evolucion_quiebre[$cont_regs]['PRODUCTO']))>$max_largo_cadena)
-						// $max_largo_cadena=strlen(trim($evolucion_quiebre[$cont_regs]['PRODUCTO']));
-					$fila[0]=trim($evolucion_quiebre[$cont_regs]['PRODUCTO']);//trim(str_replace(' ','_',trim($evolucion_quiebre[$cont_regs]['PRODUCTO'])));					
+					$fila[0]=trim($evolucion_quiebre[$cont_regs]['PRODUCTO']);
 					$fila[1]=$evolucion_quiebre[$cont_regs]['SEGMENTO'];													
-					$fila[$columna_quiebre+2]=round($evolucion_quiebre[$cont_regs]['quiebre'],1);						
-					$total+=$evolucion_quiebre[$cont_regs]['quiebre'];	
+					$fila[$columna_quiebre+2]=round($evolucion_quiebre[$cont_regs]['quiebre'],1);											
 					$cont_regs++;
-					$cont_meds++;
+					// $cont_meds++;
 				}	
 				else
 				{			
-					// Si el primer nivel de agregacion cambió, lo actualizo, agrego la fila al body y reseteo el contador de mediciones			
-					$fila[$num_meds+2]=round($total/$num_meds,1);
-					$cont_meds=0;
-					$total=0;				
+					// Si el primer nivel de agregacion cambió, lo actualizo, agrego la fila al body y reseteo el contador de mediciones								
+					$fila[$num_meds+2]=round($totales_producto[$cont_totales_producto]['QUIEBRE']*100,1);					
+					$cont_totales_producto++;					
+					// $cont_meds=0;								
 					$nivel1=$evolucion_quiebre[$cont_regs]['PRODUCTO'];				
 					array_push($body,(object)$fila);
 					$fila=array_fill(0,$num_meds+3,'-');					
 				}
 				if($cont_regs==$num_regs-1)		
 				{	
-					$fila[$num_meds+2]=round($total/($cont_meds+1),1);					
-					array_push($body,(object)$fila);
+					$fila[$num_meds+2]=round($totales_producto[$cont_totales_producto]['QUIEBRE']*100,1);					
+					array_push($body,(object)$fila);									
 					$cont_regs++;
 				}		
 			}			
-			// Calculo de totales			
-			$totales=array_fill(0,$num_meds+1,0);
-			$contadores=array_fill(0,$num_meds+1,1);
-			$medidos=array_fill(0,$num_meds+1,0);
-			$nivel2=$evolucion_quiebre[0]['SEGMENTO'];
-			$cont_fil=0;
-			$num_fil=count($body);
-			$cont=0;
+			// Calculo de totales
+			$fila=array_fill(0,$num_meds+1,"-");	
+			$num_regs=count($totales_segmento);
+			$cont_regs=0;														
+			$nivel2=$totales_segmento[$cont_regs]['SEGMENTO'];	
+			$cont_totales_horizontales_segmento=0;						
 			
-			foreach($body as $objeto)
-			{	
-				$fila=(array)$objeto;
-				
-				if($nivel2!=$fila[1])			
-				{ // Si cambia el 2o nivel agrego totales del segmento actual a la matriz		
-					for($aux=0;$aux<count($totales);++$aux)								
-						$medidos[$aux]==1? $totales[$aux]=round($totales[$aux]/$contadores[$aux],1):$totales[$aux]='-';																						
-					$matriz_totales[$cont]=$totales;
-					$cont++;
-					$totales=array_fill(0,$num_meds+1,0);
-					$contadores=array_fill(0,$num_meds+1,0);
-					$medidos=array_fill(0,$num_meds+1,0);
-					$nivel2=$fila[1];					
-				}	
-				$cont_col=0;				
-				foreach(array_slice($fila,2) as $quiebre)
-				{											
-					if(strcmp($quiebre,'-')!=0)
-					{
-						$contadores[$cont_col]++;	
-						$medidos[$cont_col]=1;							
-						$totales[$cont_col]+=$quiebre;
-					}
-					$cont_col++;
-				}		
-				if($cont_fil==$num_fil-1)		
+			while($cont_regs<$num_regs)
+			{
+				$columna_quiebre=array_search($totales_segmento[$cont_regs]['MEDICION'],$mediciones);					
+				// Mientras no cambie el segmento
+				if($nivel2==$totales_segmento[$cont_regs]['SEGMENTO'])
+				{
+					$fila[$columna_quiebre]=round($totales_segmento[$cont_regs]['QUIEBRE']*100,1);					
+					$cont_regs++;
+				}
+				else
+				{
+					$fila[$num_meds]=round($totales_horizontales_segmento[$cont_totales_horizontales_segmento]['QUIEBRE']*100,1);
+					$cont_totales_horizontales_segmento++;
+					array_push($matriz_totales,$fila);
+					$fila=array_fill(0,$num_meds+1,"-");
+					$nivel2=$totales_segmento[$cont_regs]['SEGMENTO'];					
+				}
+				if($cont_regs==$num_regs-1)		
 				{	
-					for($aux=0;$aux<count($totales);++$aux)								
-						$contadores[$aux]==0? $totales[$aux]='-':$totales[$aux]=round($totales[$aux]/$contadores[$aux],1);																						
-					$matriz_totales[$cont]=$totales;
-					$cont++;
-					$totales=array_fill(0,$num_meds+1,0);
-					$contadores=array_fill(0,$num_meds+1,0);
-					$nivel2=$fila[1];						
+					$fila[$num_meds]=round($totales_horizontales_segmento[$cont_totales_horizontales_segmento]['QUIEBRE']*100,1);
+					array_push($matriz_totales,(object)$fila);		
+					$cont_regs++;					
 				}				
-				$cont_fil++;
-			}					
+			}	
+			$cont_regs=0;
+			$num_regs=count($totales_verticales_segmento);
+			$fila=array_fill(0,$num_meds+1,"-");				
+			
+			while($cont_regs<$num_regs)
+			{
+				$columna_quiebre=array_search($totales_verticales_segmento[$cont_regs]['MEDICION'],$mediciones);					
+				// Mientras no cambie la cadena  
+				$fila[$columna_quiebre]=round($totales_verticales_segmento[$cont_regs]['QUIEBRE']*100,1);					
+				$cont_regs++;
+			}	
+			
+			$fila[$num_meds]=round($total[0]['QUIEBRE']*100,1);			
+			
+			array_push($matriz_totales,$fila);		
+				
 		}
 		/*
 		 * Output
@@ -409,11 +468,68 @@ class EvolucionController extends Controller
 		}										
 		foreach(array_reverse($prefixes) as $prefix)		
 			array_unshift($head,$prefix);		
-		array_push($head,'TOTAL');				
+		array_push($head,'TOTAL');			
+
+		// Obtener totales horizontales por producto
+			
+		$sql =	"SELECT i.NOMBRE, ni.NOMBRE, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
+		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID IN (SELECT TOP(12) m2.ID FROM MEDICION m2 WHERE m2.ID = p.MEDICION_ID ORDER BY m2.FECHAINICIO ASC)
+		INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
+		INNER JOIN ITEM i on i.ID = ic.ITEM_ID
+		INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
+		GROUP BY i.NOMBRE, ni.NOMBRE
+		ORDER BY ni.NOMBRE,i.NOMBRE";
+			
+		$totales_producto = $em->getConnection()->executeQuery($sql)->fetchAll();		
+
+		// Obtener totales verticales por segmento
+					
+		$sql =	"SELECT ni.NOMBRE as SEGMENTO, m.FECHAINICIO, m.NOMBRE as MEDICION, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
+		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID IN (SELECT TOP(12) m2.ID FROM MEDICION m2 WHERE m2.ID = p.MEDICION_ID ORDER BY m2.FECHAINICIO ASC)
+		INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
+		INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
+		INNER JOIN MEDICION m on m.ID = p.MEDICION_ID
+		GROUP BY ni.NOMBRE, m.FECHAINICIO, m.NOMBRE
+		ORDER BY ni.NOMBRE";
+	
+		$totales_segmento = $em->getConnection()->executeQuery($sql)->fetchAll();
+		
+		// Obtener totales horizontales por totales segmento (ultima columna de totales verticales por categoria)
+		
+		$sql =	"SELECT ni.NOMBRE as SEGMENTO, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
+		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID IN (SELECT TOP(12) m2.ID FROM MEDICION m2 WHERE m2.ID = p.MEDICION_ID ORDER BY m2.FECHAINICIO ASC)
+		INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
+		INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
+		GROUP BY ni.NOMBRE
+		ORDER BY ni.NOMBRE";
+			
+		$totales_horizontales_segmento = $em->getConnection()->executeQuery($sql)->fetchAll();	
+		
+		// Obtener totales verticales por totales categoria
+		
+		$sql = "SELECT  m.FECHAINICIO, m.NOMBRE as MEDICION, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
+		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID IN (SELECT TOP(12) m2.ID FROM MEDICION m2 WHERE m2.ID = p.MEDICION_ID ORDER BY m2.FECHAINICIO ASC)	
+		INNER JOIN MEDICION m on m.ID = p.MEDICION_ID
+		GROUP BY m.FECHAINICIO, m.NOMBRE
+		ORDER BY FECHAINICIO";
+		
+		$totales_verticales_segmento = $em->getConnection()->executeQuery($sql)->fetchAll();							
+		
+		// Obtener total horizontal por totales verticales por totales categoria
+		
+		$sql = "SELECT  SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
+		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID IN (SELECT TOP(12) m2.ID FROM MEDICION m2 WHERE m2.ID = p.MEDICION_ID ORDER BY m2.FECHAINICIO ASC)";			
+
+		$total = $em->getConnection()->executeQuery($sql)->fetchAll();											
 		
 		// Guardamos resultado de consulta en variable de sesión para reusarlas en un action posterior
 		$session->set("mediciones",$mediciones);		
 		$session->set("evolucion_quiebre",$evolucion_quiebre);	
+		$session->set("totales_producto",$totales_producto);		
+		$session->set("totales_segmento",$totales_segmento);	
+		$session->set("totales_horizontales_segmento",$totales_horizontales_segmento);	
+		$session->set("totales_verticales_segmento",$totales_verticales_segmento);	
+		$session->set("total",$total);		
 		
 		// Calcula el ancho máximo de la tabla	
 		$extension=count($head)*15-100;
