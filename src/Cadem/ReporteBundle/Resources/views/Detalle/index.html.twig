@@ -387,7 +387,6 @@ $(document).ready(function () {
 	{		
 		$.get("{{ path('detalle_header') }}",DatosAdicionales,function(data){			
 			maxWidth=parseInt(data.max_width);
-			alert(maxWidth);
 			// Primero destruimos la tabla si existe (la removemos del DOM)	
 			var ex = document.getElementById('tabla_resumen');
 			if ( $.fn.DataTable.fnIsDataTable( ex ) ) {

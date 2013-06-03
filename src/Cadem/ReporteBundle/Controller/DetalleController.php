@@ -13,7 +13,9 @@ class DetalleController extends Controller
 {    	
 	public function indexAction()
     {
+		$start = microtime(true);
 		$session = $this->get("session");
+
 	
 		$user = $this->getUser();
 		$em = $this->getDoctrine()->getManager();
@@ -159,21 +161,27 @@ class DetalleController extends Controller
 		
 		//CONSULTA
 		
+		
 		$sql = "SELECT (case when q.hayquiebre = 1 then 1 else 0 END) as quiebre, ic.CODIGOITEM1 as COD_PRODUCTO,i.NOMBRE as NOM_PRODUCTO,ni.NOMBRE as SEGMENTO, sc.CODIGOSALA as COD_SALA, s.CALLE as CALLE_SALA, s.NUMEROCALLE as NUM_SALA, cad.NOMBRE as CAD_SALA, com.NOMBRE as COM_SALA FROM QUIEBRE q
-		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID
-		INNER JOIN MEDICION m on m.ID = p.MEDICION_ID and m.ID={$id_ultima_medicion}
-		INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
+		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID and p.MEDICION_ID = {$id_ultima_medicion}
+		INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
 		INNER JOIN SALA s on s.ID = sc.SALA_ID
-		INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
-		INNER JOIN USUARIO u on u.cliente_id=c.id and u.id=".$user->getId()."
-		INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID AND ic.CLIENTE_ID = c.ID
+		INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
 		INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
 		INNER JOIN COMUNA com on s.COMUNA_ID=com.ID
 		INNER JOIN CADENA cad on s.CADENA_ID=cad.ID	
 		INNER JOIN ITEM i on i.ID = ic.ITEM_ID	
 		ORDER BY SEGMENTO,NOM_PRODUCTO,CAD_SALA,COM_SALA,CALLE_SALA";
 		
-		$detalle_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();
+		$sha1 = sha1($sql);
+
+		if(!$session->has($sha1)){
+			$detalle_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();
+			$session->set($sha1,$detalle_quiebre);
+		}
+		else $detalle_quiebre = $session->get($sha1);
+		
+		
 		
 		// Obtener totales horizontales por producto
 			
@@ -226,7 +234,8 @@ class DetalleController extends Controller
 
 		$total = $em->getConnection()->executeQuery($sql)->fetchAll();				
 
-		$total = $em->getConnection()->executeQuery($sql)->fetchAll();			
+		
+		
 				
 		// Variable para saber cuantos niveles de agregacion define el cliente, esto debe ser parametrizado en una etapa posterior
 		$niveles=2;										
@@ -284,7 +293,9 @@ class DetalleController extends Controller
 		if($extension<0)
 			$extension=0;
 			
-		$max_width=100+$extension;				
+		$max_width=100+$extension;
+
+			
 		
 		//RESPONSE
 		$response = $this->render('CademReporteBundle:Detalle:index.html.twig',
@@ -302,6 +313,8 @@ class DetalleController extends Controller
 			'logostyle' => $logostyle,
 			)
 		);
+		$time_taken = microtime(true) - $start;
+		//return $time_taken*1000;		
 		
 		//CACHE
 		$response->setPrivate();
@@ -325,7 +338,8 @@ class DetalleController extends Controller
 	}		
 	
 	public function bodyAction(Request $request)
-	{		
+	{
+		$start = microtime(true);
 		// Recuperar el usuario y datos de sesión
 		$user = $this->getUser();
 		$em = $this->getDoctrine()->getManager();
@@ -441,12 +455,14 @@ class DetalleController extends Controller
 		 * Output
 		 */
 		// $session->close();
+		$time_taken = microtime(true) - $start;
 		$output = array(
 			"sEcho" => intval($_GET['sEcho']),
 			"iTotalRecords" => count($detalle_quiebre),
 			"iTotalDisplayRecords" => count($body),
 			"aaData" => $body,
-			"matriz_totales" => $matriz_totales
+			"matriz_totales" => $matriz_totales,
+			"time_taken" => $time_taken*1000
 		);		
 		return new JsonResponse($output);		
 	}
@@ -466,26 +482,34 @@ class DetalleController extends Controller
 		$comunas='';
 		foreach($parametros['f_comuna']['Comuna'] as $comuna)
 			$comunas.=$comuna.',';	
-		$comunas = trim($comunas, ',');						
-			
+		$comunas = trim($comunas, ',');
+
+		//23 SEG
+		$start = microtime(true);
 		$sql = "SELECT (case when q.hayquiebre = 1 then 1 else 0 END) as quiebre, ic.CODIGOITEM1 as COD_PRODUCTO,i.NOMBRE as NOM_PRODUCTO,ni.NOMBRE as SEGMENTO, sc.CODIGOSALA as COD_SALA, s.CALLE as CALLE_SALA, s.NUMEROCALLE as NUM_SALA, cad.NOMBRE as CAD_SALA, com.NOMBRE as COM_SALA FROM QUIEBRE q
-				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID
-				INNER JOIN MEDICION m on m.ID = p.MEDICION_ID and m.ID=$medicion
-				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
-				INNER JOIN SALA s on s.ID = sc.SALA_ID
-				INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
-				INNER JOIN USUARIO u on u.cliente_id=c.id and u.id=".$user->getId()."
-				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID AND ic.CLIENTE_ID = c.ID
+				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID and p.MEDICION_ID = {$medicion}
+				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
+				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in ({$comunas})
+				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
 				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
-				INNER JOIN COMUNA com on s.COMUNA_ID=com.ID and com.ID in ($comunas)
+				INNER JOIN COMUNA com on s.COMUNA_ID=com.ID
 				INNER JOIN CADENA cad on s.CADENA_ID=cad.ID	
 				INNER JOIN ITEM i on i.ID = ic.ITEM_ID	
 				ORDER BY SEGMENTO,NOM_PRODUCTO,CAD_SALA,COM_SALA,CALLE_SALA";																		
 				
-		$detalle_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();	
+		$sha1 = sha1($sql);
+
+		if(!$session->has($sha1)){
+			$detalle_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();
+			$session->set($sha1,$detalle_quiebre);
+		}
+		else $detalle_quiebre = $session->get($sha1);
+		$time_taken = microtime(true) - $start;
+		//return $time_taken*1000;
 		
+		//680 MS
 		// Obtener totales horizontales por producto
-			
+		
 		$sql =	"SELECT  i.NOMBRE, ni.NOMBRE, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
 				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$medicion}
 				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
@@ -495,9 +519,10 @@ class DetalleController extends Controller
 				ORDER BY ni.NOMBRE,i.NOMBRE";
 			
 		$totales_producto = $em->getConnection()->executeQuery($sql)->fetchAll();		
-
+		
 		// Obtener totales verticales por segmento
-					
+		
+		//720 MS
 		$sql =	"SELECT ni.NOMBRE as SEGMENTO, sc.CODIGOSALA as COD_SALA, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
 				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$medicion}
 				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
@@ -508,8 +533,10 @@ class DetalleController extends Controller
 	
 		$totales_segmento = $em->getConnection()->executeQuery($sql)->fetchAll();
 		
+		
 		// Obtener totales horizontales por totales segmento (ultima columna de totales verticales por categoria)
 		
+		//100 MS
 		$sql =	"SELECT ni.NOMBRE as SEGMENTO, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
 				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$medicion}
 				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
@@ -519,8 +546,11 @@ class DetalleController extends Controller
 			
 		$totales_horizontales_segmento = $em->getConnection()->executeQuery($sql)->fetchAll();	
 		
+		
+
 		// Obtener totales verticales por totales categoria
 		
+		//100 MS
 		$sql = "SELECT sc.CODIGOSALA as COD_SALA, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
 				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$medicion}
 				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
@@ -530,10 +560,16 @@ class DetalleController extends Controller
 		
 		// Obtener total horizontal por totales verticales por totales categoria
 		
+		
+		//90 MS
 		$sql = "SELECT SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
 				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$medicion}";			
 
-		$total = $em->getConnection()->executeQuery($sql)->fetchAll();		
+		$total = $em->getConnection()->executeQuery($sql)->fetchAll();
+		
+		
+
+		
 				
 		// Variable para saber cuantos niveles de agregacion define el cliente, esto debe ser parametrizado en una etapa posterior
 		$niveles=2;												
