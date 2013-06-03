@@ -271,8 +271,8 @@ function fixedColumn()
 				// alert(matriz_totales[row][j]);
 				nCell.innerHTML = matriz_totales[row][j];																
 				nGroup.appendChild( nCell );						 
-			}			
-			nTrs[0].parentNode.insertBefore( nGroup, nTrs[0] );
+			}		
+			$(nGroup).insertBefore( $('tbody tr:eq('+(0)+')', right.body)[0] );						
 			// Se crea atributo que asocie la fila de agregacion con sus filas hijas
 			var att=document.createAttribute("data-tt-id");
 			att.value="TOTALES";
