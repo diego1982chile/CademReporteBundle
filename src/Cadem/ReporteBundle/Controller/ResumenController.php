@@ -211,7 +211,7 @@ class ResumenController extends Controller
 // Obtener totales horizontales por segmento
 			
 		$sql =	"SELECT ni.NOMBRE as segmento, ni2.NOMBRE as categoria, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as quiebre FROM QUIEBRE q
-		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$id_ultima_medicion}
+		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$medicion}
 		INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
 		INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
 		INNER JOIN NIVELITEM ni2 on ni2.ID = ic.NIVELITEM_ID2
@@ -219,7 +219,7 @@ class ResumenController extends Controller
 		INNER JOIN SALA s on s.ID = sc.SALA_ID
 		INNER JOIN CADENA c on c.ID = s.CADENA_ID
 		GROUP BY ni.NOMBRE, ni2.NOMBRE
-		ORDER BY categoria";
+		ORDER BY categoria, segmento";
 	
 		$totales_segmento = $em->getConnection()->executeQuery($sql)->fetchAll();		
 
@@ -275,8 +275,7 @@ class ResumenController extends Controller
 		$session->set("totales_horizontales_categoria",$totales_horizontales_categoria);	
 		$session->set("totales_verticales_categoria",$totales_verticales_categoria);	
 		$session->set("total",$total);			
-				
-		
+						
 		// Calcula el ancho máximo de la tabla	
 		$extension=count($head)*10-100;
 	
@@ -666,7 +665,7 @@ class ResumenController extends Controller
 		INNER JOIN SALA s on s.ID = sc.SALA_ID
 		INNER JOIN CADENA c on c.ID = s.CADENA_ID
 		GROUP BY ni.NOMBRE, ni2.NOMBRE
-		ORDER BY categoria";
+		ORDER BY categoria, segmento";
 	
 		$totales_segmento = $em->getConnection()->executeQuery($sql)->fetchAll();		
 
