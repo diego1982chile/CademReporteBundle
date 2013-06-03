@@ -105,10 +105,8 @@ div.DTFC_Blocker {
 {% endblock %}
 
 {% block javascripts %}
-
 <script src="{{ asset('bundles/cademreporte/js/jquery.dataTables.min.js') }}"></script>
 <script src="{{ asset('bundles/cademreporte/js/dataTables.fixedColumns.js') }}"></script>
-
 <script>
 {#% for item in variables_clientes %#}
 {#{"var i_"~item.variable.nombre~";"}#}
@@ -169,18 +167,13 @@ function construirTabla()
 				{ "sWidth": "1.2%",  "sClass": "tag", "aTargets": [0] }							
 			],
 			"aaSortingFixed": [[ 1, 'asc' ]],
-			"sPaginationType": "full_numbers",
-			// "sDom": '<"top"i>rt<"bottom"flp><"clear">',
-			//"sDom": 'T<"clear">lfrtip',		
-			// "sDom": '<"H"Cfr>t<"F"ip>',	
-			// "sDom": "frtiS",
+			"sPaginationType": "full_numbers",		
 			"fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {	
 						// str.replace(/\\n/g, '<br />');
 						if(aData[0].length>40)
 							$(nRow).children(':eq(0)').text(aData[0].substring(0,40).replace(/ /g,'_')+'...');
 						else
-							$(nRow).children(':eq(0)').text(aData[0].replace(/ /g,'_'));
-						// $(nRow).children(':eq(0)').text(aData[0].replace(/ /g,''));		  
+							$(nRow).children(':eq(0)').text(aData[0].replace(/ /g,'_'));							 
 						$(nRow).attr('title',aData[0]);		  
 					},						
 			"fnInitComplete": function() {
@@ -258,6 +251,39 @@ function fixedColumn()
 					sLastGroup = sGroup;
 				}
 			}
+			var nGroup = document.createElement('tr');
+			// Se agrgega una columna correspondiente a la columna oculta			
+			var nCell;
+			nCell = document.createElement( 'td' );						 
+			nCell.className = "group";																									
+			nCell.innerHTML = 0;															
+			nGroup.appendChild( nCell ); 				
+			
+			for(var j=0 ; j< cols ; ++j)
+			{
+				nCell = document.createElement( 'td' );						 
+				nCell.className = "group";																				
+				// alert(matriz_totales[row][j]);
+				nCell.innerHTML = matriz_totales[row][j];																
+				nGroup.appendChild( nCell );						 
+			}		
+			$(nGroup).insertBefore( $('tbody tr:eq('+(0)+')', right.body)[0] );						
+			// Se crea atributo que asocie la fila de agregacion con sus filas hijas
+			var att=document.createAttribute("data-tt-id");
+			att.value="TOTALES";
+			// Se añade fila de agregacion para tabla principal
+			nTrs[0].previousSibling.setAttributeNode(att);				
+			
+			// /* Cell to insert into the frozen columns */
+			
+			nGroup = document.createElement( 'tr' );
+			nCell = document.createElement( 'td' );
+			nCell.className = "group tag";
+			nCell.innerHTML = "TOTAL GENERAL";
+			nGroup.appendChild( nCell );
+			// Se añade fila de agregacion para tabla fija
+			$(nGroup).insertBefore( $('tbody tr:eq(0)', left.body)[0] );
+			matriz_totales=[];				
 		}
 	});
 }
@@ -370,15 +396,12 @@ $(document).ready(function () {
 	function recargarTabla()
 	{		
 		$.get("{{ path('detalle_header') }}",DatosAdicionales,function(data){			
-			maxWidth=parseInt(data.max_width);
-			alert(maxWidth);
+			maxWidth=parseInt(data.max_width);			
 			// Primero destruimos la tabla si existe (la removemos del DOM)	
 			var ex = document.getElementById('tabla_resumen');
 			if ( $.fn.DataTable.fnIsDataTable( ex ) ) {
 			  oTable.fnDestroy(true);
-			}			
-			// Luego recalculamos el ancho maximo en base a la cardinalidad del head
-			calcularAnchoMaximo();	
+			}				
 			// Luego generamos el html de la tabla y lo añadimos al DOM
 			var table= document.createElement( 'table' );
 			var thead= document.createElement( 'thead' );
@@ -398,9 +421,12 @@ $(document).ready(function () {
 					case 1:
 					case cols:
 						tableHeading.innerHTML = value;
-						var att=document.createAttribute("rowspan");
+						var att=document.createAttribute("rowspan");						
 						att.value=2;					
-						tableHeading.setAttributeNode(att);						
+						tableHeading.setAttributeNode(att);			
+						att=document.createAttribute("vertical-align");						
+						att.value="middle";					
+						tableHeading.setAttributeNode(att);	
 						break;					
 					default:
 						tableHeading.innerHTML = value['cod_sala'];
@@ -419,14 +445,16 @@ $(document).ready(function () {
 						break;					
 					default: 		
 						var tableHeading = document.createElement( 'th' );						
-						tableHeading.innerHTML = value['nom_sala'].substring(0,49).replace(/ /g,'_');
+						tableHeading.innerHTML = value['nom_sala'].substring(0,16).replace(/ /g,'_');
 						tableHead.appendChild( tableHeading );	
 						break;						
 				}																		
 			});							
 			thead.appendChild( tableHead );
 			table.appendChild( thead );				
-			document.getElementById('container').appendChild(table);								
+			document.getElementById('container').appendChild(table);		
+			// Luego recalculamos el ancho maximo en base a la cardinalidad del head
+			calcularAnchoMaximo();			
 			// Luego volvemos a construir la tabla con dataTables
 			construirTabla();
 		},"json")
