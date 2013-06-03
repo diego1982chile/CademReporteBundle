@@ -107,6 +107,7 @@ div.DTFC_Blocker {
 {% block javascripts %}
 <script src="{{ asset('bundles/cademreporte/js/jquery.dataTables.min.js') }}"></script>
 <script src="{{ asset('bundles/cademreporte/js/dataTables.fixedColumns.js') }}"></script>
+
 <script>
 {#% for item in variables_clientes %#}
 {#{"var i_"~item.variable.nombre~";"}#}
@@ -396,7 +397,8 @@ $(document).ready(function () {
 	function recargarTabla()
 	{		
 		$.get("{{ path('detalle_header') }}",DatosAdicionales,function(data){			
-			maxWidth=parseInt(data.max_width);			
+			maxWidth=parseInt(data.max_width);
+			alert(maxWidth);
 			// Primero destruimos la tabla si existe (la removemos del DOM)	
 			var ex = document.getElementById('tabla_resumen');
 			if ( $.fn.DataTable.fnIsDataTable( ex ) ) {
@@ -424,8 +426,8 @@ $(document).ready(function () {
 						var att=document.createAttribute("rowspan");						
 						att.value=2;					
 						tableHeading.setAttributeNode(att);			
-						att=document.createAttribute("vertical-align");						
-						att.value="middle";					
+						att=document.createAttribute("style");						
+						att.value="vertical-align:middle";					
 						tableHeading.setAttributeNode(att);	
 						break;					
 					default:
@@ -445,7 +447,7 @@ $(document).ready(function () {
 						break;					
 					default: 		
 						var tableHeading = document.createElement( 'th' );						
-						tableHeading.innerHTML = value['nom_sala'].substring(0,16).replace(/ /g,'_');
+						tableHeading.innerHTML = value['nom_sala'].substring(0,16).replace(/ /g,'_')+'...';
 						tableHead.appendChild( tableHeading );	
 						break;						
 				}																		
