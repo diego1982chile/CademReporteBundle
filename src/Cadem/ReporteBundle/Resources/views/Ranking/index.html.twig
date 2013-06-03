@@ -34,7 +34,7 @@
                             <tr>
                               <th>#</th>
                               <th>Cod.</th>
-                              <th>Dirección</th>
+                              <th>Sala</th>
                               <th>%Quiebre ant</th>
                               <th>%Quiebre act</th>
                               <th>Ptos Dif</th>
@@ -47,7 +47,7 @@
                             <tr>
                               <td>{{rank}}</td>
                               <td>{{row.codigosala}}</td>
-                              <td title="{{row.calle}} {{row.numerocalle}}">{{row.calle|slice(0,35)}} {{row.numerocalle}}</td>
+                              <td title="{{row.calle}} {{row.numerocalle}}">{{row.cadena}}, {{row.calle|slice(0,35)}} {{row.numerocalle}}</td>
                               <td>{% if row.quiebre_anterior is not null %} {{row.quiebre_anterior|number_format(1)}} {% else %} NO {% endif %}</td>
                               <td>{% if row.quiebre is not null %} {{row.quiebre|number_format(1)}} {% else %} NO {% endif %}</td>
                               <td>{% if row.diferencia is not null %}
@@ -375,7 +375,7 @@ $(document).ready(function () {
 					oTables[0].fnAddData([
 						cont,
 						row[i].codigosala,
-						row[i].calle.substring(0, 35)+" "+row[i].numerocalle,
+						row[i].cadena+", "+row[i].calle.substring(0, 35)+" "+row[i].numerocalle,
 						(row[i].quiebre_anterior != null)?parseFloat(row[i].quiebre_anterior).toFixed(1):"NO",
 						(row[i].quiebre != null)?parseFloat(row[i].quiebre).toFixed(1):"NO",
 						(row[i].diferencia != null)?parseFloat(row[i].diferencia).toFixed(1):"NO",
