@@ -503,7 +503,7 @@ class DetalleController extends Controller
 		// Obtener totales horizontales por totales segmento (ultima columna de totales verticales por categoria)
 		
 		$sql =	"SELECT ni.NOMBRE as SEGMENTO, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
-				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID =6
+				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$medicion}
 				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
 				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
 				GROUP BY ni.NOMBRE
