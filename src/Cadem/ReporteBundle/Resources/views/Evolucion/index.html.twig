@@ -150,7 +150,7 @@ function construirTabla()
 							DatosAdicionales = [];//AL FINAL SE BORRAN
 						}
 			} )
-			.done(function() {  })
+			.done(function() { colorTotales(); })
 			.fail(function() {  })
 			.always(function() { quitarloader(); });
 		},	
@@ -290,6 +290,13 @@ function fixedColumn()
 			matriz_totales=[];			
 		}
 	});
+}
+
+function colorTotales(){
+	var color_fondo = 'rgb(255, 235, 158)';
+	$('.DTFC_Cloned tbody tr:first td').css('background-color',color_fondo);
+	$('.table:not(.DTFC_Cloned) tbody tr:first td').css('background-color',color_fondo);
+	$('.table:not(.DTFC_Cloned) tbody tr td:last-of-type:not(.group)').css('background-color',color_fondo);
 }
 
 $(document).ready(function () {
