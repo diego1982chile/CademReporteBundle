@@ -55,8 +55,8 @@ div.dataTables_scroll {
 	clear: both !important; 
 	}
 
-table body tr{ 
-	height: 2em !important;
+table tbody tr{ 
+	height: 1.3em !important;
 } 	
 	
 td{
@@ -387,7 +387,6 @@ $(document).ready(function () {
 		var dataform = cform.serializeArray();
 		
 		DatosAdicionales = dataform;
-		$('form#filtros input').last().after('<img id="tabla-loader" class="loader" alt="" style="float:right" src="/bundles/cademreporte/images/loader.gif">');
 		recargarTabla();
 		// oTable.fnDraw();//SI NO FUNCIONA ESTO USAR LA DE ABAJO
 		// oTable.fnReloadAjax();
@@ -396,7 +395,7 @@ $(document).ready(function () {
 	function recargarTabla()
 	{		
 		$.get("{{ path('detalle_header') }}",DatosAdicionales,function(data){			
-			maxWidth=parseInt(data.max_width);
+			maxWidth=parseInt(data.max_width);			
 			// Primero destruimos la tabla si existe (la removemos del DOM)	
 			var ex = document.getElementById('tabla_resumen');
 			if ( $.fn.DataTable.fnIsDataTable( ex ) ) {
@@ -458,16 +457,10 @@ $(document).ready(function () {
 			// Luego volvemos a construir la tabla con dataTables
 			construirTabla();
 		},"json")
-		.done(function() {  })
-		.fail(function() {  })
-		.always(function() { quitarloader('#tabla-loader'); });
 	}
 		
-	function quitarloader(id_){
-		if(typeof id_ == 'undefined' || id_ == null){ if($('.loader').length > 0) $('.loader').remove();}
-		else{
-			$(id_+'.loader').remove();
-		}
+	function quitarloader(){
+		if($('.loader').length > 0) $('.loader').remove();
 	}
 	
  </script>
