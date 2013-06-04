@@ -34,3 +34,10 @@ services:
         arguments:
             entityManager: @doctrine.orm.entity_manager
             security: @security.context
+    cadem_reporte.helper.phpexcel:
+        class: Cadem\ReporteBundle\Helper\PHPExcelHelper
+        arguments:
+            entityManager: @doctrine.orm.entity_manager
+            security: @security.context
+            medicion: @cadem_reporte.helper.medicion
+            session: @session
