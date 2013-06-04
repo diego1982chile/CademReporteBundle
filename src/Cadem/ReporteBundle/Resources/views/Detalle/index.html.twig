@@ -149,7 +149,10 @@ function construirTabla()
 								fnCallback(data);
 								DatosAdicionales = [];//AL FINAL SE BORRAN
 							}
-				} );
+				} )
+				.done(function() { colorTotales(); })
+				.fail(function() {  })
+				.always(function() { quitarloader(); });
 			},	
 			// "bDeferRender": true,
 			"sScrollY": maxHeight+'px',
@@ -289,6 +292,13 @@ function fixedColumn()
 	});
 }
 
+function colorTotales(){
+	var color_fondo = 'rgb(255, 235, 158)';
+	$('.DTFC_Cloned tbody tr:first td').css('background-color',color_fondo);
+	$('.table:not(.DTFC_Cloned) tbody tr:first td').css('background-color',color_fondo);
+	$('.table:not(.DTFC_Cloned) tbody tr td:last-of-type:not(.group)').css('background-color',color_fondo);
+}
+
 $(document).ready(function () {
 	
 	var callbacks = $.Callbacks();	
@@ -360,6 +370,18 @@ $(document).ready(function () {
 	});
 });
 
+	//LOGICA DEL SUBMIT DEL FORMULARIO, SE DEBERIA OCUPAR AJAX
+	function procesarform(){
+	
+		//LOADER
+		$('form#filtros input').last().after('<img class="loader" alt="" style="float:right" src="/bundles/cademreporte/images/loader.gif">');
+		//GET
+		//PROCESO
+		alert('aca se hace request get/post');
+		//AL FINALIZAR
+		quitarloader();
+	}
+	
 	//LOGICA DEL SUBMIT DEL FORMULARIO, SE DEBERIA OCUPAR AJAX
 	function procesarform(){
 		//SE CLONA FORM Y SE ARREGLA LOS ITEM SELECCIONADOS POR USUARIO
