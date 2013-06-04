@@ -15,7 +15,6 @@ class DetalleController extends Controller
     {
 		$start = microtime(true);
 		$session = $this->get("session");
-
 	
 		$user = $this->getUser();
 		$em = $this->getDoctrine()->getManager();
@@ -64,7 +63,7 @@ class DetalleController extends Controller
 			JOIN c.salas s
 			JOIN s.salaclientes sc
 			JOIN sc.cliente cl
-			WHERE cl.id = :id')
+			WHERE cl.id = :id and p.region_id=1')
 			->setParameter('id', $cliente->getId());
 		$provincias = $query->getResult();
 		
@@ -77,10 +76,11 @@ class DetalleController extends Controller
 		//COMUNA
 		$query = $em->createQuery(
 			'SELECT DISTINCT c FROM CademReporteBundle:Comuna c
+			JOIN c.provincia p
 			JOIN c.salas s
 			JOIN s.salaclientes sc
 			JOIN sc.cliente cl
-			WHERE cl.id = :id')
+			WHERE cl.id = :id and p.region_id=1')
 			->setParameter('id', $cliente->getId());
 		$comunas = $query->getResult();
 		
@@ -127,14 +127,14 @@ class DetalleController extends Controller
 				'multiple'  => false,
 				'data' => $ultima_medicion			
 			))
-			->getForm();
-			
+			->getForm();					
+		
 		$form_region = $this->get('form.factory')->createNamedBuilder('f_region', 'form')
 			->add('Region', 'choice', array(
 				'choices'   => $choices_regiones,
 				'required'  => true,
 				'multiple'  => true,
-				'data' => array_keys($choices_regiones)
+				'data' => array(1)
 			))
 			->getForm();
 			
@@ -159,13 +159,19 @@ class DetalleController extends Controller
 		//ULTIMA MEDICION
 		$id_ultima_medicion = $this->get('cadem_reporte.helper.medicion')->getIdUltimaMedicion();
 		
+		$comunas='';
+		foreach(array_keys($choices_comunas) as $comuna)
+			$comunas.=$comuna.',';	
+		$comunas = trim($comunas, ',');
+		
+		// print_r($comunas);
+		
 		//CONSULTA
-		
-		
+				
 		$sql = "SELECT (case when q.hayquiebre = 1 then 1 else 0 END) as quiebre, ic.CODIGOITEM1 as COD_PRODUCTO,i.NOMBRE as NOM_PRODUCTO,ni.NOMBRE as SEGMENTO, sc.CODIGOSALA as COD_SALA, s.CALLE as CALLE_SALA, s.NUMEROCALLE as NUM_SALA, cad.NOMBRE as CAD_SALA, com.NOMBRE as COM_SALA FROM QUIEBRE q
 		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID and p.MEDICION_ID = {$id_ultima_medicion}
 		INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
-		INNER JOIN SALA s on s.ID = sc.SALA_ID
+		INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in ({$comunas})
 		INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
 		INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
 		INNER JOIN COMUNA com on s.COMUNA_ID=com.ID
@@ -180,9 +186,7 @@ class DetalleController extends Controller
 			$session->set($sha1,$detalle_quiebre);
 		}
 		else $detalle_quiebre = $session->get($sha1);
-		
-		
-		
+					
 		// Obtener totales horizontales por producto
 			
 		$sql =	"SELECT  i.NOMBRE, ni.NOMBRE, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
@@ -232,10 +236,7 @@ class DetalleController extends Controller
 		$sql = "SELECT SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
 				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$id_ultima_medicion}";			
 
-		$total = $em->getConnection()->executeQuery($sql)->fetchAll();				
-
-		
-		
+		$total = $em->getConnection()->executeQuery($sql)->fetchAll();								
 				
 		// Variable para saber cuantos niveles de agregacion define el cliente, esto debe ser parametrizado en una etapa posterior
 		$niveles=2;										
@@ -288,7 +289,7 @@ class DetalleController extends Controller
 		$session->set("total",$total);	
 
 		// Calcula el ancho máximo de la tabla	
-		$extension=count($head)*18-100;
+		$extension=count($head)*16-100;
 	
 		if($extension<0)
 			$extension=0;
@@ -364,7 +365,7 @@ class DetalleController extends Controller
 		{
 			$nivel1=$detalle_quiebre[$cont_regs]['COD_PRODUCTO'];		
 			// Lleno la fila con vacios, le agrego 1 posiciones, correspondientes al total					
-			$fila=array_fill(0,$num_salas+3,"<div style='background:grey;height:1.6em'></div>");								
+			$fila=array_fill(0,$num_salas+3,"<div style='background:grey;height:1.9em'></div>");								
 			$nivel2=$detalle_quiebre[$cont_regs]['SEGMENTO'];																								
 			$cont_totales_producto=0;				
 		
@@ -380,10 +381,10 @@ class DetalleController extends Controller
 					switch($detalle_quiebre[$cont_regs]['quiebre'])
 					{
 						case '0':
-							$fila[$columna_quiebre+2]="<div style='background:green;height:1.6em'></div>";	
+							$fila[$columna_quiebre+2]="<div style='background:green;height:1.9em'></div>";	
 							break;
 						case '1':
-							$fila[$columna_quiebre+2]="<div style='background:red;height:1.6em'></div>";	
+							$fila[$columna_quiebre+2]="<div style='background:red;height:1.9em'></div>";	
 							break;
 					}																			
 					$cont_regs++;						
@@ -394,7 +395,7 @@ class DetalleController extends Controller
 					$cont_totales_producto++;																			
 					$nivel1=$detalle_quiebre[$cont_regs]['COD_PRODUCTO'];
 					array_push($body,$fila);
-					$fila=array_fill(0,$num_salas+3,"<div style='background:grey;height:1.6em'></div>");	
+					$fila=array_fill(0,$num_salas+3,"<div style='background:grey;height:1.9em'></div>");	
 				}
 				if($cont_regs==$num_regs-1)		
 				{	
@@ -512,6 +513,8 @@ class DetalleController extends Controller
 		
 		$sql =	"SELECT  i.NOMBRE, ni.NOMBRE, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
 				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$medicion}
+				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
+				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )				
 				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
 				INNER JOIN ITEM i on i.ID = ic.ITEM_ID
 				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID				
@@ -525,9 +528,10 @@ class DetalleController extends Controller
 		//720 MS
 		$sql =	"SELECT ni.NOMBRE as SEGMENTO, sc.CODIGOSALA as COD_SALA, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
 				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$medicion}
+				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
+				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )				
 				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
-				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
-				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
+				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID				
 				GROUP BY ni.NOMBRE, sc.CODIGOSALA
 				ORDER BY ni.NOMBRE";
 	
@@ -539,6 +543,8 @@ class DetalleController extends Controller
 		//100 MS
 		$sql =	"SELECT ni.NOMBRE as SEGMENTO, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
 				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$medicion}
+				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
+				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )
 				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
 				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
 				GROUP BY ni.NOMBRE
@@ -553,23 +559,21 @@ class DetalleController extends Controller
 		//100 MS
 		$sql = "SELECT sc.CODIGOSALA as COD_SALA, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
 				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$medicion}
-				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
+				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
+				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )				
 				GROUP BY sc.CODIGOSALA";
 		
 		$totales_verticales_segmento = $em->getConnection()->executeQuery($sql)->fetchAll();							
 		
 		// Obtener total horizontal por totales verticales por totales categoria
-		
-		
+				
 		//90 MS
 		$sql = "SELECT SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
-				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$medicion}";			
+				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$medicion}
+				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
+				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )";			
 
-		$total = $em->getConnection()->executeQuery($sql)->fetchAll();
-		
-		
-
-		
+		$total = $em->getConnection()->executeQuery($sql)->fetchAll();			
 				
 		// Variable para saber cuantos niveles de agregacion define el cliente, esto debe ser parametrizado en una etapa posterior
 		$niveles=2;												
@@ -625,7 +629,7 @@ class DetalleController extends Controller
 		$session->set("totales_verticales_segmento",$totales_verticales_segmento);	
 		$session->set("total",$total);		
 		// Calcula el ancho máximo de la tabla	
-		$extension=count($head)*20-100;
+		$extension=count($head)*16-100;
 	
 		if($extension<0)
 			$extension=0;

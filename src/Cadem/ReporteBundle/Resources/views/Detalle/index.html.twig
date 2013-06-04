@@ -168,7 +168,7 @@ function construirTabla()
 			// "bScrollInfinite": true,
 			"aoColumnDefs": [
 				{ "bVisible": false, "aTargets": [1] },
-				{ "sWidth": "1.2%",  "sClass": "tag", "aTargets": [0] }							
+				{ "sClass": "tag", "aTargets": [0] }							
 			],
 			"aaSortingFixed": [[ 1, 'asc' ]],
 			"sPaginationType": "full_numbers",		
@@ -421,12 +421,8 @@ $(document).ready(function () {
 					case 1:
 					case cols:
 						tableHeading.innerHTML = value;
-						var att=document.createAttribute("rowspan");						
-						att.value=2;					
-						tableHeading.setAttributeNode(att);			
-						att=document.createAttribute("style");						
-						att.value="vertical-align:middle";					
-						tableHeading.setAttributeNode(att);	
+						tableHeading.setAttribute('rowspan',2);				
+						tableHeading.setAttribute('style',"vertical-align:middle");															
 						break;					
 					default:
 						tableHeading.innerHTML = value['cod_sala'];
@@ -457,6 +453,7 @@ $(document).ready(function () {
 			calcularAnchoMaximo();			
 			// Luego volvemos a construir la tabla con dataTables
 			construirTabla();
+			$('.DTFC_LeftFootWrapper').hide();
 		},"json")
 		.done(function() {  })
 		.fail(function() {  })
