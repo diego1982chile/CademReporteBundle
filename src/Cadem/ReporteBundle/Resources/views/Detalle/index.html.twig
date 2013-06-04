@@ -369,18 +369,6 @@ $(document).ready(function () {
 		.always(function() { /*alert("finished");*/ quitarloader();});
 	});
 });
-
-	//LOGICA DEL SUBMIT DEL FORMULARIO, SE DEBERIA OCUPAR AJAX
-	function procesarform(){
-	
-		//LOADER
-		$('form#filtros input').last().after('<img class="loader" alt="" style="float:right" src="/bundles/cademreporte/images/loader.gif">');
-		//GET
-		//PROCESO
-		alert('aca se hace request get/post');
-		//AL FINALIZAR
-		quitarloader();
-	}
 	
 	//LOGICA DEL SUBMIT DEL FORMULARIO, SE DEBERIA OCUPAR AJAX
 	function procesarform(){
