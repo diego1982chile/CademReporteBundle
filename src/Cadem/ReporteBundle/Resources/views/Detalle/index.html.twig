@@ -15,35 +15,64 @@
 {% block body %}
     <div class="span9">
 		<div class="container-fluid well" style="padding-top:0">
-			<h4>Detalle Quiebre</h4>
 			<div class="hero-unit" style="padding:15px;margin-bottom:20px">
+				<table id='encabezado' width='100%'>
+					<thead>
+						<tr>
+							<th width='35%' style='text-align:left'>
+								<h4>Detalle Quiebre</h4>
+							</th>
+							<th width='10%' style='font-size:medium'>
+								Presencia:
+							</th>
+							<th width='10%'>
+								<div style='background:green;height:1.9em'>
+								</div>
+							</th>
+							<th width='10%'>
+								Quiebre:
+							</th>
+							<th width='10%'>
+								<div style='background:red;height:1.9em'>
+								</div>
+							</th>
+							<th width='15%'>
+								No planogramado:
+							</th>
+							<th width='10%'>
+								<div style='background:grey;height:1.9em'>
+								</div>
+							</th>
+						</tr>
+					</thead>
+				</table>
 				<div id="container" class="row-fluid">
-						<table id="tabla_resumen" class="tabla_resumen table table-bordered display">                      
-							<thead>
-								<tr>
-									{% for key,value in head %}
-									{% if loop.index>2 %}										
-									<th>
-										{{key}}
-									</th>
-									{% else %}	
-									<th rowspan="2" style='vertical-align:middle'>
-										{{value}}
-									</th>
-									{% endif %}		
-									{% endfor %}
-								</tr>
-								<tr>
-									{% for key,value in head %}
-									{% if loop.index>2 %}
-									<th>
-										{{value|replace({' ':'_'})[0:16]}}...											
-									</th>
-									{% endif %}		
-									{% endfor %}
-								</tr>
-							</thead>                        					                   
-						</table>
+					<table id="tabla_resumen" class="tabla_resumen table table-bordered display">                      
+						<thead>
+							<tr>
+								{% for key,value in head %}
+								{% if loop.index>2 %}										
+								<th>
+									{{key}}
+								</th>
+								{% else %}	
+								<th rowspan="2" style='vertical-align:middle'>
+									{{value}}
+								</th>
+								{% endif %}		
+								{% endfor %}
+							</tr>
+							<tr>
+								{% for key,value in head %}
+								{% if loop.index>2 %}
+								<th title='{{ value }}'>
+									{{value|replace({' ':'_'})[0:16]}}...											
+								</th>
+								{% endif %}		
+								{% endfor %}
+							</tr>
+						</thead>                        					                   
+					</table>
 				</div>
 			</div>					        
 		</div>
@@ -122,7 +151,7 @@ var matriz_totales = [];
 function calcularAnchoMaximo()
 {
 	// Calcula el ancho máximo de la tabla		
-	$('table').css('max-width',maxWidth+'%');
+	$('#tabla_resumen').css('max-width',maxWidth+'%');
 	maxHeight=400;
 	// alert('maxWidth='+maxWidth);
 }
@@ -168,7 +197,7 @@ function construirTabla()
 			// "bScrollInfinite": true,
 			"aoColumnDefs": [
 				{ "bVisible": false, "aTargets": [1] },
-				{ "sWidth": "1.2%",  "sClass": "tag", "aTargets": [0] }							
+				{ "sClass": "tag", "aTargets": [0] }							
 			],
 			"aaSortingFixed": [[ 1, 'asc' ]],
 			"sPaginationType": "full_numbers",		
@@ -405,12 +434,8 @@ $(document).ready(function () {
 			// Luego generamos el html de la tabla y lo añadimos al DOM
 			var table= document.createElement( 'table' );
 			var thead= document.createElement( 'thead' );
-			var att=document.createAttribute("id");
-			att.value="tabla_resumen";					
-			table.setAttributeNode(att);
-			var att=document.createAttribute("class");
-			att.value="tabla_resumen table table-bordered display";					
-			table.setAttributeNode(att);			
+			table.setAttribute('id',"tabla_resumen");	
+			table.setAttribute('class',"tabla_resumen table table-bordered display");								
 			var tableHead = document.createElement( 'tr' );	 //tableheader 					
 			var cols=data.head.length-1;
 			$(data.head).each(function(key,value){				
@@ -421,12 +446,8 @@ $(document).ready(function () {
 					case 1:
 					case cols:
 						tableHeading.innerHTML = value;
-						var att=document.createAttribute("rowspan");						
-						att.value=2;					
-						tableHeading.setAttributeNode(att);			
-						att=document.createAttribute("style");						
-						att.value="vertical-align:middle";					
-						tableHeading.setAttributeNode(att);	
+						tableHeading.setAttribute('rowspan',2);				
+						tableHeading.setAttribute('style',"vertical-align:middle");															
 						break;					
 					default:
 						tableHeading.innerHTML = value['cod_sala'];
@@ -446,6 +467,7 @@ $(document).ready(function () {
 					default: 		
 						var tableHeading = document.createElement( 'th' );						
 						tableHeading.innerHTML = value['nom_sala'].substring(0,16).replace(/ /g,'_')+'...';
+						tableHeading.setAttribute('title',value['nom_sala']);		
 						tableHead.appendChild( tableHeading );	
 						break;						
 				}																		
@@ -457,6 +479,7 @@ $(document).ready(function () {
 			calcularAnchoMaximo();			
 			// Luego volvemos a construir la tabla con dataTables
 			construirTabla();
+			$('.DTFC_LeftFootWrapper').hide();
 		},"json")
 		.done(function() {  })
 		.fail(function() {  })

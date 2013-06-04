@@ -524,6 +524,8 @@ class EvolucionController extends Controller
 			
 		$sql =	"SELECT i.NOMBRE, ni.NOMBRE, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
 		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID IN (SELECT TOP(12) m2.ID FROM MEDICION m2 WHERE m2.ID = p.MEDICION_ID ORDER BY m2.FECHAINICIO ASC)
+		INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
+		INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )
 		INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
 		INNER JOIN ITEM i on i.ID = ic.ITEM_ID
 		INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
@@ -543,6 +545,8 @@ class EvolucionController extends Controller
 					
 		$sql =	"SELECT ni.NOMBRE as SEGMENTO, m.FECHAINICIO, m.NOMBRE as MEDICION, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
 		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID IN (SELECT TOP(12) m2.ID FROM MEDICION m2 WHERE m2.ID = p.MEDICION_ID ORDER BY m2.FECHAINICIO ASC)
+		INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
+		INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )
 		INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
 		INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
 		INNER JOIN MEDICION m on m.ID = p.MEDICION_ID
@@ -560,6 +564,8 @@ class EvolucionController extends Controller
 		
 		$sql =	"SELECT ni.NOMBRE as SEGMENTO, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
 		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID IN (SELECT TOP(12) m2.ID FROM MEDICION m2 WHERE m2.ID = p.MEDICION_ID ORDER BY m2.FECHAINICIO ASC)
+		INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
+		INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )
 		INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
 		INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
 		GROUP BY ni.NOMBRE
@@ -577,6 +583,8 @@ class EvolucionController extends Controller
 		
 		$sql = "SELECT  m.FECHAINICIO, m.NOMBRE as MEDICION, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
 		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID IN (SELECT TOP(12) m2.ID FROM MEDICION m2 WHERE m2.ID = p.MEDICION_ID ORDER BY m2.FECHAINICIO ASC)	
+		INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
+		INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )
 		INNER JOIN MEDICION m on m.ID = p.MEDICION_ID
 		GROUP BY m.FECHAINICIO, m.NOMBRE
 		ORDER BY FECHAINICIO";
@@ -592,8 +600,10 @@ class EvolucionController extends Controller
 		// Obtener total horizontal por totales verticales por totales categoria
 		
 		$sql = "SELECT  SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
-		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID IN (SELECT TOP(12) m2.ID FROM MEDICION m2 WHERE m2.ID = p.MEDICION_ID ORDER BY m2.FECHAINICIO ASC)";			
-
+		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID IN (SELECT TOP(12) m2.ID FROM MEDICION m2 WHERE m2.ID = p.MEDICION_ID ORDER BY m2.FECHAINICIO ASC)
+		INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
+		INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )		";			
+		
 		$total = $em->getConnection()->executeQuery($sql)->fetchAll();											
 		
 		// Guardamos resultado de consulta en variable de sesión para reusarlas en un action posterior
