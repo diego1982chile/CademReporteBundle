@@ -65,7 +65,7 @@
 							<tr>
 								{% for key,value in head %}
 								{% if loop.index>2 %}
-								<th>
+								<th title='{{ value }}'>
 									{{value|replace({' ':'_'})[0:16]}}...											
 								</th>
 								{% endif %}		
@@ -434,12 +434,8 @@ $(document).ready(function () {
 			// Luego generamos el html de la tabla y lo añadimos al DOM
 			var table= document.createElement( 'table' );
 			var thead= document.createElement( 'thead' );
-			var att=document.createAttribute("id");
-			att.value="tabla_resumen";					
-			table.setAttributeNode(att);
-			var att=document.createAttribute("class");
-			att.value="tabla_resumen table table-bordered display";					
-			table.setAttributeNode(att);			
+			table.setAttribute('id',"tabla_resumen");	
+			table.setAttribute('class',"tabla_resumen table table-bordered display");								
 			var tableHead = document.createElement( 'tr' );	 //tableheader 					
 			var cols=data.head.length-1;
 			$(data.head).each(function(key,value){				
@@ -471,6 +467,7 @@ $(document).ready(function () {
 					default: 		
 						var tableHeading = document.createElement( 'th' );						
 						tableHeading.innerHTML = value['nom_sala'].substring(0,16).replace(/ /g,'_')+'...';
+						tableHeading.setAttribute('title',value['nom_sala']);		
 						tableHead.appendChild( tableHeading );	
 						break;						
 				}																		
