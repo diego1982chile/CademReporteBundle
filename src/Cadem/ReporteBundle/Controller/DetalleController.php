@@ -406,10 +406,21 @@ class DetalleController extends Controller
 					$fila=array_fill(0,$num_salas+3,"<div style='background:grey;height:1.9em'></div>");	
 				}
 				if($cont_regs==$num_regs-1)		
-				{	
+				{						
+					$columna_quiebre=array_search($detalle_quiebre[$cont_regs]['COD_SALA'],$salas);											
+					switch($detalle_quiebre[$cont_regs]['quiebre'])
+					{
+						case '0':
+							$fila[$columna_quiebre+2]="<div style='background:green;height:1.9em'></div>";	
+							break;
+						case '1':
+							$fila[$columna_quiebre+2]="<div style='background:red;height:1.9em'></div>";	
+							break;
+					}					
 					$fila[$num_salas+2]=round($totales_producto[$cont_totales_producto]['QUIEBRE']*100,1);					
 					$cont_totales_producto++;								
-					array_push($body,$fila);						
+					array_push($body,$fila);
+					$cont_regs++;
 				}			
 			}	
 			// Calculo de totales		
@@ -448,7 +459,7 @@ class DetalleController extends Controller
 
 			$cont_regs=0;
 			$num_regs=count($totales_verticales_segmento);
-			$fila=array_fill(0,$num_salas+1,"-");				
+			$fila=array_fill(0,$num_salas+1,"-");										
 			
 			while($cont_regs<$num_regs)
 			{
@@ -506,8 +517,8 @@ class DetalleController extends Controller
 				INNER JOIN COMUNA com on s.COMUNA_ID=com.ID
 				INNER JOIN CADENA cad on s.CADENA_ID=cad.ID	
 				INNER JOIN ITEM i on i.ID = ic.ITEM_ID	
-				ORDER BY SEGMENTO,NOM_PRODUCTO,CAD_SALA,COM_SALA,CALLE_SALA";																		
-				
+				ORDER BY SEGMENTO,NOM_PRODUCTO,CAD_SALA,COM_SALA,CALLE_SALA";																						
+		
 		$sha1 = sha1($sql);
 
 		if(!$session->has($sha1)){
@@ -546,8 +557,7 @@ class DetalleController extends Controller
 				ORDER BY ni.NOMBRE";
 	
 		$totales_segmento = $em->getConnection()->executeQuery($sql)->fetchAll();
-		
-		
+				
 		// Obtener totales horizontales por totales segmento (ultima columna de totales verticales por categoria)
 		
 		//100 MS

@@ -375,6 +375,8 @@ class EvolucionController extends Controller
 				}
 				if($cont_regs==$num_regs-1)		
 				{	
+					$columna_quiebre=array_search($evolucion_quiebre[$cont_regs]['NOMBRE'],$mediciones);
+					$fila[$columna_quiebre]=round($evolucion_quiebre[$cont_regs]['quiebre']*100,1);				
 					$fila[$num_meds+2]=round($totales_producto[$cont_totales_producto]['QUIEBRE']*100,1);					
 					array_push($body,(object)$fila);									
 					$cont_regs++;
