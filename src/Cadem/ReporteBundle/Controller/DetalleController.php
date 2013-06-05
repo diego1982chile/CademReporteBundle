@@ -438,6 +438,8 @@ class DetalleController extends Controller
 				}
 				if($cont_regs==$num_regs-1)		
 				{	
+					$columna_quiebre=array_search($totales_segmento[$cont_regs]['COD_SALA'],$salas);
+					$fila[$columna_quiebre]=round($totales_segmento[$cont_regs]['QUIEBRE']*100,1);					
 					$fila[$num_salas]=round($totales_horizontales_segmento[$cont_totales_horizontales_segmento]['QUIEBRE']*100,1);
 					array_push($matriz_totales,(object)$fila);		
 					$cont_regs++;					
