@@ -22,6 +22,13 @@ class Noticia
     private $id;
 
     /**
+     * @var integer
+     *
+     * @ORM\Column(name="CLIENTE_ID", type="integer", nullable=false)
+     */
+    private $clienteid;
+
+    /**
      * @var string
      *
      * @ORM\Column(name="TITULO", type="string", length=256, nullable=false)
@@ -52,7 +59,7 @@ class Noticia
     /**
      * @var \Cliente
      *
-     * @ORM\ManyToOne(targetEntity="Cliente")
+     * @ORM\ManyToOne(targetEntity="Cliente", inversedBy="noticias")
      * @ORM\JoinColumns({
      *   @ORM\JoinColumn(name="CLIENTE_ID", referencedColumnName="ID")
      * })
@@ -69,6 +76,29 @@ class Noticia
     public function getId()
     {
         return $this->id;
+    }
+
+    /**
+     * Get clienteid
+     *
+     * @return integer 
+     */
+    public function getClienteId()
+    {
+        return $this->clienteid;
+    }
+    
+    /**
+     * Set clienteid
+     *
+     * @param integer $clienteid
+     * @return Noticia
+     */
+    public function SetClienteId($clienteid)
+    {
+        $this->clienteid = $clienteid;
+        
+        return $this;
     }
 
     /**

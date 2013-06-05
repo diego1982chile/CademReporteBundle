@@ -70,17 +70,23 @@ class Cliente
 	 
 	protected $usuarios;
 	 
-	 /**
-     * @ORM\OneToMany(targetEntity="Estudio", mappedBy="cliente")
-     */
+	/**
+    * @ORM\OneToMany(targetEntity="Estudio", mappedBy="cliente")
+    */
 	 
 	protected $estudios;
 	 
-	 /**
-     * @ORM\OneToMany(targetEntity="Salacliente", mappedBy="cliente")
-     */
+	/**
+    * @ORM\OneToMany(targetEntity="Salacliente", mappedBy="cliente")
+    */
 	 
 	protected $salaclientes;
+	
+	/**
+    * @ORM\OneToMany(targetEntity="Noticia", mappedBy="cliente")
+    */
+	 
+	protected $noticias;
 	 
 	 
 	 
@@ -90,6 +96,7 @@ class Cliente
         $this->usuarios = new ArrayCollection();
         $this->estudios = new ArrayCollection();
         $this->salaclientes = new ArrayCollection();
+        $this->noticias = new ArrayCollection();
     }
 
 
@@ -334,7 +341,7 @@ class Cliente
     }
 
     /**
-     * Remove salaclientes
+     * Remove salacliente
      *
      * @param \Cadem\ReporteBundle\Entity\Salacliente $salaclientes
      */
@@ -352,14 +359,37 @@ class Cliente
     {
         return $this->salaclientes;
     }
+	
+	/**
+     * Add noticia
+     *
+     * @param \Cadem\ReporteBundle\Entity\Noticia $noticia
+     * @return Cliente
+     */
+    public function addNoticia(\Cadem\ReporteBundle\Entity\Noticia $noticia)
+    {
+        $this->noticias[] = $noticia;
+    
+        return $this;
+    }
+	
+	/**
+     * Remove noticia
+     *
+     * @param \Cadem\ReporteBundle\Entity\Noticia $noticia
+     */
+    public function removeNoticia(\Cadem\ReporteBundle\Entity\Noticia $noticia)
+    {
+        $this->salaclientes->removeElement($noticia);
+    }
 
     /**
-     * Get salaclientes
+     * Get noticias
      *
      * @return \Doctrine\Common\Collections\Collection 
      */
-    public function getSalaclientes()
+    public function getNoticias()
     {
-        return $this->salaclientes;
+        return $this->noticias;
     }
 }
