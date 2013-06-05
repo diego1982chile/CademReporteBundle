@@ -192,9 +192,9 @@ class ResumenController extends Controller
 		// CONSTRUIR EL ENCABEZADO DE LA TABLA
 			
 		if($niveles==1)
-			$prefixes=array('SKU/SALA');
+			$prefixes=array('SKU/CADENA');
 		else
-			$prefixes=array('SKU/SALA','SEGMENTO');
+			$prefixes=array('SKU/CADENA','SEGMENTO');
 		
 		$head=array();		
 		
@@ -514,6 +514,8 @@ class ResumenController extends Controller
 				}
 				if($cont_regs==$num_regs-1)		
 				{	
+					$columna_quiebre=array_search($resumen_quiebre[$cont_regs]['CADENA'],$cadenas);
+					$fila[$columna_quiebre]=round($resumen_quiebre[$cont_regs]['quiebre']*100,1);					
 					$fila[$num_cads+2]=round($totales_segmento[$cont_totales_segmento]['quiebre']*100,1);					
 					array_push($body,(object)$fila);		
 					$cont_regs++;					
@@ -640,9 +642,9 @@ class ResumenController extends Controller
 		// CONSTRUIR EL ENCABEZADO DE LA TABLA
 			
 		if($niveles==1)
-			$prefixes=array('SKU/SALA');
+			$prefixes=array('SKU/CADENA');
 		else
-			$prefixes=array('SKU/SALA','SEGMENTO');
+			$prefixes=array('SKU/CADENA','SEGMENTO');
 		
 		$head=array();		
 		
