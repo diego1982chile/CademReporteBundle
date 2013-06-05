@@ -33,6 +33,7 @@ class PHPExcelHelper {
 		$id_user = $user->getId();
 		$id_cliente = $user->getClienteId();
 		$id_ultima_medicion = $this->medicion->getIdUltimaMedicion();
+		$nombre_medicion = $this->medicion->getNombreMedicion($id_ultima_medicion);
 		$session = $this->session;
 
 		//DATOS
@@ -46,7 +47,7 @@ class PHPExcelHelper {
 		cad.NOMBRE as CAD_SALA,
 		com.NOMBRE as COM_SALA
 		FROM QUIEBRE q
-		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID and p.MEDICION_ID = 22
+		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID and p.MEDICION_ID = {$id_ultima_medicion}
 		INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$id_cliente}
 		INNER JOIN SALA s on s.ID = sc.SALA_ID
 		INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
@@ -83,12 +84,15 @@ class PHPExcelHelper {
 			$quiebre[$d['COD_SALA']][$d['COD_PRODUCTO']] = intval($d['quiebre']);
 		}
 
-		//ORDENAR LAS SALAS
-		asort($header);
+		//ORDENAR LAS SALAS SI HAY DATOS, SI NO RETORNAR ERROR
+		if(isset($header) && is_array($header)) asort($header);
+		else return 'NO HAY DATOS o FALLO EL PROCESO';
 
 		//LLENAR PRODUCTO/SEGMENTO
 		$objPHPExcel->setActiveSheetIndex(0)->setCellValue('A1', 'PRODUCTO');
+		$objPHPExcel->getActiveSheet()->getColumnDimension('A')->setWidth(50);
 		$objPHPExcel->setActiveSheetIndex(0)->setCellValue('B1', 'SEGMENTO');
+		$objPHPExcel->getActiveSheet()->getColumnDimension('B')->setAutoSize(true);
 
 		$col = 'A';
 		$fil = 2;
@@ -115,12 +119,17 @@ class PHPExcelHelper {
 			$fil = 2;
 		}
 
+		$objPHPExcel->getActiveSheet()->getStyle('C1:'.$col.'1')->getAlignment()->setWrapText(true);
+		$objPHPExcel->getActiveSheet()->getStyle('C1:'.$col.'1')->getFont()->setSize(8);
+		$objPHPExcel->getActiveSheet()->getStyle('A1:'.$col.'1')->getFont()->setBold(true);
+
+
 
 		
 		
 
 		// Rename worksheet
-		$objPHPExcel->getActiveSheet()->setTitle('Simple');
+		$objPHPExcel->getActiveSheet()->setTitle('Detalle quiebre');
 
 
 		// Set active sheet index to the first sheet, so Excel opens this as the first sheet
@@ -128,7 +137,7 @@ class PHPExcelHelper {
 
 		// Redirect output to a client’s web browser (Excel2007)
 		header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-		header('Content-Disposition: attachment;filename="01simple.xlsx"');
+		header('Content-Disposition: attachment;filename="Detalle_quiebre_'.$nombre_medicion.'.xlsx"');
 		header('Cache-Control: max-age=0');
 		$objWriter = \PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel2007');
 		$objWriter->save('php://output');
