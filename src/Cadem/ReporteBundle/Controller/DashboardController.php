@@ -64,7 +64,12 @@ class DashboardController extends Controller
 		}
 		else $porc_quiebre = 0;
 		
-		
+		//NOTICIAS
+		$query = $em->createQuery(
+			'SELECT n FROM CademReporteBundle:Noticia n
+			WHERE n.clienteid = :idcliente and n.activo = 1')
+			->setParameter('idcliente', $cliente->getId());
+		$noticias = $query->getArrayResult();
 		
 		
 		//RESPONSE
@@ -76,7 +81,8 @@ class DashboardController extends Controller
 			'logofilename' => $logofilename,
 			'logostyle' => $logostyle,
 			'porc_quiebre' => $porc_quiebre,
-			'estudios' => $estudios
+			'estudios' => $estudios,
+			'noticias' => $noticias
 		));
 
 		//CACHE

@@ -14,7 +14,7 @@
 {% block body %}
 		<div class="span9">
 			<div class="container-fluid well" style="padding-top:0">
-				<h4>Estudio de "{{estudios[0].getNombre}}"</h4>
+				<h4>{{estudios[0].getNombre}}</h4>
 				<div class="hero-unit" style="padding:15px;margin-bottom:10px">
 					<!-- <h3>Indicadores</h3> -->
 					<div class="row-fluid">
@@ -38,39 +38,20 @@
 			
 			
 			<div class="row-fluid">
-            
-            <div class="span4">
-              {{ "
-			  
-Versión Beta!
-=============
-Se ha trabajado bastante para que pueda disfrutar de estas características:
-
-- Dashboard, donde estarán los indicadores más importantes y será tu home.
-- Resumen, con la info de la variable en forma global.
-- Ranking, los mejores y los peores con una vista.
-- Evolución, los indicadores a través del tiempo.
-- Detalle, con la información más desagregada posible.
-
-
-			  " | rst2html | raw }}
-             <!--  <p><a class="btn" href="#">Ver detalles &raquo;</a></p> -->
-            </div><!--/span-->
-			
+		{% for n in noticias %}
 			<div class="span4">
-              {{ "
-			  
-Pronto más novedades
-=====================
-En esta sección de noticias se irán publicando novedades y características adicionales.
-Aún estamos en versión beta así que las cosas podrían no salir como esperamos. Te invitamos a probar todo y cualquier “bug” que encuentres coméntanos!.
 
+{% set t = 
+n.titulo~"
+========================="%}
+			{{ t  | rst2html | raw}}
+			{{ n.cuerpo | rst2html | raw}}
 
-			  " | rst2html | raw }}
-             <!--  <p><a class="btn" href="#">Ver detalles &raquo;</a></p> -->
-            </div><!--/span-->
-         
+			<!--  <p><a class="btn" href="#">Ver detalles &raquo;</a></p> -->
+			</div>
+		{% endfor %}
 			
+
           </div><!--/row-->
 		  
         </div><!--/span-->
@@ -161,7 +142,7 @@ $(document).ready(function () {
 					rotation: 'auto'
 				},
 				title: {
-					text: '% {{ev.getNombrevariable}}',
+					text: '%',
 					y: 15
 				},
 				plotBands: [{
@@ -205,22 +186,7 @@ $(document).ready(function () {
 
 	$('form#filtros').submit(function() {
 		$.get( "{{ path('dashboard_indicadores') }}", $(this).serialize(), function(data) {
-				{# % for item in variables_clientes % #}
-				// if (typeof data.{#{item.variable.nombre}#} != 'undefined'){
-					// if ({#{"i_"~item.variable.nombre}#}.series.length) {
-						// {#{"i_"~item.variable.nombre}#}.series[0].remove();
-					// }
-					// {#{"i_"~item.variable.nombre}#}.addSeries(data.{#{item.variable.nombre}#});
-					// {#{"i_"~item.variable.nombre}#}.setTitle({ text: data.{#{item.variable.nombre}#}.name});
-				// }
-				// {# % endfor % #}
 				
-				
-				
-				// evo_quiebre_precio.series[0].remove();
-				// evo_quiebre_precio.series[0].remove();				
-				// evo_quiebre_precio.addSeries(data.evo_quiebre_precio.precio);
-				// evo_quiebre_precio.addSeries(data.evo_quiebre_precio.quiebre);
 				
 			},
 		'json');
