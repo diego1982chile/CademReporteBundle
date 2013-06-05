@@ -650,7 +650,12 @@ class DetalleController extends Controller
 			"max_width" => $max_width,
 		);		
 		return new JsonResponse($output);		
-	}	
+	}
+
+	public function excelAction(Request $request)
+    {
+    	return new Response($this->get("cadem_reporte.helper.phpexcel")->getExcelDetalle());
+    }
 		
 	public function indicadoresAction(Request $request)
     {

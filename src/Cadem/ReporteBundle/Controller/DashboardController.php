@@ -162,9 +162,4 @@ class DashboardController extends Controller
 
 		return $response;
     }
-
-    public function excelAction(Request $request)
-    {
-    	$this->get("cadem_reporte.helper.phpexcel")->getExcelDetalle();
-    }
 }

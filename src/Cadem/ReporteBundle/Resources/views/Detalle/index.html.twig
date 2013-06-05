@@ -45,7 +45,7 @@
 						</thead>                        					                   
 					</table>
 				</div>
-				<table id='encabezado' width='50%' style='float:right'>
+				<table id='encabezado' width='60%' style='float:right'>
 					<thead>
 						<tr>
 							<th width='10%' style='font-size:medium'>
@@ -68,6 +68,9 @@
 							<th width='10%'>
 								<div style='background:grey;height:1.9em'>
 								</div>
+							</th>
+							<th width='10%'>
+								<a target="_blank" href="{{path('detalle_excel')}}">Bajar Excel</a>
 							</th>
 						</tr>
 					</thead>
@@ -352,6 +355,11 @@ $(document).ready(function () {
 				// {#% endif %#}
 			// {#% endfor %#}  					
 		// });	
+	});
+
+	//BOTON PARA GENERAR EXCEL
+	$('#excel').click(function() {
+		alert('aaa');
 	});
 	
 	//GUARDA QUE BOTON SE PRESIONA EN EL FORMULARIO
