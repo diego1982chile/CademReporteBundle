@@ -208,7 +208,7 @@ class ResumenController extends Controller
 			array_unshift($head,$prefix);		
 		array_push($head,'TOTAL');	
 		
-// Obtener totales horizontales por segmento
+		// Obtener totales horizontales por segmento
 			
 		$sql =	"SELECT ni.NOMBRE as segmento, ni2.NOMBRE as categoria, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as quiebre FROM QUIEBRE q
 		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$id_ultima_medicion}
@@ -541,11 +541,13 @@ class ResumenController extends Controller
 					$fila[$num_cads]=round($totales_horizontales_categoria[$cont_totales_horizontales_categoria]['QUIEBRE']*100,1);
 					$cont_totales_horizontales_categoria++;
 					array_push($matriz_totales,$fila);
-					$fila=array_fill(0,$num_cads+1,"-");
+					$fila=array_fill(0,$num_cads,"-");
 					$nivel2=$totales_categoria[$cont_regs]['CATEGORIA'];					
 				}
 				if($cont_regs==$num_regs-1)		
-				{	
+				{						
+					$columna_quiebre=array_search($totales_categoria[$cont_regs]['CADENA'],$cadenas);
+					$fila[$columna_quiebre]=round($totales_categoria[$cont_regs]['QUIEBRE']*100,1);										
 					$fila[$num_cads]=round($totales_horizontales_categoria[$cont_totales_horizontales_categoria]['QUIEBRE']*100,1);
 					array_push($matriz_totales,(object)$fila);		
 					$cont_regs++;					
@@ -554,7 +556,7 @@ class ResumenController extends Controller
 
 			$cont_regs=0;
 			$num_regs=count($totales_verticales_categoria);
-			$fila=array_fill(0,$num_cads+1,"-");				
+			$fila=array_fill(0,$num_cads,"-");				
 			
 			while($cont_regs<$num_regs)
 			{
