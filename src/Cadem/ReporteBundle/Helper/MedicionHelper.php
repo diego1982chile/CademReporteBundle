@@ -11,12 +11,36 @@ class MedicionHelper {
 	protected $user;
 	private $id_ultima_medicion = null;
 	private $id_medicion_anterior = null;
+	private $nombre_medicion;
 
     public function __construct(EntityManager $entityManager, SecurityContext $security) {
         $this->em = $entityManager;
 		$this->security = $security;
 		if($security->getToken() != null) $this->user = $security->getToken()->getUser();
 		else $this->user = null;
+    }
+
+    private function getNombreMedicion_($id_medicion) {
+		$em = $this->em;
+		$user = $this->user;
+		$id_user = $user->getId();
+		$id_cliente = $user->getClienteID();
+		
+		//MEDICION
+		$query = $em->createQuery(
+			'SELECT m.nombre FROM CademReporteBundle:Medicion m
+			JOIN m.estudio e
+			WHERE e.clienteid = :idcliente AND m.id = :idmedicion')
+			->setParameter('idcliente', $id_cliente)
+			->setParameter('idmedicion', $id_medicion);
+		$medicion_q = $query->getArrayResult();
+		if(count($medicion_q) > 0){
+			$nombre_medicion = $medicion_q[0]['nombre'];
+		}
+		else $nombre_medicion = 'null';
+
+		$this->nombre_medicion = $nombre_medicion;
+		return $this->nombre_medicion;
     }
 
     private function getIdUltimaMedicion_() {
@@ -77,6 +101,11 @@ class MedicionHelper {
 		return $this->id_medicion_anterior;
     }
 	
+	public function getNombreMedicion($id_medicion){
+		if($this->nombre_medicion !== null) return $this->nombre_medicion;
+		else  return $this->getNombreMedicion_($id_medicion);
+	}
+
 	public function getIdUltimaMedicion(){
 		if($this->id_ultima_medicion !== null) return $this->id_ultima_medicion;
 		else  return $this->getIdUltimaMedicion_();
