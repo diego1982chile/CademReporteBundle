@@ -15,7 +15,7 @@
 {% block body %}
     <div class="span9">
 		<div class="container-fluid well" style="padding-top:0">
-			<h4>Vista Evolución de Quiebres</h4>
+			<h4>Evolución de Quiebres</h4>
 				<div class="hero-unit" style="padding:15px;margin-bottom:10px">
 					<div id='container' class="row-fluid">
 							<table id="tabla_resumen" class="tabla_resumen table-bordered table display">                      
@@ -182,11 +182,14 @@ function construirTabla()
 			  fixedColumn();
 			},
 		"bDeferRender": true,
-		"bSortClasses": false,		
+		"bSortClasses": false,	
+		"oLanguage": {
+				  "sProcessing": "<b>Procesando...</b>"
+				}	
 		// "sDom": "frtiS",
 	//	"sDom": '<"H"Cfr>t<"F"ip>',	
 	});
-	$('div.fg-toolbar:first').append("<h5 style='float:left;margin:0em'>Tabla Resumen Quiebre: (%) de Quiebre Categoria/Cadena</h5>");
+	$('div.fg-toolbar:first').append("<h5 style='float:left;margin:0em'>Tabla Resumen Quiebre: (%)</h5>");
 }
 
 function fixedColumn()
