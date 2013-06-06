@@ -37,6 +37,23 @@ class DetalleController extends Controller
 		
 		$logofilename = $cliente->getLogofilename();
 		$logostyle = $cliente->getLogostyle();
+
+		//CADENAS
+		$query = $em->createQuery(
+			'SELECT DISTINCT cad FROM CademReporteBundle:Cadena cad
+			JOIN cad.salas s
+			JOIN s.salaclientes sc
+			JOIN sc.cliente cl
+			WHERE cl.id = :id
+			ORDER BY cad.nombre')
+			->setParameter('id', $cliente->getId());
+		$cadenas = $query->getResult();
+		
+		$choices_cadenas = array();
+		foreach($cadenas as $r)
+		{
+			$choices_cadenas[$r->getId()] = strtoupper($r->getNombre());
+		}
 						
 		//REGIONES
 		$query = $em->createQuery(
@@ -117,6 +134,15 @@ class DetalleController extends Controller
 				'multiple'  => false,
 				'data' => '0',
 				'attr' => array('id' => 'myValue')
+			))
+			->getForm();
+
+		$form_cadena = $this->get('form.factory')->createNamedBuilder('f_cadena', 'form')
+			->add('Cadena', 'choice', array(
+				'choices'   => $choices_cadenas,
+				'required'  => true,
+				'multiple'  => true,
+				'data' => array_keys($choices_cadenas)
 			))
 			->getForm();
 			
@@ -311,7 +337,8 @@ class DetalleController extends Controller
 		array(
 			'forms' => array(
 				'form_estudio' 	=> $form_estudio->createView(),
-				'form_periodo' 	=> $form_periodo->createView(),	
+				'form_periodo' 	=> $form_periodo->createView(),
+				'form_cadena' => $form_cadena->createView(),
 				'form_region' 	=> $form_region->createView(),
 				'form_provincia' => $form_provincia->createView(),
 				'form_comuna' 	=> $form_comuna->createView(),	
@@ -506,12 +533,17 @@ class DetalleController extends Controller
 			$comunas.=$comuna.',';	
 		$comunas = trim($comunas, ',');
 
+		$cadenas='';
+		foreach($parametros['f_cadena']['Cadena'] as $cadena)
+			$cadenas.=$cadena.',';
+		$cadenas = trim($cadenas, ',');
+
 		//23 SEG
 		$start = microtime(true);
 		$sql = "SELECT (case when q.hayquiebre = 1 then 1 else 0 END) as quiebre, ic.CODIGOITEM1 as COD_PRODUCTO,i.NOMBRE as NOM_PRODUCTO,ni.NOMBRE as SEGMENTO, sc.CODIGOSALA as COD_SALA, s.CALLE as CALLE_SALA, s.NUMEROCALLE as NUM_SALA, cad.NOMBRE as CAD_SALA, com.NOMBRE as COM_SALA FROM QUIEBRE q
 				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID and p.MEDICION_ID = {$medicion}
 				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
-				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in ({$comunas})
+				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in ({$comunas}) and s.CADENA_ID in ({$cadenas})
 				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
 				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
 				INNER JOIN COMUNA com on s.COMUNA_ID=com.ID
@@ -535,7 +567,7 @@ class DetalleController extends Controller
 		$sql =	"SELECT  i.NOMBRE, ni.NOMBRE, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
 				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$medicion}
 				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
-				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )				
+				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )	 and s.CADENA_ID in ({$cadenas})			
 				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
 				INNER JOIN ITEM i on i.ID = ic.ITEM_ID
 				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID				
@@ -550,7 +582,7 @@ class DetalleController extends Controller
 		$sql =	"SELECT ni.NOMBRE as SEGMENTO, sc.CODIGOSALA as COD_SALA, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
 				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$medicion}
 				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
-				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )				
+				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} ) and s.CADENA_ID in ({$cadenas})			
 				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
 				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID				
 				GROUP BY ni.NOMBRE, sc.CODIGOSALA
@@ -564,7 +596,7 @@ class DetalleController extends Controller
 		$sql =	"SELECT ni.NOMBRE as SEGMENTO, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
 				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$medicion}
 				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
-				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )
+				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} ) and s.CADENA_ID in ({$cadenas})
 				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
 				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
 				GROUP BY ni.NOMBRE
@@ -578,7 +610,7 @@ class DetalleController extends Controller
 		$sql = "SELECT sc.CODIGOSALA as COD_SALA, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
 				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$medicion}
 				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
-				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )				
+				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )	and s.CADENA_ID in ({$cadenas})
 				GROUP BY sc.CODIGOSALA";
 		
 		$totales_verticales_segmento = $em->getConnection()->executeQuery($sql)->fetchAll();							
@@ -589,7 +621,7 @@ class DetalleController extends Controller
 		$sql = "SELECT SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
 				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$medicion}
 				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
-				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )";			
+				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} ) and s.CADENA_ID in ({$cadenas})";			
 
 		$total = $em->getConnection()->executeQuery($sql)->fetchAll();			
 				
@@ -667,141 +699,5 @@ class DetalleController extends Controller
 	public function excelAction(Request $request)
     {
     	return new Response($this->get("cadem_reporte.helper.phpexcel")->getExcelDetalle());
-    }
-		
-	public function indicadoresAction(Request $request)
-    {
-		// $start = microtime(true);
-
-		// $em = $this->getDoctrine()->getManager();
-		// $query = $em->createQuery(
-			// 'SELECT t FROM CademReporteBundle:Test t'
-		// )->setMaxResults(10000);
-		
-		// $cacheDriver = new \Doctrine\Common\Cache\ApcCache();
-
-		
-		//$cacheDriver->deleteAll();
-		// if($prueba = $cacheDriver->contains('my_query_result')){
-			// $test = $cacheDriver->fetch('my_query_result');
-		// }
-		// else{
-			// $test = $query->getResult(\Doctrine\ORM\Query::HYDRATE_ARRAY);
-			// $cacheDriver->save('my_query_result', $test, 20);
-		// }
-		
-		// $time_taken = microtime(true) - $start;
-		
-		$data = $request->query->all();
-		
-		$min = 0;
-		$max = 100;
-		
-		switch($data['form']['Canal']){
-			case '1':
-				$min = 60;
-				$max = 100;
-			break;
-			case '2':
-				$min = 40;
-				$max = 100;
-			break;
-			case '3':
-				$min = 0;
-				$max = 60;
-			break;
-		}
-		
-		$ranking = array(
-			'head' => array('CATEGORIA','JUMBO','LIDER','TOTTUS','TOTAL'),
-			'body' => array(
-				array("CERVEZA", mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max)),
-				array("ENERGETICA", mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max)),
-				array("RON", mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max))
-			)
-		);
-		
-		
-		$responseA = array(
-				'cobertura' =>	array(
-					'type' => 'pie',
-					'name' => 'Cobertura',
-					'data' => array(
-							array('name' => 'Cumple', 'y' => 20, 'color' => '#83A931'),
-							array('name' => 'No cumple', 'y' => 80, 'color' => '#EB3737')
-						)
-				),
-				'atributo' =>	array(
-					'type' => 'pie',
-					'name' => 'Atributo',
-					'data' => array(
-							array('name' => 'Cumple', 'y' => 35.5, 'color' => '#83A931'),
-							array('name' => 'No cumple', 'y' => 64.5, 'color' => '#EB3737')
-						)
-				),
-				'quiebre' =>	array(
-					'type' => 'pie',
-					'name' => 'Quiebre',
-					'data' => array(
-							array('name' => 'Cumple', 'y' => 55.5, 'color' => '#83A931'),
-							array('name' => 'No cumple', 'y' => 44.5, 'color' => '#EB3737')
-						)
-				),
-				'presencia' =>	array(
-					'type' => 'pie',
-					'name' => 'Presencia',
-					'data' => array(
-							array('name' => 'Cumple', 'y' => 44.5, 'color' => '#83A931'),
-							array('name' => 'No cumple', 'y' => 55.5, 'color' => '#EB3737')
-						)
-				),
-				'ranking' => $ranking
-				
-		);
-		$responseB = array( 
-				'cobertura' =>	array(
-					'type' => 'pie',
-					'name' => 'Cobertura',
-					'data' => array(
-							array('name' => 'Cumple', 'y' => 60, 'color' => '#83A931'),
-							array('name' => 'No cumple', 'y' => 40, 'color' => '#EB3737')
-						)
-				),
-				'atributo' =>	array(
-					'type' => 'pie',
-					'name' => 'Atributo',
-					'data' => array(
-							array('name' => 'Cumple', 'y' => 15.5, 'color' => '#83A931'),
-							array('name' => 'No cumple', 'y' => 84.5, 'color' => '#EB3737')
-						)
-				),
-				'quiebre' =>	array(
-					'type' => 'pie',
-					'name' => 'Quiebre',
-					'data' => array(
-							array('name' => 'Cumple', 'y' => 0, 'color' => '#83A931'),
-							array('name' => 'No cumple', 'y' => 100, 'color' => '#EB3737')
-						)
-				),
-				'presencia' =>	array(
-					'type' => 'pie',
-					'name' => 'Presencia',
-					'data' => array(
-							array('name' => 'Cumple', 'y' => 44.5, 'color' => '#83A931'),
-							array('name' => 'No cumple', 'y' => 55.5, 'color' => '#EB3737')
-						)
-				),
-				'ranking' => $ranking
-		);
-		
-		//RESPONSE
-		if('1' === $data['form']['Periodo']) $response = new JsonResponse($responseA);
-		else $response = new JsonResponse($responseB);
-		
-		//CACHE
-		$response->setPrivate();
-		$response->setMaxAge(1);
-
-		return $response;
     }
 }

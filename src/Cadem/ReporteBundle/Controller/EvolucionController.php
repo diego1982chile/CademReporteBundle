@@ -38,7 +38,26 @@ class EvolucionController extends Controller
 		
 		$logofilename = $cliente->getLogofilename();
 		$logostyle = $cliente->getLogostyle();
-							
+		
+
+		//CADENAS
+		$query = $em->createQuery(
+			'SELECT DISTINCT cad FROM CademReporteBundle:Cadena cad
+			JOIN cad.salas s
+			JOIN s.salaclientes sc
+			JOIN sc.cliente cl
+			WHERE cl.id = :id
+			ORDER BY cad.nombre')
+			->setParameter('id', $cliente->getId());
+		$cadenas = $query->getResult();
+		
+		$choices_cadenas = array();
+		foreach($cadenas as $r)
+		{
+			$choices_cadenas[$r->getId()] = strtoupper($r->getNombre());
+		}
+
+
 		//REGIONES
 		$query = $em->createQuery(
 			'SELECT DISTINCT r FROM CademReporteBundle:Region r
@@ -99,7 +118,17 @@ class EvolucionController extends Controller
 				'attr' => array('id' => 'myValue')
 			))
 			->getForm();
-			
+		
+		$form_cadena = $this->get('form.factory')->createNamedBuilder('f_cadena', 'form')
+			->add('Cadena', 'choice', array(
+				'choices'   => $choices_cadenas,
+				'required'  => true,
+				'multiple'  => true,
+				'data' => array_keys($choices_cadenas)
+			))
+			->getForm();
+
+
 		$form_region = $this->get('form.factory')->createNamedBuilder('f_region', 'form')
 			->add('Region', 'choice', array(
 				'choices'   => $choices_regiones,
@@ -294,6 +323,7 @@ class EvolucionController extends Controller
 		array(
 			'forms' => array(
 				'form_estudio' 	=> $form_estudio->createView(),
+				'form_cadena' => $form_cadena->createView(),
 				'form_region' 	=> $form_region->createView(),
 				'form_provincia' => $form_provincia->createView(),
 				'form_comuna' 	=> $form_comuna->createView(),
@@ -460,13 +490,18 @@ class EvolucionController extends Controller
 		$comunas='';
 		foreach($parametros['f_comuna']['Comuna'] as $comuna)
 			$comunas.=$comuna.',';	
-		$comunas = trim($comunas, ',');								
+		$comunas = trim($comunas, ',');
+
+		$cadenas='';
+		foreach($parametros['f_cadena']['Cadena'] as $cadena)
+			$cadenas.=$cadena.',';
+		$cadenas = trim($cadenas, ',');
 
 		$sql = "SELECT (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre, i.NOMBRE as PRODUCTO,  ni.NOMBRE as SEGMENTO, m.NOMBRE, m.FECHAINICIO FROM QUIEBRE q
 				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID				
 				INNER JOIN (SELECT TOP(12) m2.ID as ID, m2.NOMBRE as NOMBRE, m2.FECHAINICIO as FECHAINICIO FROM MEDICION m2 INNER JOIN ESTUDIO e on m2.ESTUDIO_ID=e.ID and e.CLIENTE_ID={$user->getClienteID()} ORDER BY m2.FECHAINICIO DESC) as m on m.ID = p.MEDICION_ID				
 				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
-				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )
+				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in ( {$comunas} ) and s.CADENA_ID in ({$cadenas})
 				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
 				INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
 				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
@@ -528,7 +563,7 @@ class EvolucionController extends Controller
 		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID
 		INNER JOIN (SELECT TOP(12) m2.ID as ID, m2.NOMBRE as NOMBRE, m2.FECHAINICIO as FECHAINICIO FROM MEDICION m2 INNER JOIN ESTUDIO e on m2.ESTUDIO_ID=e.ID and e.CLIENTE_ID={$user->getClienteID()} ORDER BY m2.FECHAINICIO DESC) as m on m.ID = p.MEDICION_ID		
 		INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
-		INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )
+		INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} ) and s.CADENA_ID in ({$cadenas})
 		INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
 		INNER JOIN ITEM i on i.ID = ic.ITEM_ID
 		INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
@@ -548,7 +583,7 @@ class EvolucionController extends Controller
 		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID
 		INNER JOIN (SELECT TOP(12) m2.ID as ID, m2.NOMBRE as NOMBRE, m2.FECHAINICIO as FECHAINICIO FROM MEDICION m2 INNER JOIN ESTUDIO e on m2.ESTUDIO_ID=e.ID and e.CLIENTE_ID={$user->getClienteID()} ORDER BY m2.FECHAINICIO DESC) as m on m.ID = p.MEDICION_ID		
 		INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
-		INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )
+		INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} ) and s.CADENA_ID in ({$cadenas})
 		INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
 		INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID		
 		GROUP BY ni.NOMBRE, m.FECHAINICIO, m.NOMBRE
@@ -567,7 +602,7 @@ class EvolucionController extends Controller
 		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID
 		INNER JOIN (SELECT TOP(12) m2.ID as ID, m2.NOMBRE as NOMBRE, m2.FECHAINICIO as FECHAINICIO FROM MEDICION m2 INNER JOIN ESTUDIO e on m2.ESTUDIO_ID=e.ID and e.CLIENTE_ID={$user->getClienteID()} ORDER BY m2.FECHAINICIO DESC) as m on m.ID = p.MEDICION_ID		
 		INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
-		INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )
+		INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} ) and s.CADENA_ID in ({$cadenas})
 		INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
 		INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
 		GROUP BY ni.NOMBRE
@@ -586,7 +621,7 @@ class EvolucionController extends Controller
 		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID
 		INNER JOIN (SELECT TOP(12) m2.ID as ID, m2.NOMBRE as NOMBRE, m2.FECHAINICIO as FECHAINICIO FROM MEDICION m2 INNER JOIN ESTUDIO e on m2.ESTUDIO_ID=e.ID and e.CLIENTE_ID={$user->getClienteID()} ORDER BY m2.FECHAINICIO DESC) as m on m.ID = p.MEDICION_ID		
 		INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
-		INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )		
+		INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )	and s.CADENA_ID in ({$cadenas})	
 		GROUP BY m.FECHAINICIO, m.NOMBRE
 		ORDER BY FECHAINICIO";
 				
@@ -603,7 +638,7 @@ class EvolucionController extends Controller
 		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID
 		INNER JOIN (SELECT TOP(12) m2.ID as ID, m2.NOMBRE as NOMBRE, m2.FECHAINICIO as FECHAINICIO FROM MEDICION m2 INNER JOIN ESTUDIO e on m2.ESTUDIO_ID=e.ID and e.CLIENTE_ID={$user->getClienteID()} ORDER BY m2.FECHAINICIO DESC) as m on m.ID = p.MEDICION_ID		
 		INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
-		INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )";			
+		INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} ) and s.CADENA_ID in ({$cadenas})";			
 		
 		$total = $em->getConnection()->executeQuery($sql)->fetchAll();											
 		
@@ -632,223 +667,5 @@ class EvolucionController extends Controller
 			"max_width" => $max_width
 		);		
 		return new JsonResponse($output);		
-	}		
-	
-	public function periodoAction(Request $request)
-	{
-	
-		$min = 0;
-		$max = 100;				
-	
-	$tabla_resumen = array(
-		'cadenas' => array('LIDER','JUMBO','SANTA ISABEL','SMU','SODIMAC','MAYORISTA 10','ALVI','TOTAL'),
-		'totales' => array('nombre'=>'QUIEBRE SC JOHNSON',
-						   'valores'=>array(mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max))
-					 ),
-		'segmento' => array(array('nombre'=>'AIR CARE',
-								  'valores'=>array(mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max)),
-								  'categoria'=>array(array('nombre'=>'AMBIENTALES AUTO',
-														   'valores'=>array(mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max)),
-											
-															),		
-													 array('nombre'=>'CONTINUO ELECTRICO',
-														   'valores'=>array(mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max)),
-											
-															),					
-													 array('nombre'=>'CONTINUO NO ELECTRICO',
-														   'valores'=>array(mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max)),
-											
-															)			
-													 ),		
-																													 
-								 ),
-							array('nombre'=>'AUTO CARE',
-								  'valores'=>array(mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max)),
-								  'categoria'=>array(array('nombre'=>'AMBIENTALES AUTO',
-														   'valores'=>array(mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max)),
-											
-															),									
-													 ),		
-																													 
-								 ), 
-							array('nombre'=>' HOME CLEANING',
-								  'valores'=>array(mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max)),
-								  'categoria'=>array(array('nombre'=>'BAÑO',
-														   'valores'=>array(mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max)),
-															),																						
-													 array('nombre'=>'BAÑO-CREMA',
-														   'valores'=>array(mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max)),
-															),																						 
-													 array('nombre'=>'COCINA',
-														   'valores'=>array(mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max)),
-															),																						 
-													 array('nombre'=>'LIMPIAHORNOS',
-														   'valores'=>array(mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max)),
-															),									
-																										 
-																													 
-								 ), 								 
-							),
-						),
-					);
-					
-		
-		$evolutivo= array(mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max), mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max));	
-		
-		//RESPONSE
-		$response = 
-		array(
-			'tabla_resumen' => $tabla_resumen,
-			'evolutivo' => $evolutivo,
-			);
-		
-		return new JsonResponse($response);
 	}
-	
-	public function evolutivoAction(Request $request)
-    {
-		$min = 0;
-		$max = 100;	
-	
-		$evolutivo= array(mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max), mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max));
-		
-		return new JsonResponse($evolutivo);
-	}
-	
-	public function indicadoresAction(Request $request)
-    {
-		// $start = microtime(true);
-
-		// $em = $this->getDoctrine()->getManager();
-		// $query = $em->createQuery(
-			// 'SELECT t FROM CademReporteBundle:Test t'
-		// )->setMaxResults(10000);
-		
-		// $cacheDriver = new \Doctrine\Common\Cache\ApcCache();
-
-		
-		//$cacheDriver->deleteAll();
-		// if($prueba = $cacheDriver->contains('my_query_result')){
-			// $test = $cacheDriver->fetch('my_query_result');
-		// }
-		// else{
-			// $test = $query->getResult(\Doctrine\ORM\Query::HYDRATE_ARRAY);
-			// $cacheDriver->save('my_query_result', $test, 20);
-		// }
-		
-		// $time_taken = microtime(true) - $start;
-		
-		$data = $request->query->all();
-		
-		$min = 0;
-		$max = 100;
-		
-		switch($data['form']['Canal']){
-			case '1':
-				$min = 60;
-				$max = 100;
-			break;
-			case '2':
-				$min = 40;
-				$max = 100;
-			break;
-			case '3':
-				$min = 0;
-				$max = 60;
-			break;
-		}
-		
-		$ranking = array(
-			'head' => array('CATEGORIA','JUMBO','LIDER','TOTTUS','TOTAL'),
-			'body' => array(
-				array("CERVEZA", mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max)),
-				array("ENERGETICA", mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max)),
-				array("RON", mt_rand($min, $max), mt_rand($min, $max),mt_rand($min, $max),mt_rand($min, $max))
-			)
-		);
-		
-		
-		$responseA = array(
-				'cobertura' =>	array(
-					'type' => 'pie',
-					'name' => 'Cobertura',
-					'data' => array(
-							array('name' => 'Cumple', 'y' => 20, 'color' => '#83A931'),
-							array('name' => 'No cumple', 'y' => 80, 'color' => '#EB3737')
-						)
-				),
-				'atributo' =>	array(
-					'type' => 'pie',
-					'name' => 'Atributo',
-					'data' => array(
-							array('name' => 'Cumple', 'y' => 35.5, 'color' => '#83A931'),
-							array('name' => 'No cumple', 'y' => 64.5, 'color' => '#EB3737')
-						)
-				),
-				'quiebre' =>	array(
-					'type' => 'pie',
-					'name' => 'Quiebre',
-					'data' => array(
-							array('name' => 'Cumple', 'y' => 55.5, 'color' => '#83A931'),
-							array('name' => 'No cumple', 'y' => 44.5, 'color' => '#EB3737')
-						)
-				),
-				'presencia' =>	array(
-					'type' => 'pie',
-					'name' => 'Presencia',
-					'data' => array(
-							array('name' => 'Cumple', 'y' => 44.5, 'color' => '#83A931'),
-							array('name' => 'No cumple', 'y' => 55.5, 'color' => '#EB3737')
-						)
-				),
-				'ranking' => $ranking
-				
-		);
-		$responseB = array( 
-				'cobertura' =>	array(
-					'type' => 'pie',
-					'name' => 'Cobertura',
-					'data' => array(
-							array('name' => 'Cumple', 'y' => 60, 'color' => '#83A931'),
-							array('name' => 'No cumple', 'y' => 40, 'color' => '#EB3737')
-						)
-				),
-				'atributo' =>	array(
-					'type' => 'pie',
-					'name' => 'Atributo',
-					'data' => array(
-							array('name' => 'Cumple', 'y' => 15.5, 'color' => '#83A931'),
-							array('name' => 'No cumple', 'y' => 84.5, 'color' => '#EB3737')
-						)
-				),
-				'quiebre' =>	array(
-					'type' => 'pie',
-					'name' => 'Quiebre',
-					'data' => array(
-							array('name' => 'Cumple', 'y' => 0, 'color' => '#83A931'),
-							array('name' => 'No cumple', 'y' => 100, 'color' => '#EB3737')
-						)
-				),
-				'presencia' =>	array(
-					'type' => 'pie',
-					'name' => 'Presencia',
-					'data' => array(
-							array('name' => 'Cumple', 'y' => 44.5, 'color' => '#83A931'),
-							array('name' => 'No cumple', 'y' => 55.5, 'color' => '#EB3737')
-						)
-				),
-				'ranking' => $ranking
-		);
-		
-		//RESPONSE
-		if('1' === $data['form']['Periodo']) $response = new JsonResponse($responseA);
-		else $response = new JsonResponse($responseB);
-		
-		//CACHE
-		$response->setPrivate();
-		$response->setMaxAge(1);
-
-
-		return $response;
-    }
 }
