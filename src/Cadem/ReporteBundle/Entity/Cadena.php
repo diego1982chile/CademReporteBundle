@@ -3,6 +3,7 @@
 namespace Cadem\ReporteBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * Cadena
@@ -44,6 +45,17 @@ class Cadena
      * })
      */
     private $holding;
+
+    /**
+     * @ORM\OneToMany(targetEntity="Sala", mappedBy="cadena")
+     */
+     
+    protected $salas;
+
+    public function __construct()
+    {
+        $this->salas = new ArrayCollection();
+    }
 
 
 
