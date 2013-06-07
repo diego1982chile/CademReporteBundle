@@ -173,7 +173,7 @@ function construirTabla()
 			if(aData[0].length>40)
 				$(nRow).children(':eq(0)').text(aData[0].substring(0,40).replace(/ /g,'_')+'...');
 			else{
-				console.log((aData[0]);
+				console.log(aData[0]);
 				$(nRow).children(':eq(0)').text(aData[0].replace(/ /g,'_'));
 			}  
 			$(nRow).attr('title',aData[0]);		  
