@@ -4,6 +4,9 @@ root:
         _controller: FrameworkBundle:Redirect:Redirect
         route: dashboard_index
         permanent: true
+admin_index:
+    pattern:  /admin
+    defaults: { _controller: CademReporteBundle:Admin:index }
 dashboard_index:
     pattern:  /dashboard
     defaults: { _controller: CademReporteBundle:Dashboard:index }

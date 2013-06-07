@@ -31,7 +31,9 @@ security:
                 provider: fos_userbundle
                 csrf_provider: form.csrf_provider
                 #use_referer: true
-                default_target_path: /dashboard
+                #default_target_path: /dashboard
+                success_handler: cadem_reporte.authentication.login_success_handler
+                failure_path:   null
             logout:
                 target: /login
             anonymous:    true

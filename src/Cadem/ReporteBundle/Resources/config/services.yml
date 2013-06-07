@@ -41,3 +41,6 @@ services:
             security: @security.context
             medicion: @cadem_reporte.helper.medicion
             session: @session
+    cadem_reporte.authentication.login_success_handler:
+        class: Cadem\ReporteBundle\EventListener\LoginSuccessHandler
+        arguments:  [@router, @security.context]
