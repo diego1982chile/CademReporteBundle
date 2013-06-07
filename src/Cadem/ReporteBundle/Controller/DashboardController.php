@@ -100,48 +100,50 @@ class DashboardController extends Controller
 		$em = $this->getDoctrine()->getManager();
 		$start = microtime(true);//SE MIDE CUANTO SE DEMORAN LAS CONSULTAS Y PROCESAMIENTO
 		$user = $this->getUser();
+		$id_cliente = $user->getClienteID();
 		
-		//medicion join estudio
-		$query = $em->createQuery(
-			'SELECT m.nombre, m.fechainicio, m.fechafin FROM CademReporteBundle:Medicion m
-			JOIN m.estudio e
-			JOIN e.cliente c
-			JOIN c.usuarios u
-			WHERE u.id = :id
-			ORDER BY m.fechainicio DESC')
-			->setMaxResults(12)
-			->setParameter('id', $user->getId());
-		$mediciones_q = $query->getArrayResult();
+		//DATOS DEL EJE X EN EVOLUTIVO
+		$sql = "SELECT TOP(12) m.NOMBRE, m.FECHAINICIO, m.FECHAFIN FROM MEDICION m
+			INNER JOIN PLANOGRAMA p on p.MEDICION_ID = m.ID
+			INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
+			
+			WHERE sc.CLIENTE_ID = ?
+			GROUP BY m.NOMBRE, m.FECHAINICIO, m.FECHAFIN
+			ORDER BY m.FECHAINICIO DESC";
+		$param = array($id_cliente);
+		$tipo_param = array(\PDO::PARAM_INT);
+		$mediciones_q = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
 		$mediciones_q = array_reverse($mediciones_q);
 		
 		foreach($mediciones_q as $m){
-			$mediciones[] = $m['fechainicio']->format('d/m').'-'.$m['fechafin']->format('d/m');
-			$mediciones_tooltip[] = $m['nombre'];
+			$fi = new \DateTime($m['FECHAINICIO']);
+			$ff = new \DateTime($m['FECHAFIN']);
+			$mediciones_data[] = $fi->format('d/m').'-'.$ff->format('d/m');
+			$mediciones_tooltip[] = $m['NOMBRE'];
 		}
 		
-		//quiebre join salamedicion join medicion
-		$query = $em->createQuery(
-			'SELECT (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*1.0)/COUNT(q.id) as quiebre FROM CademReporteBundle:Quiebre q
-			JOIN q.planograma p
-			JOIN p.medicion m
-			JOIN m.estudio e
-			JOIN e.cliente c
-			JOIN c.usuarios u
-			WHERE u.id = :id
-			GROUP BY m.id, m.fechainicio
-			ORDER BY m.fechainicio DESC')
-			->setMaxResults(12)
-			->setParameter('id', $user->getId());
-		$quiebres = $query->getArrayResult();
-		$quiebres = array_reverse($quiebres);
+		//DATOS DEL EJE Y EN EVOLUTIVO
+		$sql = "SELECT TOP(12) (SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 END)*1.0)/COUNT(q.ID) as QUIEBRE FROM QUIEBRE q
+			INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID
+			INNER JOIN MEDICION m on m.ID = p.MEDICION_ID
+			INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
+			INNER JOIN SALA s on s.ID = sc.SALA_ID
+			
+			WHERE sc.CLIENTE_ID = ?
+			GROUP BY m.FECHAINICIO
+			ORDER BY m.FECHAINICIO DESC";
+		$param = array($id_cliente);
+		$tipo_param = array(\PDO::PARAM_INT);
+		$quiebres_q = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
+		$quiebres_q = array_reverse($quiebres_q);
 		
-		foreach ($quiebres as $q) $porc_quiebre[] = round($q['quiebre']*100,1);
+		foreach ($quiebres_q as $q) $porc_quiebre[] = round($q['QUIEBRE']*100,1);
 		
 		$time_taken = microtime(true) - $start;
 		
 		$response = array(
 			'evolutivo' => array(
-				'mediciones' => $mediciones,
+				'mediciones' => $mediciones_data,
 				'mediciones_tooltip' => $mediciones_tooltip,
 				'serie_quiebre' => array(
 					'name' => '% Quiebre',

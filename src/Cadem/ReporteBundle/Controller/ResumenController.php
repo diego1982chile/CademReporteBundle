@@ -29,7 +29,7 @@ class ResumenController extends Controller
 		$clientes = $query->getResult();
 		$cliente = $clientes[0];
 		$estudios = $cliente->getEstudios();
-		$id_cliente = $cliente->getId();
+		$id_cliente = $user->getClienteID();
 		
 		$choices_estudio = array('0' => 'TODOS');
 		foreach($estudios as $e)
@@ -173,7 +173,7 @@ class ResumenController extends Controller
 		$resumen_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();
 		$niveles=2;
 		
-			$head=array();
+		$head=array();
 		$cadenas=array();		
 		$cadenas_aux=array();		
 		
@@ -289,9 +289,9 @@ class ResumenController extends Controller
 		$sql = "SELECT TOP(12) m.NOMBRE, m.FECHAINICIO, m.FECHAFIN FROM MEDICION m
 			INNER JOIN PLANOGRAMA p on p.MEDICION_ID = m.ID
 			INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
-			INNER JOIN SALA s on s.ID = sc.SALA_ID
 			
 			WHERE sc.CLIENTE_ID = ?
+			GROUP BY m.NOMBRE, m.FECHAINICIO, m.FECHAFIN
 			ORDER BY m.FECHAINICIO DESC";
 		$param = array($id_cliente);
 		$tipo_param = array(\PDO::PARAM_INT);
