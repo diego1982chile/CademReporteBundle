@@ -111,9 +111,6 @@ legend {
 <script src="{{ asset('bundles/cademreporte/js/jquery.dataTables.min.js') }}"></script>
 <script src="{{ asset('bundles/cademreporte/js/dataTables.fixedColumns.js') }}"></script>
 <script>
-//{#% for item in variables_clientes %#}
-//{#{"var i_"~item.variable.nombre~";"}#}
-//{#% endfor %#}
 
 var i_quiebre;
 var periodo = {{ periodos|raw }};
@@ -296,6 +293,11 @@ function colorTotales(){
 	$('.DTFC_Cloned tbody tr:first td').css('background-color',color_fondo);
 	$('.table:not(.DTFC_Cloned) tbody tr:first td').css('background-color',color_fondo);
 	$('.table:not(.DTFC_Cloned) tbody tr td:last-of-type:not(.group)').css('background-color',color_fondo);
+	$('.DTFC_Cloned tbody tr td:first-of-type:not(.group)').css({
+		'background-color':'rgb(238, 236, 255)',
+		'color': 'black',
+		});
+	$('.DTFC_Cloned tbody tr:not(:first) td:first-of-type').css('cursor','pointer');
 }
 
 
