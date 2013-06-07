@@ -6,6 +6,7 @@ use Symfony\Component\Security\Http\Authentication\AuthenticationSuccessHandlerI
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\SecurityContext;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\Routing\Router;
 
@@ -26,11 +27,12 @@ class LoginSuccessHandler implements AuthenticationSuccessHandlerInterface
 		
 		if ($this->security->isGranted('ROLE_SUPER_ADMIN'))
 		{
-			$response = new RedirectResponse($this->router->generate('algo'));
+			// $response = new RedirectResponse($this->router->generate('algo'));
+			$response = new Response("NO PERMITIDO");//SE DEBE DESLOGIAR
 		}
 		elseif ($this->security->isGranted('ROLE_ADMIN'))
 		{
-			$response = new RedirectResponse($this->router->generate('resumen_index'));
+			$response = new RedirectResponse($this->router->generate('admin_index'));
 		} 
 		elseif ($this->security->isGranted('ROLE_USER'))
 		{
@@ -40,7 +42,6 @@ class LoginSuccessHandler implements AuthenticationSuccessHandlerInterface
 						
 			$response = new RedirectResponse($referer_url);
 		}
-			
 		return $response;
 	}
 	
