@@ -59,3 +59,12 @@ helper_filtro_provincia:
     pattern:  /h/filtro/provincia
     defaults: { _controller: CademReporteBundle:Helper:filtroprovincia }
     methods:  [GET]
+#ESTATICAS
+privacidad:
+    pattern: /privacidad
+    defaults:
+        _controller: FrameworkBundle:Template:template
+        template: 'CademReporteBundle:Estaticas:privacidad.html.twig'
+        maxAge: 86400
+        sharedMaxAge: 86400
+        private: false
