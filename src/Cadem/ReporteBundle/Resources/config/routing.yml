@@ -4,51 +4,53 @@ root:
         _controller: FrameworkBundle:Redirect:Redirect
         route: dashboard_index
         permanent: true
+#DASHBOARD
 dashboard_index:
     pattern:  /dashboard
     defaults: { _controller: CademReporteBundle:Dashboard:index }
 dashboard_indicadores:
     pattern:  /dashboard/indicadores
     defaults: { _controller: CademReporteBundle:Dashboard:indicadores }
-resumen_index:
-    pattern: /resumen
+#QUIEBRE
+quiebre_resumen_index:
+    pattern: /quiebre/resumen
     defaults: { _controller: CademReporteBundle:Resumen:index }
-resumen_evolutivo:
-    pattern: /resumen/evolutivo
+quiebre_resumen_evolutivo:
+    pattern: /quiebre/resumen/evolutivo
     defaults: { _controller: CademReporteBundle:Resumen:evolutivo }	
-resumen_header:
-    pattern: /resumen/header
+quiebre_resumen_header:
+    pattern: /quiebre/resumen/header
     defaults: { _controller: CademReporteBundle:Resumen:header }		
-resumen_body:
-    pattern: /resumen/body
+quiebre_resumen_body:
+    pattern: /quiebre/resumen/body
     defaults: { _controller: CademReporteBundle:Resumen:body }
-ranking_index:
-    pattern:  /ranking
+quiebre_ranking_index:
+    pattern:  /quiebre/ranking
     defaults: { _controller: CademReporteBundle:Ranking:index }
-ranking_filtros:
-    pattern:  /ranking/filtros
+quiebre_ranking_filtros:
+    pattern:  /quiebre/ranking/filtros
     defaults: { _controller: CademReporteBundle:Ranking:filtros }
     methods:  [GET]
-evolucion_index:
-    pattern:  /evolucion
+quiebre_evolucion_index:
+    pattern:  /quiebre/evolucion
     defaults: { _controller: CademReporteBundle:Evolucion:index }
-evolucion_header:
-    pattern:  /evolucion/header
+quiebre_evolucion_header:
+    pattern:  /quiebre/evolucion/header
     defaults: { _controller: CademReporteBundle:Evolucion:header }		
-evolucion_body:
-    pattern:  /evolucion/body
+quiebre_evolucion_body:
+    pattern:  /quiebre/evolucion/body
     defaults: { _controller: CademReporteBundle:Evolucion:body }	
-detalle_index:
-    pattern:  /detalle
+quiebre_detalle_index:
+    pattern:  /quiebre/detalle
     defaults: { _controller: CademReporteBundle:Detalle:index }	
-detalle_header:
-    pattern:  /detalle/header
+quiebre_detalle_header:
+    pattern:  /quiebre/detalle/header
     defaults: { _controller: CademReporteBundle:Detalle:header }		
-detalle_body:
-    pattern:  /detalle/body
+quiebre_detalle_body:
+    pattern:  /quiebre/detalle/body
     defaults: { _controller: CademReporteBundle:Detalle:body }
-detalle_excel:
-    pattern:  /detalle/excel
+quiebre_detalle_excel:
+    pattern:  /quiebre/detalle/excel
     defaults: { _controller: CademReporteBundle:Detalle:excel }
 #RUTAS GENERALES Y AYUDANTES
 helper_filtro_region:

@@ -1,5 +1,7 @@
 {% extends '::base.html.twig' %}
 
+{% set url_filtros = path('quiebre_ranking_filtros') %}
+
 {% block title %}Cadem Analytics{% endblock %}
 
 {% block filtro %}
@@ -365,7 +367,7 @@ $(document).ready(function () {
 		var senddata = dataform + "&" + topbottom_empleado + "&" + topbottom_producto + "&" + topbottom_sala;
 		
 		$('form#filtros input').last().after('<img class="loader" alt="" style="float:right" src="/bundles/cademreporte/images/loader.gif">');
-		$.get( "{{ path('ranking_filtros') }}", senddata, function(data) {
+		$.get( "{{ url_filtros }}", senddata, function(data) {
 				//RANKING SALAS
 				oTables[0].fnClearTable();
 				var row = data.ranking_sala;

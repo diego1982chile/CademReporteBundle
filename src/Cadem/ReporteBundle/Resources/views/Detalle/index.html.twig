@@ -1,5 +1,9 @@
 {% extends '::base.html.twig' %}
 
+{% set url_excel = path('quiebre_detalle_excel') %}
+{% set url_body = path('quiebre_detalle_body') %}
+{% set url_header = path('quiebre_detalle_header') %}
+
 {% block title %}Cadem Analytics{% endblock %}
 
 {% block filtro %}
@@ -70,7 +74,7 @@
 								</div>
 							</th>
 							<th width='10%'>
-								<a target="_blank" href="{{path('detalle_excel')}}">Bajar Excel</a>
+								<a target="_blank" href="{{ url_excel }}">Bajar Excel</a>
 							</th>
 						</tr>
 					</thead>
@@ -163,7 +167,7 @@ function construirTabla()
 		oTable = $('#tabla_resumen').dataTable({
 			"bProcessing": true,
 			"bServerSide": true,
-			"sAjaxSource": "{{ path('detalle_body') }}",
+			"sAjaxSource": "{{ url_body }}",
 			"fnServerData": function ( sSource, aoData, fnCallback ) {
 				//AGREGAMOS LOS DATOS SOLO SI HAY
 				if (DatosAdicionales.length > 0) for(i in DatosAdicionales) aoData.push(DatosAdicionales[i]);
@@ -349,15 +353,6 @@ $(document).ready(function () {
 		$('.ui-state-active').removeClass();
 		$(this).addClass('ui-state-active');
 		$(".row_selected").removeClass("row_selected");
-		
-		// $.get( "{{ path('resumen_evolutivo') }}", $(this).text().trim(), function(data) {	
-			// {#% for item in variables_clientes %#}
-				// {#% if loop.index == 1 %#}
-					// {#{"i_"~item.variable.nombre}#}.series[0].setData(data); 
-					// {#{"i_"~item.variable.nombre}#}.setTitle({ text: "Evolucion Quiebre '"+label +"'"});
-				// {#% endif %#}
-			// {#% endfor %#}  					
-		// });	
 	});
 
 	//BOTON PARA GENERAR EXCEL
@@ -433,7 +428,7 @@ $(document).ready(function () {
 	
 	function recargarTabla()
 	{		
-		$.get("{{ path('detalle_header') }}",DatosAdicionales,function(data){			
+		$.get("{{ url_header }}",DatosAdicionales,function(data){			
 			maxWidth=parseInt(data.max_width);			
 			// Primero destruimos la tabla si existe (la removemos del DOM)	
 			var ex = document.getElementById('tabla_resumen');
