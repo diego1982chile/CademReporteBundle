@@ -8,6 +8,15 @@ root:
 admin_index:
     pattern:  /admin
     defaults: { _controller: CademReporteBundle:Admin:index }
+admin_fileupload:
+    pattern:  /admin/fileupload
+    defaults: { _controller: CademReporteBundle:Admin:fileupload }
+admin_filevalid:
+    pattern:  /admin/admin_filevalid
+    defaults: { _controller: CademReporteBundle:Admin:filevalid }
+admin_fileprocess:
+    pattern:  /admin/admin_fileprocess
+    defaults: { _controller: CademReporteBundle:Admin:fileprocess }
 #DASHBOARD
 dashboard_index:
     pattern:  /dashboard

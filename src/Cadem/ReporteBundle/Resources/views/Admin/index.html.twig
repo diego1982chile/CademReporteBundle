@@ -2,28 +2,64 @@
 
 {% block body %}
 		  <div class="hero-unit">
-            <h2>Carga de Item</h2>
-            <p>Esta interfaz.</p>
-          </div>
-          <div class="row-fluid color">
-            <div class="span12">
-              <h2>Cargar</h2>
-              <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui. </p>
+        <h2>Carga de Item</h2>
+        <p>A continuación podrá cargar un archivo CSV, que contenga los “ITEM” que desea cargar. Se verificará si el SKU existe, de ser así se actualizarán los datos del ítem.</p>
+
+
+        <form id="f1" action="{{ path('admin_fileupload') }}" method="POST" enctype="multipart/form-data" encoding="multipart/form-data">
+          <div class="fileupload fileupload-new" data-provides="fileupload">
+            <div class="input-append">
+              <div class="uneditable-input span3"><i class="icon-file fileupload-exists"></i> <span class="fileupload-preview"></span></div><span class="btn btn-file"><span class="fileupload-new">Select file</span><span class="fileupload-exists">Change</span><input type="file" name="file1"/></span><a href="#" class="btn fileupload-exists" data-dismiss="fileupload">Remove</a>
             </div>
-            <!-- <div class="span6">
-              <h2>Heading</h2>
-              <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui. </p>
-              <p><a class="btn" href="#">View details &raquo;</a></p>
-            </div> -->
-          </div><!--/row-->
+          </div>
+          <input type="submit" value="Subir">
+        </form>
+        
+
+
+
+
+      </div>
           
 {% endblock %}
 
 
 {% block javascripts %}
+<script src="http://malsup.github.com/jquery.form.js"></script>
 <script>
 $(document).ready(function () {
-	
+
+
+  $('#f1').ajaxForm({
+    success: function(data) {
+        alert('SS');
+        // console.log(data);
+        if(data.status == false){
+          alert('SE PRODUJO UN ERROR AL SUBIR EL ARCHIVO');
+          return;
+        }
+        //AHORA SE DEBE VALIDAR EL ARCHIVO SUBIDO
+        $.get("{{ path('admin_filevalid') }}", {name: data.name}, function(data2) {
+          if(data2.status == false){
+            alert('SE PRODUJO UN ERROR EN LA VALIDACION DEL ARCHIVO: ' + data2.mensaje);
+            return;
+          }
+          $.get("{{ path('admin_fileprocess') }}", {name: data2.name}, function(data3) {
+            if(data3.status == false){
+              alert('SE PRODUJO UN ERROR EN LA CARGA DEL ARCHIVO: ' + data3.mensaje);
+              return;
+            }
+            else alert('PROCESO DE CARGA EXITOSO');
+          } );
+        })
+        .fail(function() { alert("ERROR AL VALIDAR"); });
+    },
+    error: function() {
+        alert('SE PRODUJO UN ERROR AL SUBIR EL ARCHIVO');
+    },
+    dataType:'json'
+  });
+
 });
  </script>
 {% endblock %}
