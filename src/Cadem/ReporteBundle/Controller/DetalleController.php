@@ -194,7 +194,7 @@ class DetalleController extends Controller
 		
 		//CONSULTA
 				
-		$sql = "SELECT (case when q.hayquiebre = 1 then 1 else 0 END) as quiebre, ic.CODIGOITEM1 as COD_PRODUCTO,i.NOMBRE as NOM_PRODUCTO,ni.NOMBRE as SEGMENTO, sc.CODIGOSALA as COD_SALA, s.CALLE as CALLE_SALA, s.NUMEROCALLE as NUM_SALA, cad.NOMBRE as CAD_SALA, com.NOMBRE as COM_SALA FROM QUIEBRE q
+		$sql = "SELECT (case when q.hayquiebre = 1 then 1 else 0 END) as quiebre, ic.CODIGOITEM1 as COD_PRODUCTO,i.NOMBRE as NOM_PRODUCTO,ni.NOMBRE as SEGMENTO, ISNULL(sc.CODIGOSALA, UPPER(cad.NOMBRE+' '+com.NOMBRE+' '+s.CALLE+' '+s.NUMEROCALLE)) as ID_SALA, ISNULL(sc.CODIGOSALA,'-') as COD_SALA, UPPER(cad.NOMBRE+' '+com.NOMBRE+' '+s.CALLE+' '+s.NUMEROCALLE) as NOM_SALA FROM QUIEBRE q
 		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID and p.MEDICION_ID = {$id_ultima_medicion}
 		INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
 		INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in ({$comunas})
@@ -203,7 +203,7 @@ class DetalleController extends Controller
 		INNER JOIN COMUNA com on s.COMUNA_ID=com.ID
 		INNER JOIN CADENA cad on s.CADENA_ID=cad.ID	
 		INNER JOIN ITEM i on i.ID = ic.ITEM_ID	
-		ORDER BY SEGMENTO,NOM_PRODUCTO,CAD_SALA,COM_SALA,CALLE_SALA";
+		ORDER BY SEGMENTO,NOM_PRODUCTO,NOM_SALA";
 		
 		$sha1 = sha1($sql);
 
@@ -228,14 +228,16 @@ class DetalleController extends Controller
 		$totales_producto = $em->getConnection()->executeQuery($sql)->fetchAll();		
 
 		// Obtener totales verticales por segmento
-					
-		$sql =	"SELECT ni.NOMBRE as SEGMENTO, sc.CODIGOSALA as COD_SALA, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
+						
+		$sql =	"SELECT ni.NOMBRE as SEGMENTO, ISNULL(sc.CODIGOSALA, UPPER(cad.NOMBRE+' '+com.NOMBRE+' '+s.CALLE+' '+s.NUMEROCALLE)) as ID_SALA, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
 				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$id_ultima_medicion}
 				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
-				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in ({$comunas})
+				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )		
 				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
 				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID				
-				GROUP BY ni.NOMBRE, sc.CODIGOSALA
+				INNER JOIN COMUNA com on s.COMUNA_ID=com.ID
+				INNER JOIN CADENA cad on s.CADENA_ID=cad.ID								
+				GROUP BY cad.NOMBRE,com.NOMBRE,s.CALLE,s.NUMEROCALLE,ni.NOMBRE, sc.CODIGOSALA
 				ORDER BY ni.NOMBRE";			
 	
 		$totales_segmento = $em->getConnection()->executeQuery($sql)->fetchAll();		
@@ -255,11 +257,13 @@ class DetalleController extends Controller
 		
 		// Obtener totales verticales por totales categoria
 		
-		$sql = "SELECT sc.CODIGOSALA as COD_SALA, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
+		$sql = "SELECT ISNULL(sc.CODIGOSALA, UPPER(cad.NOMBRE+' '+com.NOMBRE+' '+s.CALLE+' '+s.NUMEROCALLE)) as ID_SALA, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
 				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$id_ultima_medicion}
 				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
-				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in ({$comunas})				
-				GROUP BY sc.CODIGOSALA";
+				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )
+				INNER JOIN COMUNA com on s.COMUNA_ID=com.ID
+				INNER JOIN CADENA cad on s.CADENA_ID=cad.ID								
+				GROUP BY cad.NOMBRE,com.NOMBRE,s.CALLE,s.NUMEROCALLE, sc.CODIGOSALA";
 		
 		$totales_verticales_segmento = $em->getConnection()->executeQuery($sql)->fetchAll();							
 		
@@ -284,11 +288,12 @@ class DetalleController extends Controller
 		{			
 			$fila=array();
 			
-			if(!in_array($registro['COD_SALA'],$head))
+			if(!in_array($registro['ID_SALA'],$head))
 			{
-				array_push($head,$registro['COD_SALA']);
+				array_push($head,$registro['ID_SALA']);
+				$fila['ID_SALA']=$registro['ID_SALA'];
 				$fila['COD_SALA']=$registro['COD_SALA'];
-				$fila['NOM_SALA']=$registro['CAD_SALA'].' '.strtoupper($registro['COM_SALA']).' '.$registro['CALLE_SALA'].' '.$registro['NUM_SALA'];
+				$fila['NOM_SALA']=$registro['NOM_SALA'];
 				array_push($salas_aux,$fila);
 			}					
 		}				
@@ -305,7 +310,7 @@ class DetalleController extends Controller
 		
 		foreach($salas_aux as $sala)
 		{
-			array_push($salas,$sala['COD_SALA']);	
+			array_push($salas,$sala['ID_SALA']);	
 			$head[$sala['COD_SALA']]=$sala['NOM_SALA'];						
 		}		
 						
@@ -406,7 +411,7 @@ class DetalleController extends Controller
 		
 			while($cont_regs<$num_regs)
 			{	// Lleno la fila con vacios, le agrego 3 posiciones, correspondientes a los niveles de agregación y al total	
-				$columna_quiebre=array_search($detalle_quiebre[$cont_regs]['COD_SALA'],$salas);	
+				$columna_quiebre=array_search($detalle_quiebre[$cont_regs]['ID_SALA'],$salas);	
 						
 				// Mientras el primer nivel de agregación no cambie			
 				if($nivel1==$detalle_quiebre[$cont_regs]['COD_PRODUCTO'])
@@ -459,7 +464,7 @@ class DetalleController extends Controller
 
 			while($cont_regs<$num_regs)
 			{
-				$columna_quiebre=array_search($totales_segmento[$cont_regs]['COD_SALA'],$salas);					
+				$columna_quiebre=array_search($totales_segmento[$cont_regs]['ID_SALA'],$salas);					
 				// Mientras no cambie el segmento
 				if($nivel2==$totales_segmento[$cont_regs]['SEGMENTO'])
 				{
@@ -476,7 +481,7 @@ class DetalleController extends Controller
 				}
 				if($cont_regs==$num_regs-1)		
 				{	
-					$columna_quiebre=array_search($totales_segmento[$cont_regs]['COD_SALA'],$salas);
+					$columna_quiebre=array_search($totales_segmento[$cont_regs]['ID_SALA'],$salas);
 					$fila[$columna_quiebre]=round($totales_segmento[$cont_regs]['QUIEBRE']*100,1);					
 					$fila[$num_salas]=round($totales_horizontales_segmento[$cont_totales_horizontales_segmento]['QUIEBRE']*100,1);
 					array_push($matriz_totales,(object)$fila);		
@@ -490,7 +495,7 @@ class DetalleController extends Controller
 			
 			while($cont_regs<$num_regs)
 			{
-				$columna_quiebre=array_search($totales_verticales_segmento[$cont_regs]['COD_SALA'],$salas);					
+				$columna_quiebre=array_search($totales_verticales_segmento[$cont_regs]['ID_SALA'],$salas);					
 				// Mientras no cambie la cadena  
 				$fila[$columna_quiebre]=round($totales_verticales_segmento[$cont_regs]['QUIEBRE']*100,1);					
 				$cont_regs++;
@@ -540,7 +545,7 @@ class DetalleController extends Controller
 
 		//23 SEG
 		$start = microtime(true);
-		$sql = "SELECT (case when q.hayquiebre = 1 then 1 else 0 END) as quiebre, ic.CODIGOITEM1 as COD_PRODUCTO,i.NOMBRE as NOM_PRODUCTO,ni.NOMBRE as SEGMENTO, sc.CODIGOSALA as COD_SALA, s.CALLE as CALLE_SALA, s.NUMEROCALLE as NUM_SALA, cad.NOMBRE as CAD_SALA, com.NOMBRE as COM_SALA FROM QUIEBRE q
+		$sql = "SELECT (case when q.hayquiebre = 1 then 1 else 0 END) as quiebre, ic.CODIGOITEM1 as COD_PRODUCTO,i.NOMBRE as NOM_PRODUCTO,ni.NOMBRE as SEGMENTO, ISNULL(sc.CODIGOSALA, UPPER(cad.NOMBRE+' '+com.NOMBRE+' '+s.CALLE+' '+s.NUMEROCALLE)) as ID_SALA, ISNULL(sc.CODIGOSALA,'-') as COD_SALA, UPPER(cad.NOMBRE+' '+com.NOMBRE+' '+s.CALLE+' '+s.NUMEROCALLE) as NOM_SALA FROM QUIEBRE q
 				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID and p.MEDICION_ID = {$medicion}
 				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
 				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in ({$comunas}) and s.CADENA_ID in ({$cadenas})
@@ -549,7 +554,7 @@ class DetalleController extends Controller
 				INNER JOIN COMUNA com on s.COMUNA_ID=com.ID
 				INNER JOIN CADENA cad on s.CADENA_ID=cad.ID	
 				INNER JOIN ITEM i on i.ID = ic.ITEM_ID	
-				ORDER BY SEGMENTO,NOM_PRODUCTO,CAD_SALA,COM_SALA,CALLE_SALA";																						
+				ORDER BY SEGMENTO,NOM_PRODUCTO,NOM_SALA";																										
 		
 		$sha1 = sha1($sql);
 
@@ -579,14 +584,18 @@ class DetalleController extends Controller
 		// Obtener totales verticales por segmento
 		
 		//720 MS
-		$sql =	"SELECT ni.NOMBRE as SEGMENTO, sc.CODIGOSALA as COD_SALA, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
+		$sql =	"SELECT ni.NOMBRE as SEGMENTO, ISNULL(sc.CODIGOSALA, UPPER(cad.NOMBRE+' '+com.NOMBRE+' '+s.CALLE+' '+s.NUMEROCALLE)) as ID_SALA, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
 				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$medicion}
 				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
 				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} ) and s.CADENA_ID in ({$cadenas})			
 				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
 				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID				
-				GROUP BY ni.NOMBRE, sc.CODIGOSALA
+				INNER JOIN COMUNA com on s.COMUNA_ID=com.ID
+				INNER JOIN CADENA cad on s.CADENA_ID=cad.ID								
+				GROUP BY cad.NOMBRE,com.NOMBRE,s.CALLE,s.NUMEROCALLE,ni.NOMBRE, sc.CODIGOSALA
 				ORDER BY ni.NOMBRE";
+	
+		// print_r($sql);
 	
 		$totales_segmento = $em->getConnection()->executeQuery($sql)->fetchAll();
 				
@@ -607,11 +616,13 @@ class DetalleController extends Controller
 		// Obtener totales verticales por totales categoria
 		
 		//100 MS
-		$sql = "SELECT sc.CODIGOSALA as COD_SALA, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
+		$sql = "SELECT ISNULL(sc.CODIGOSALA, UPPER(cad.NOMBRE+' '+com.NOMBRE+' '+s.CALLE+' '+s.NUMEROCALLE)) as ID_SALA, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
 				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$medicion}
 				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
 				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )	and s.CADENA_ID in ({$cadenas})
-				GROUP BY sc.CODIGOSALA";
+				INNER JOIN COMUNA com on s.COMUNA_ID=com.ID
+				INNER JOIN CADENA cad on s.CADENA_ID=cad.ID								
+				GROUP BY cad.NOMBRE,com.NOMBRE,s.CALLE,s.NUMEROCALLE, sc.CODIGOSALA";
 		
 		$totales_verticales_segmento = $em->getConnection()->executeQuery($sql)->fetchAll();							
 		
@@ -635,13 +646,14 @@ class DetalleController extends Controller
 		// Generamos el head de la tabla, y las salas
 		foreach($detalle_quiebre as $registro)
 		{			
-			$fila=array();
+			$fila=array();						
 			
-			if(!in_array($registro['COD_SALA'],$head))
+			if(!in_array($registro['ID_SALA'],$head))
 			{
-				array_push($head,$registro['COD_SALA']);
+				array_push($head,$registro['ID_SALA']);
+				$fila['ID_SALA']=$registro['ID_SALA'];
 				$fila['COD_SALA']=$registro['COD_SALA'];
-				$fila['NOM_SALA']=$registro['CAD_SALA'].' '.strtoupper($registro['COM_SALA']).' '.$registro['CALLE_SALA'].' '.$registro['NUM_SALA'];
+				$fila['NOM_SALA']=$registro['NOM_SALA'];
 				array_push($salas_aux,$fila);
 			}					
 		}						
@@ -661,7 +673,7 @@ class DetalleController extends Controller
 			$fila=array();
 			$fila['cod_sala']=$sala['COD_SALA'];
 			$fila['nom_sala']=$sala['NOM_SALA'];			
-			array_push($salas,$sala['COD_SALA']);		
+			array_push($salas,$sala['ID_SALA']);		
 			array_push($head,$fila);
 			// $head[$sala['COD_SALA']]=$sala['NOM_SALA'];											
 		}		
