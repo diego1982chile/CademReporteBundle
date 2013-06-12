@@ -170,6 +170,9 @@ class ResumenController extends Controller
 			INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
 			INNER JOIN NIVELITEM ni2 on ni2.ID = ic.NIVELITEM_ID2			
 			GROUP BY ni2.NOMBRE, ni.NOMBRE, cad.NOMBRE";
+			
+		// print_r($sql);
+		
 		$resumen_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();
 		$niveles=2;
 		
@@ -198,10 +201,32 @@ class ResumenController extends Controller
 		
 		$head=array();		
 		
+		$aoColumnDefs=array();
+		$cont=0;
+		
 		foreach($cadenas_aux as $cadena)
 		{
 			array_push($cadenas,$cadena);
-			array_push($head,$cadena);						
+			array_push($head,$cadena);	
+			$fila= array();
+			$bVisible=true;
+			$sClass='';
+			$sWidth='100px';
+			switch($cont)
+			{
+				case 0:
+					$sClass='tag';	
+					$sWidth='200px';
+				case 1:
+					$bVisible=false;				
+			}
+			$fila['aTargets']=array($cont);
+			// $fila['mDataProp']=$cadena;
+			$fila['bVisible']=$bVisible;
+			$fila['sClass']=$sClass;
+			$fila['sWidth']=$sWidth;
+			$cont++;
+			array_push($aoColumnDefs,$fila);				
 		}		
 		
 		foreach(array_reverse($prefixes) as $prefix)		
@@ -343,7 +368,8 @@ class ResumenController extends Controller
 			'logofilename' => $logofilename,
 			'logostyle' => $logostyle,
 			'evolutivo' => json_encode($evolutivo),
-			'periodos' => json_encode($periodos)
+			'periodos' => json_encode($periodos),
+			'aoColumnDefs' => json_encode($aoColumnDefs)
 			)
 		);		
 		//CACHE
@@ -450,14 +476,13 @@ class ResumenController extends Controller
 		$response = array(
 			'evo_ejex' => $mediciones_data,
 			'evo_tooltip' => $mediciones_tooltip,
-			'evo_ejey' => $porc_quiebre
+			'evo_ejey' => $porc_quiebre,			
 		);
 		$response = new JsonResponse($response);
 		
 		//CACHE
 		$response->setPrivate();
 		$response->setMaxAge(1);
-
 
 		return $response;
 		
@@ -515,7 +540,7 @@ class ResumenController extends Controller
 				if($cont_regs==$num_regs-1)		
 				{	
 					$columna_quiebre=array_search($resumen_quiebre[$cont_regs]['CADENA'],$cadenas);
-					$fila[$columna_quiebre]=round($resumen_quiebre[$cont_regs]['quiebre']*100,1);					
+					$fila[$columna_quiebre+2]=round($resumen_quiebre[$cont_regs]['quiebre'],1);					
 					$fila[$num_cads+2]=round($totales_segmento[$cont_totales_segmento]['quiebre']*100,1);					
 					array_push($body,(object)$fila);		
 					$cont_regs++;					
@@ -647,11 +672,15 @@ class ResumenController extends Controller
 			$prefixes=array('SKU/CADENA','SEGMENTO');
 		
 		$head=array();		
+		$aoColumns=array();
 		
 		foreach($cadenas_aux as $cadena)
 		{
 			array_push($cadenas,$cadena);
 			array_push($head,$cadena);						
+			$fila= array();
+			$fila['mDataProp']=$cadena;
+			array_push($aoColumns,$fila);	
 		}		
 		
 		foreach(array_reverse($prefixes) as $prefix)		
@@ -743,7 +772,8 @@ class ResumenController extends Controller
 		// $session->close();
 		$output = array(
 			"head" => $head,
-			"max_width" => $max_width
+			"max_width" => $max_width,
+			'aoColumns' => $aoColumns
 		);		
 		return new JsonResponse($output);		
 	}	
