@@ -32,7 +32,6 @@ $(document).ready(function () {
 
   $('#f1').ajaxForm({
     success: function(data) {
-        alert('SS');
         // console.log(data);
         if(data.status == false){
           alert('SE PRODUJO UN ERROR AL SUBIR EL ARCHIVO');
@@ -49,7 +48,7 @@ $(document).ready(function () {
               alert('SE PRODUJO UN ERROR EN LA CARGA DEL ARCHIVO: ' + data3.mensaje);
               return;
             }
-            else alert('PROCESO DE CARGA EXITOSO');
+            else alert('PROCESO DE CARGA EXITOSO. REGISTROS GUARDADOS: ' + data3.row_affected);
           } );
         })
         .fail(function() { alert("ERROR AL VALIDAR"); });
