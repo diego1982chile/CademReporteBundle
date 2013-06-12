@@ -160,7 +160,7 @@ class EvolucionController extends Controller
 		
 		$sql = "SELECT (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre, i.NOMBRE as PRODUCTO,  ni.NOMBRE as SEGMENTO, m.NOMBRE, m.FECHAINICIO FROM QUIEBRE q
 				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID
-				INNER JOIN (SELECT TOP(12) m2.ID as ID, m2.NOMBRE as NOMBRE, m2.FECHAINICIO as FECHAINICIO FROM MEDICION m2 INNER JOIN ESTUDIO e on m2.ESTUDIO_ID=e.ID and e.CLIENTE_ID=12 ORDER BY m2.FECHAINICIO DESC) as m on m.ID = p.MEDICION_ID
+				INNER JOIN (SELECT TOP(12) m2.ID as ID, m2.NOMBRE as NOMBRE, m2.FECHAINICIO as FECHAINICIO FROM MEDICION m2 INNER JOIN ESTUDIO e on m2.ESTUDIO_ID=e.ID and e.CLIENTE_ID={$user->getClienteID()} ORDER BY m2.FECHAINICIO DESC) as m on m.ID = p.MEDICION_ID
 				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
 				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
 				INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
@@ -168,6 +168,8 @@ class EvolucionController extends Controller
 				INNER JOIN ITEM i on i.ID = ic.ITEM_ID
 				GROUP BY  ni.NOMBRE,i.NOMBRE,m.NOMBRE,m.FECHAINICIO
 				ORDER BY ni.NOMBRE,i.NOMBRE";
+		
+		// print_r($sql);
 		
 		$sha1 = sha1($sql);
 
@@ -406,7 +408,7 @@ class EvolucionController extends Controller
 				if($cont_regs==$num_regs-1)		
 				{	
 					$columna_quiebre=array_search($evolucion_quiebre[$cont_regs]['NOMBRE'],$mediciones);
-					$fila[$columna_quiebre]=round($evolucion_quiebre[$cont_regs]['quiebre']*100,1);				
+					$fila[$columna_quiebre+2]=round($evolucion_quiebre[$cont_regs]['quiebre'],1);				
 					$fila[$num_meds+2]=round($totales_producto[$cont_totales_producto]['QUIEBRE']*100,1);					
 					array_push($body,(object)$fila);									
 					$cont_regs++;
