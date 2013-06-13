@@ -41,12 +41,12 @@ $(document).ready(function () {
           return;
         }
         //AHORA SE DEBE VALIDAR EL ARCHIVO SUBIDO
-        $.get("{{ path('admin_filevalid') }}", {name: data.name}, function(data2) {
+        $.get("{{ path('admin_filevalid') }}", {name: data.name, tipo_carga: data.tipo_carga}, function(data2) {
           if(data2.status == false){
             alert('SE PRODUJO UN ERROR EN LA VALIDACION DEL ARCHIVO: ' + data2.mensaje);
             return;
           }
-          $.get("{{ path('admin_fileprocess') }}", {name: data2.name}, function(data3) {
+          $.get("{{ path('admin_fileprocess') }}", {name: data2.name, tipo_carga: data2.tipo_carga}, function(data3) {
             if(data3.status == false){
               alert('SE PRODUJO UN ERROR EN LA CARGA DEL ARCHIVO: ' + data3.mensaje);
               return;
@@ -59,7 +59,8 @@ $(document).ready(function () {
     error: function() {
         alert('SE PRODUJO UN ERROR AL SUBIR EL ARCHIVO');
     },
-    dataType:'json'
+    dataType:'json',
+    data: {tipo_carga: 'sala'}
   });
 
   $('#file1').change(function(){
