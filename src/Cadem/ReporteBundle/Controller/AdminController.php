@@ -204,7 +204,7 @@ class AdminController extends Controller
                         $id_fabricante = (isset($fabricante_[$fields[1]]))?$fabricante_[$fields[1]]:"NULL";
                         $id_marca = (isset($marca_[$fields[2]]))?$marca_[$fields[2]]:"NULL";
                         $fila = array_merge($fields, array($id_tipo_codigo, $id_fabricante, $id_marca));
-                        fputcsv($fp, $campos,";");
+                        fputcsv($fp, $fila,";");
                     }
                     fclose($fp);
 
@@ -231,15 +231,9 @@ class AdminController extends Controller
                     $tipo_param = array(\Doctrine\DBAL\Connection::PARAM_STR_ARRAY);
                     $query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
                     $folio_encontrados = array();
-                    foreach ($query as $v) $cod_encontrados[] = $v['codigo'];
+                    foreach ($query as $v) $folio_encontrados[] = $v['codigo'];
 
                     foreach ($m as $k => $fila) {
-                        if(strlen($fila[4]) !== 13){//ERROR
-                            return new JsonResponse(array(
-                                'status' => false,
-                                'mensaje' => 'EL SKU '.$fila[4].' CERCA DE LA LINEA '.$k.', NO TIENE 13 DIGITOS'
-                            ));
-                        }
                         $tipo_codigo[] = $fila[0];
                         if($fila[1] !== '') $fabricante[] = $fila[1];
                         if($fila[2] !== '') $marca[] = $fila[2];
