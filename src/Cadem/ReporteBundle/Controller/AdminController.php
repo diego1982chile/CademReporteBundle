@@ -67,7 +67,7 @@ class AdminController extends Controller
 			}
             //FORMATO ES: TIPOCODIGO_ID;FABRICANTE;MARCA;NOMBRE;CODIGO
             //SI LA PRIMERA FILA TIENE LOS ENCABEZADOS SE BORRA
-            if($m[0][0] === 'TIPOCODIGO_ID' || $m[0][4] === 'CODIGO') unset($m[0]);
+            if($m[0][0] === 'TIPOCODIGO' || $m[0][4] === 'CODIGO') unset($m[0]);
             
 
             //SE VERIFICA QUE TODOS LOS SKU TENGAN 13 DIG, ADEMAS SE VALIDA QUE EL SKU NO ESTE EN LA BD
