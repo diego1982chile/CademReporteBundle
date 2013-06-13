@@ -201,32 +201,10 @@ class ResumenController extends Controller
 		
 		$head=array();		
 		
-		$aoColumnDefs=array();
-		$cont=0;
-		
 		foreach($cadenas_aux as $cadena)
 		{
 			array_push($cadenas,$cadena);
-			array_push($head,$cadena);	
-			$fila= array();
-			$bVisible=true;
-			$sClass='';
-			$sWidth='100px';
-			switch($cont)
-			{
-				case 0:
-					$sClass='tag';	
-					$sWidth='200px';
-				case 1:
-					$bVisible=false;				
-			}
-			$fila['aTargets']=array($cont);
-			// $fila['mDataProp']=$cadena;
-			$fila['bVisible']=$bVisible;
-			$fila['sClass']=$sClass;
-			$fila['sWidth']=$sWidth;
-			$cont++;
-			array_push($aoColumnDefs,$fila);				
+			array_push($head,$cadena);					
 		}		
 		
 		foreach(array_reverse($prefixes) as $prefix)		
@@ -260,7 +238,8 @@ class ResumenController extends Controller
 		GROUP BY ni.NOMBRE, c.NOMBRE
 		ORDER BY CATEGORIA,CADENA";
 	
-		$totales_categoria = $em->getConnection()->executeQuery($sql)->fetchAll();
+		$totales_categoria = $em->getConnection()->executeQuery($sql)->fetchAll();	
+				
 		
 		// Obtener totales horizontales por totales segmento (ultima columna de totales verticales por categoria)
 		
@@ -271,7 +250,7 @@ class ResumenController extends Controller
 				GROUP BY ni.NOMBRE
 				ORDER BY CATEGORIA";
 			
-		$totales_horizontales_categoria = $em->getConnection()->executeQuery($sql)->fetchAll();	
+		$totales_horizontales_categoria = $em->getConnection()->executeQuery($sql)->fetchAll();				
 		
 		// Obtener totales verticales por totales categoria
 		
@@ -283,7 +262,7 @@ class ResumenController extends Controller
 		GROUP BY c.NOMBRE
 		ORDER BY CADENA";
 		
-		$totales_verticales_categoria = $em->getConnection()->executeQuery($sql)->fetchAll();							
+		$totales_verticales_categoria = $em->getConnection()->executeQuery($sql)->fetchAll();				
 		
 		// Obtener total horizontal por totales verticales por totales categoria
 		
@@ -291,6 +270,7 @@ class ResumenController extends Controller
 		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$id_ultima_medicion}";			
 
 		$total = $em->getConnection()->executeQuery($sql)->fetchAll();											
+				
 		
 		// Guardamos resultado de consulta en variable de sesión para reusarlas en un action posterior
 		$session->set("cadenas",$cadenas);		
@@ -368,8 +348,7 @@ class ResumenController extends Controller
 			'logofilename' => $logofilename,
 			'logostyle' => $logostyle,
 			'evolutivo' => json_encode($evolutivo),
-			'periodos' => json_encode($periodos),
-			'aoColumnDefs' => json_encode($aoColumnDefs)
+			'periodos' => json_encode($periodos),			
 			)
 		);		
 		//CACHE
@@ -507,8 +486,8 @@ class ResumenController extends Controller
 		$cont_regs=0;		
 		$num_cads=count($cadenas);			
 		
-		$cont_totales_segmento=0;
-				
+		$cont_totales_segmento=0;			
+		
 		if($num_regs>0)
 		{					
 			// Para llevar los cambios del 1er nivel de agregacion
@@ -537,15 +516,17 @@ class ResumenController extends Controller
 					array_push($body,(object)$fila);
 					$fila=array_fill(0,$num_cads+3,'-');					
 				}
-				if($cont_regs==$num_regs-1)		
-				{	
-					$columna_quiebre=array_search($resumen_quiebre[$cont_regs]['CADENA'],$cadenas);
-					$fila[$columna_quiebre+2]=round($resumen_quiebre[$cont_regs]['quiebre'],1);					
+				if($cont_regs==$num_regs)		
+				{					
+					$columna_quiebre=array_search($resumen_quiebre[$cont_regs-1]['CADENA'],$cadenas);
+					$fila[$columna_quiebre+2]=round($resumen_quiebre[$cont_regs-1]['quiebre'],1);					
 					$fila[$num_cads+2]=round($totales_segmento[$cont_totales_segmento]['quiebre']*100,1);					
 					array_push($body,(object)$fila);		
 					$cont_regs++;					
 				}
-			}							
+			}
+
+			// print_r($body);
 								
 			// Calculo de totales
 			$fila=array_fill(0,$num_cads+1,"-");	
@@ -555,11 +536,20 @@ class ResumenController extends Controller
 			$cont_totales_horizontales_categoria=0;						
 			
 			while($cont_regs<$num_regs)
-			{
+			{				
 				$columna_quiebre=array_search($totales_categoria[$cont_regs]['CADENA'],$cadenas);					
 				// Mientras no cambie la categoria
+				if($num_regs==1)		
+				{						
+					$columna_quiebre=array_search($totales_categoria[$cont_regs]['CADENA'],$cadenas);
+					$fila[$columna_quiebre]=round($totales_categoria[$cont_regs]['QUIEBRE']*100,1);										
+					$fila[$num_cads]=round($totales_horizontales_categoria[$cont_totales_horizontales_categoria]['QUIEBRE']*100,1);					
+					array_push($matriz_totales,(object)$fila);		
+					$cont_regs++;
+					break;
+				}
 				if($nivel2==$totales_categoria[$cont_regs]['CATEGORIA'])
-				{
+				{					
 					$fila[$columna_quiebre]=round($totales_categoria[$cont_regs]['QUIEBRE']*100,1);					
 					$cont_regs++;
 				}
@@ -571,15 +561,15 @@ class ResumenController extends Controller
 					$fila=array_fill(0,$num_cads,"-");
 					$nivel2=$totales_categoria[$cont_regs]['CATEGORIA'];					
 				}
-				if($cont_regs==$num_regs-1)		
+				if($cont_regs==$num_regs)		
 				{						
-					$columna_quiebre=array_search($totales_categoria[$cont_regs]['CADENA'],$cadenas);
-					$fila[$columna_quiebre]=round($totales_categoria[$cont_regs]['QUIEBRE']*100,1);										
-					$fila[$num_cads]=round($totales_horizontales_categoria[$cont_totales_horizontales_categoria]['QUIEBRE']*100,1);
+					$columna_quiebre=array_search($totales_categoria[$cont_regs-1]['CADENA'],$cadenas);
+					$fila[$columna_quiebre]=round($totales_categoria[$cont_regs-1]['QUIEBRE']*100,1);										
+					$fila[$num_cads]=round($totales_horizontales_categoria[$cont_totales_horizontales_categoria]['QUIEBRE']*100,1);					
 					array_push($matriz_totales,(object)$fila);		
 					$cont_regs++;					
 				}				
-			}	
+			}			
 
 			$cont_regs=0;
 			$num_regs=count($totales_verticales_categoria);
@@ -598,8 +588,7 @@ class ResumenController extends Controller
 			// print_r($fila);
 			
 			array_push($matriz_totales,$fila);			
-			
-			// print_r($matriz_totales);	
+						
 		}							
 		/*
 		 * Output
@@ -715,6 +704,7 @@ class ResumenController extends Controller
 		ORDER BY CATEGORIA,CADENA";
 	
 		$totales_categoria = $em->getConnection()->executeQuery($sql)->fetchAll();
+				
 		
 		// Obtener totales horizontales por totales segmento (ultima columna de totales verticales por categoria)
 		

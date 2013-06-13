@@ -177,10 +177,7 @@ class EvolucionController extends Controller
 			$evolucion_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();
 			$session->set($sha1,$evolucion_quiebre);
 		}
-		else $evolucion_quiebre = $session->get($sha1);
-		
-		
-
+		else $evolucion_quiebre = $session->get($sha1);				
 		
 		$niveles=2;
 				
@@ -217,8 +214,6 @@ class EvolucionController extends Controller
 		}
 
 		array_push($head,'TOTAL');
-
-
 		
 		// Obtener totales horizontales por producto
 			
@@ -405,10 +400,10 @@ class EvolucionController extends Controller
 					array_push($body,(object)$fila);
 					$fila=array_fill(0,$num_meds+3,'-');					
 				}
-				if($cont_regs==$num_regs-1)		
+				if($cont_regs==$num_regs)		
 				{	
-					$columna_quiebre=array_search($evolucion_quiebre[$cont_regs]['NOMBRE'],$mediciones);
-					$fila[$columna_quiebre+2]=round($evolucion_quiebre[$cont_regs]['quiebre'],1);				
+					$columna_quiebre=array_search($evolucion_quiebre[$cont_regs-1]['NOMBRE'],$mediciones);
+					$fila[$columna_quiebre+2]=round($evolucion_quiebre[$cont_regs-1]['quiebre'],1);				
 					$fila[$num_meds+2]=round($totales_producto[$cont_totales_producto]['QUIEBRE']*100,1);					
 					array_push($body,(object)$fila);									
 					$cont_regs++;
@@ -438,10 +433,10 @@ class EvolucionController extends Controller
 					$fila=array_fill(0,$num_meds+1,"-");
 					$nivel2=$totales_segmento[$cont_regs]['SEGMENTO'];					
 				}
-				if($cont_regs==$num_regs-1)		
+				if($cont_regs==$num_regs)		
 				{	
-					$columna_quiebre=array_search($totales_segmento[$cont_regs]['MEDICION'],$mediciones);
-					$fila[$columna_quiebre]=round($totales_segmento[$cont_regs]['QUIEBRE']*100,1);	
+					$columna_quiebre=array_search($totales_segmento[$cont_regs-1]['MEDICION'],$mediciones);
+					$fila[$columna_quiebre]=round($totales_segmento[$cont_regs-1]['QUIEBRE']*100,1);	
 					$fila[$num_meds]=round($totales_horizontales_segmento[$cont_totales_horizontales_segmento]['QUIEBRE']*100,1);
 					array_push($matriz_totales,(object)$fila);		
 					$cont_regs++;					
