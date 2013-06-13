@@ -160,7 +160,7 @@ class EvolucionController extends Controller
 		
 		$sql = "SELECT (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre, i.NOMBRE as PRODUCTO,  ni.NOMBRE as SEGMENTO, m.NOMBRE, m.FECHAINICIO FROM QUIEBRE q
 				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID
-				INNER JOIN (SELECT TOP(12) m2.ID as ID, m2.NOMBRE as NOMBRE, m2.FECHAINICIO as FECHAINICIO FROM MEDICION m2 INNER JOIN ESTUDIO e on m2.ESTUDIO_ID=e.ID and e.CLIENTE_ID=12 ORDER BY m2.FECHAINICIO DESC) as m on m.ID = p.MEDICION_ID
+				INNER JOIN (SELECT TOP(12) m2.ID as ID, m2.NOMBRE as NOMBRE, m2.FECHAINICIO as FECHAINICIO FROM MEDICION m2 INNER JOIN ESTUDIO e on m2.ESTUDIO_ID=e.ID and e.CLIENTE_ID={$user->getClienteID()} ORDER BY m2.FECHAINICIO DESC) as m on m.ID = p.MEDICION_ID
 				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
 				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
 				INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
@@ -169,16 +169,15 @@ class EvolucionController extends Controller
 				GROUP BY  ni.NOMBRE,i.NOMBRE,m.NOMBRE,m.FECHAINICIO
 				ORDER BY ni.NOMBRE,i.NOMBRE";
 		
+		// print_r($sql);
+		
 		$sha1 = sha1($sql);
 
 		if(!$session->has($sha1)){
 			$evolucion_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();
 			$session->set($sha1,$evolucion_quiebre);
 		}
-		else $evolucion_quiebre = $session->get($sha1);
-		
-		
-
+		else $evolucion_quiebre = $session->get($sha1);				
 		
 		$niveles=2;
 				
@@ -215,8 +214,6 @@ class EvolucionController extends Controller
 		}
 
 		array_push($head,'TOTAL');
-
-
 		
 		// Obtener totales horizontales por producto
 			
@@ -403,10 +400,10 @@ class EvolucionController extends Controller
 					array_push($body,(object)$fila);
 					$fila=array_fill(0,$num_meds+3,'-');					
 				}
-				if($cont_regs==$num_regs-1)		
+				if($cont_regs==$num_regs)		
 				{	
-					$columna_quiebre=array_search($evolucion_quiebre[$cont_regs]['NOMBRE'],$mediciones);
-					$fila[$columna_quiebre]=round($evolucion_quiebre[$cont_regs]['quiebre']*100,1);				
+					$columna_quiebre=array_search($evolucion_quiebre[$cont_regs-1]['NOMBRE'],$mediciones);
+					$fila[$columna_quiebre+2]=round($evolucion_quiebre[$cont_regs-1]['quiebre'],1);				
 					$fila[$num_meds+2]=round($totales_producto[$cont_totales_producto]['QUIEBRE']*100,1);					
 					array_push($body,(object)$fila);									
 					$cont_regs++;
@@ -436,10 +433,10 @@ class EvolucionController extends Controller
 					$fila=array_fill(0,$num_meds+1,"-");
 					$nivel2=$totales_segmento[$cont_regs]['SEGMENTO'];					
 				}
-				if($cont_regs==$num_regs-1)		
+				if($cont_regs==$num_regs)		
 				{	
-					$columna_quiebre=array_search($totales_segmento[$cont_regs]['MEDICION'],$mediciones);
-					$fila[$columna_quiebre]=round($totales_segmento[$cont_regs]['QUIEBRE']*100,1);	
+					$columna_quiebre=array_search($totales_segmento[$cont_regs-1]['MEDICION'],$mediciones);
+					$fila[$columna_quiebre]=round($totales_segmento[$cont_regs-1]['QUIEBRE']*100,1);	
 					$fila[$num_meds]=round($totales_horizontales_segmento[$cont_totales_horizontales_segmento]['QUIEBRE']*100,1);
 					array_push($matriz_totales,(object)$fila);		
 					$cont_regs++;					

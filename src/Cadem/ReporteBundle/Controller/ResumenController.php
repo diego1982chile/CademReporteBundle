@@ -170,6 +170,9 @@ class ResumenController extends Controller
 			INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
 			INNER JOIN NIVELITEM ni2 on ni2.ID = ic.NIVELITEM_ID2			
 			GROUP BY ni2.NOMBRE, ni.NOMBRE, cad.NOMBRE";
+			
+		// print_r($sql);
+		
 		$resumen_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();
 		$niveles=2;
 		
@@ -201,7 +204,7 @@ class ResumenController extends Controller
 		foreach($cadenas_aux as $cadena)
 		{
 			array_push($cadenas,$cadena);
-			array_push($head,$cadena);						
+			array_push($head,$cadena);					
 		}		
 		
 		foreach(array_reverse($prefixes) as $prefix)		
@@ -235,7 +238,8 @@ class ResumenController extends Controller
 		GROUP BY ni.NOMBRE, c.NOMBRE
 		ORDER BY CATEGORIA,CADENA";
 	
-		$totales_categoria = $em->getConnection()->executeQuery($sql)->fetchAll();
+		$totales_categoria = $em->getConnection()->executeQuery($sql)->fetchAll();	
+				
 		
 		// Obtener totales horizontales por totales segmento (ultima columna de totales verticales por categoria)
 		
@@ -246,7 +250,7 @@ class ResumenController extends Controller
 				GROUP BY ni.NOMBRE
 				ORDER BY CATEGORIA";
 			
-		$totales_horizontales_categoria = $em->getConnection()->executeQuery($sql)->fetchAll();	
+		$totales_horizontales_categoria = $em->getConnection()->executeQuery($sql)->fetchAll();				
 		
 		// Obtener totales verticales por totales categoria
 		
@@ -258,7 +262,7 @@ class ResumenController extends Controller
 		GROUP BY c.NOMBRE
 		ORDER BY CADENA";
 		
-		$totales_verticales_categoria = $em->getConnection()->executeQuery($sql)->fetchAll();							
+		$totales_verticales_categoria = $em->getConnection()->executeQuery($sql)->fetchAll();				
 		
 		// Obtener total horizontal por totales verticales por totales categoria
 		
@@ -266,6 +270,7 @@ class ResumenController extends Controller
 		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$id_ultima_medicion}";			
 
 		$total = $em->getConnection()->executeQuery($sql)->fetchAll();											
+				
 		
 		// Guardamos resultado de consulta en variable de sesión para reusarlas en un action posterior
 		$session->set("cadenas",$cadenas);		
@@ -343,7 +348,7 @@ class ResumenController extends Controller
 			'logofilename' => $logofilename,
 			'logostyle' => $logostyle,
 			'evolutivo' => json_encode($evolutivo),
-			'periodos' => json_encode($periodos)
+			'periodos' => json_encode($periodos),			
 			)
 		);		
 		//CACHE
@@ -450,14 +455,13 @@ class ResumenController extends Controller
 		$response = array(
 			'evo_ejex' => $mediciones_data,
 			'evo_tooltip' => $mediciones_tooltip,
-			'evo_ejey' => $porc_quiebre
+			'evo_ejey' => $porc_quiebre,			
 		);
 		$response = new JsonResponse($response);
 		
 		//CACHE
 		$response->setPrivate();
 		$response->setMaxAge(1);
-
 
 		return $response;
 		
@@ -482,8 +486,8 @@ class ResumenController extends Controller
 		$cont_regs=0;		
 		$num_cads=count($cadenas);			
 		
-		$cont_totales_segmento=0;
-				
+		$cont_totales_segmento=0;			
+		
 		if($num_regs>0)
 		{					
 			// Para llevar los cambios del 1er nivel de agregacion
@@ -512,15 +516,17 @@ class ResumenController extends Controller
 					array_push($body,(object)$fila);
 					$fila=array_fill(0,$num_cads+3,'-');					
 				}
-				if($cont_regs==$num_regs-1)		
-				{	
-					$columna_quiebre=array_search($resumen_quiebre[$cont_regs]['CADENA'],$cadenas);
-					$fila[$columna_quiebre]=round($resumen_quiebre[$cont_regs]['quiebre']*100,1);					
+				if($cont_regs==$num_regs)		
+				{					
+					$columna_quiebre=array_search($resumen_quiebre[$cont_regs-1]['CADENA'],$cadenas);
+					$fila[$columna_quiebre+2]=round($resumen_quiebre[$cont_regs-1]['quiebre'],1);					
 					$fila[$num_cads+2]=round($totales_segmento[$cont_totales_segmento]['quiebre']*100,1);					
 					array_push($body,(object)$fila);		
 					$cont_regs++;					
 				}
-			}							
+			}
+
+			// print_r($body);
 								
 			// Calculo de totales
 			$fila=array_fill(0,$num_cads+1,"-");	
@@ -530,11 +536,20 @@ class ResumenController extends Controller
 			$cont_totales_horizontales_categoria=0;						
 			
 			while($cont_regs<$num_regs)
-			{
+			{				
 				$columna_quiebre=array_search($totales_categoria[$cont_regs]['CADENA'],$cadenas);					
 				// Mientras no cambie la categoria
+				if($num_regs==1)		
+				{						
+					$columna_quiebre=array_search($totales_categoria[$cont_regs]['CADENA'],$cadenas);
+					$fila[$columna_quiebre]=round($totales_categoria[$cont_regs]['QUIEBRE']*100,1);										
+					$fila[$num_cads]=round($totales_horizontales_categoria[$cont_totales_horizontales_categoria]['QUIEBRE']*100,1);					
+					array_push($matriz_totales,(object)$fila);		
+					$cont_regs++;
+					break;
+				}
 				if($nivel2==$totales_categoria[$cont_regs]['CATEGORIA'])
-				{
+				{					
 					$fila[$columna_quiebre]=round($totales_categoria[$cont_regs]['QUIEBRE']*100,1);					
 					$cont_regs++;
 				}
@@ -546,15 +561,15 @@ class ResumenController extends Controller
 					$fila=array_fill(0,$num_cads,"-");
 					$nivel2=$totales_categoria[$cont_regs]['CATEGORIA'];					
 				}
-				if($cont_regs==$num_regs-1)		
+				if($cont_regs==$num_regs)		
 				{						
-					$columna_quiebre=array_search($totales_categoria[$cont_regs]['CADENA'],$cadenas);
-					$fila[$columna_quiebre]=round($totales_categoria[$cont_regs]['QUIEBRE']*100,1);										
-					$fila[$num_cads]=round($totales_horizontales_categoria[$cont_totales_horizontales_categoria]['QUIEBRE']*100,1);
+					$columna_quiebre=array_search($totales_categoria[$cont_regs-1]['CADENA'],$cadenas);
+					$fila[$columna_quiebre]=round($totales_categoria[$cont_regs-1]['QUIEBRE']*100,1);										
+					$fila[$num_cads]=round($totales_horizontales_categoria[$cont_totales_horizontales_categoria]['QUIEBRE']*100,1);					
 					array_push($matriz_totales,(object)$fila);		
 					$cont_regs++;					
 				}				
-			}	
+			}			
 
 			$cont_regs=0;
 			$num_regs=count($totales_verticales_categoria);
@@ -573,8 +588,7 @@ class ResumenController extends Controller
 			// print_r($fila);
 			
 			array_push($matriz_totales,$fila);			
-			
-			// print_r($matriz_totales);	
+						
 		}							
 		/*
 		 * Output
@@ -612,11 +626,11 @@ class ResumenController extends Controller
 			INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )
 			INNER JOIN CADENA cad on cad.ID = s.CADENA_ID
 			INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
-			INNER JOIN USUARIO u on u.cliente_id=c.id and u.id=2
+			INNER JOIN USUARIO u on u.cliente_id=c.id and u.id=".$user->getId()."
 			INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID AND ic.CLIENTE_ID = c.ID
 			INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
 			INNER JOIN NIVELITEM ni2 on ni2.ID = ic.NIVELITEM_ID2				
-			GROUP BY ni2.NOMBRE, ni.NOMBRE, cad.NOMBRE";				
+			GROUP BY ni2.NOMBRE, ni.NOMBRE, cad.NOMBRE";			
 				
 		$resumen_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();						
 		
@@ -647,6 +661,7 @@ class ResumenController extends Controller
 			$prefixes=array('SKU/CADENA','SEGMENTO');
 		
 		$head=array();		
+		$aoColumns=array();
 		
 		foreach($cadenas_aux as $cadena)
 		{
@@ -686,6 +701,7 @@ class ResumenController extends Controller
 		ORDER BY CATEGORIA,CADENA";
 	
 		$totales_categoria = $em->getConnection()->executeQuery($sql)->fetchAll();
+				
 		
 		// Obtener totales horizontales por totales segmento (ultima columna de totales verticales por categoria)
 		
@@ -743,7 +759,8 @@ class ResumenController extends Controller
 		// $session->close();
 		$output = array(
 			"head" => $head,
-			"max_width" => $max_width
+			"max_width" => $max_width,
+			'aoColumns' => $aoColumns
 		);		
 		return new JsonResponse($output);		
 	}	
