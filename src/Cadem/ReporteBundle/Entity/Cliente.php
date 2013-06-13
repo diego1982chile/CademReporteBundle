@@ -57,6 +57,13 @@ class Cliente
      */
     private $logostyle;
 
+	/**
+     * @var integer
+     *
+     * @ORM\Column(name="CANTIDADNIVELES", type="integer", nullable=false)
+     */
+    private $cantidadniveles;	
+	
     /**
      * @var boolean
      *
@@ -225,6 +232,29 @@ class Cliente
         return $this->logostyle;
     }
 
+    /**
+     * Set cantidadniveles
+     *
+     * @param integer $cantidadniveles
+     * @return Cliente
+     */
+    public function setCantidadniveles($cantidadniveles)
+    {
+        $this->cantidadniveles = $cantidadniveles;
+    
+        return $this;
+    }
+
+    /**
+     * Get cantidadniveles
+     *
+     * @return integer
+     */
+    public function getCantidadniveles()
+    {
+        return $this->cantidadniveles;
+    }	
+	
     /**
      * Set activo
      *

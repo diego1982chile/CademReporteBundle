@@ -437,10 +437,10 @@ class DetalleController extends Controller
 					array_push($body,$fila);
 					$fila=array_fill(0,$num_salas+3,"<div style='background:grey;height:1.9em'></div>");	
 				}
-				if($cont_regs==$num_regs-1)		
+				if($cont_regs==$num_regs)		
 				{						
-					$columna_quiebre=array_search($detalle_quiebre[$cont_regs]['COD_SALA'],$salas);											
-					switch($detalle_quiebre[$cont_regs]['quiebre'])
+					$columna_quiebre=array_search($detalle_quiebre[$cont_regs-1]['COD_SALA'],$salas);											
+					switch($detalle_quiebre[$cont_regs-1]['quiebre'])
 					{
 						case '0':
 							$fila[$columna_quiebre+2]="<div style='background:green;height:1.9em'></div>";	
@@ -479,10 +479,10 @@ class DetalleController extends Controller
 					$fila=array_fill(0,$num_salas+1,"-");
 					$nivel2=$totales_segmento[$cont_regs]['SEGMENTO'];					
 				}
-				if($cont_regs==$num_regs-1)		
+				if($cont_regs==$num_regs)		
 				{	
-					$columna_quiebre=array_search($totales_segmento[$cont_regs]['ID_SALA'],$salas);
-					$fila[$columna_quiebre]=round($totales_segmento[$cont_regs]['QUIEBRE']*100,1);					
+					$columna_quiebre=array_search($totales_segmento[$cont_regs-1]['ID_SALA'],$salas);
+					$fila[$columna_quiebre]=round($totales_segmento[$cont_regs-1]['QUIEBRE']*100,1);					
 					$fila[$num_salas]=round($totales_horizontales_segmento[$cont_totales_horizontales_segmento]['QUIEBRE']*100,1);
 					array_push($matriz_totales,(object)$fila);		
 					$cont_regs++;					

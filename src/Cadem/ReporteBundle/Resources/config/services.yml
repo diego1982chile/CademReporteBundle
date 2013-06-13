@@ -28,6 +28,11 @@ services:
         arguments:
             entityManager: @doctrine.orm.entity_manager
             security: @security.context
+    cadem_reporte.helper.cliente:
+        class: Cadem\ReporteBundle\Helper\ClienteHelper
+        arguments:
+            entityManager: @doctrine.orm.entity_manager
+            security: @security.context			
     cadem_reporte.helper.phpexcel:
         class: Cadem\ReporteBundle\Helper\PHPExcelHelper
         arguments:
