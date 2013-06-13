@@ -4,6 +4,22 @@ root:
         _controller: FrameworkBundle:Redirect:Redirect
         route: dashboard_index
         permanent: true
+#ADMIN
+admin_carga_item:
+    pattern:  /admin/carga/item
+    defaults: { _controller: CademReporteBundle:Admin:cargaitem }
+admin_carga_sala:
+    pattern:  /admin/carga/sala
+    defaults: { _controller: CademReporteBundle:Admin:cargasala }
+admin_fileupload:
+    pattern:  /admin/fileupload
+    defaults: { _controller: CademReporteBundle:Admin:fileupload }
+admin_filevalid:
+    pattern:  /admin/admin_filevalid
+    defaults: { _controller: CademReporteBundle:Admin:filevalid }
+admin_fileprocess:
+    pattern:  /admin/admin_fileprocess
+    defaults: { _controller: CademReporteBundle:Admin:fileprocess }
 #DASHBOARD
 dashboard_index:
     pattern:  /dashboard

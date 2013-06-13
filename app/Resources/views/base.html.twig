@@ -44,6 +44,10 @@
 			font-size: 14px !important;
 			line-height: 20px !important;
 		  }
+
+		  .divider-vertical {
+		  	border-left: 1px solid rgb(219, 219, 219) !important;
+		  }
 		  
 		  {% block customstyles %}{% endblock %}
 		</style>
@@ -62,7 +66,7 @@
 						<span class="icon-bar"></span>
 						<span class="icon-bar"></span>
 					</button>
-					<a class="brand" href="{{ path('dashboard_index')}}">Cadem Analytics<span style="font-size:11px">beta</span></a>
+					<a class="brand" href="{{ path('dashboard_index')}}">Cadem Analytics<span style="font-size:11px;line-height:0">beta</span></a>
 					<div class="nav-collapse collapse">
 						<div style="margin-top: 0" class="btn-group pull-right navbar-text">
 							<a class="btn btn-small" href="{{ path('fos_user_profile_show')}}">{{ app.user.username }}</a>
