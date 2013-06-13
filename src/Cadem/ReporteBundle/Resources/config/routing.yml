@@ -5,9 +5,12 @@ root:
         route: dashboard_index
         permanent: true
 #ADMIN
-admin_index:
-    pattern:  /admin
-    defaults: { _controller: CademReporteBundle:Admin:index }
+admin_carga_item:
+    pattern:  /admin/carga/item
+    defaults: { _controller: CademReporteBundle:Admin:cargaitem }
+admin_carga_sala:
+    pattern:  /admin/carga/sala
+    defaults: { _controller: CademReporteBundle:Admin:cargasala }
 admin_fileupload:
     pattern:  /admin/fileupload
     defaults: { _controller: CademReporteBundle:Admin:fileupload }

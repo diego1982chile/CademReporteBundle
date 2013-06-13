@@ -17,13 +17,27 @@ class AdminController extends Controller
         $this->uploadDIR = __DIR__.'/../../../../web/uploads/';
     }
 
-	public function indexAction()
+	public function cargaitemAction()
+    {
+        
+        //RESPONSE
+        $response = $this->render('CademReporteBundle:Admin:cargaitem.html.twig',
+        array()
+        );
+
+        //CACHE
+        $response->setPrivate();
+        $response->setMaxAge(1);
+
+
+        return $response;
+    }
+
+    public function cargasalaAction()
     {
 		
-
-		
 		//RESPONSE
-		$response = $this->render('CademReporteBundle:Admin:index.html.twig',
+		$response = $this->render('CademReporteBundle:Admin:cargasala.html.twig',
 		array()
 		);
 
@@ -37,24 +51,25 @@ class AdminController extends Controller
 
     public function fileuploadAction(Request $request)
     {
-    	$uf = $request->files->get('file1');
+        $uf = $request->files->get('file1');
+    	$tipo_carga = $request->request->get('tipo_carga');
     	if (null === $uf) return new JsonResponse(array('status' => false));//ERROR
 
     	$uf = $uf->move($this->uploadDIR,$uf->getClientOriginalName().'__'.date("d_m_Y_H_i_s").'.'.$uf->getClientOriginalExtension());
-    	return new JsonResponse(array('status' => true, 'name' =>  $uf->getFilename()));
+    	return new JsonResponse(array('status' => true, 'name' =>  $uf->getFilename(), 'tipo_carga' => $tipo_carga));
     }
 
     public function filevalidAction(Request $request)
     {
     	$em = $this->getDoctrine()->getManager();
         $data = $request->query->all();
+        $tipo_carga = $data['tipo_carga'];
     	$name = $data['name'];
     	$file = new File($this->uploadDIR.$name);
         $item_descartados = 0;
-        $fabricante = array();
-        $marca = array();
+        
     	if($file->isReadable() && $file->getExtension() === 'csv'){
-    		//LEER Y VALIDAR. SE GENERA UN ARCHIVO CON DATOS DE CARGA/LUEGO DEBERIA ESTAR EN MEMORIA
+    		//LEER Y VALIDAR. SE GENERA UN ARCHIVO CON DATOS DE CARGA. LUEGO DEBERIA ESTAR EN MEMORIA
     		$fileobj = $file->openFile('r');
 
     		while (!$fileobj->eof()) {
@@ -62,127 +77,147 @@ class AdminController extends Controller
                 $row = array_map("utf8_encode", $row);//SE PASA DE ANSI A UTF-8
                 if(isset($row[4])){
                     $m[] = $row;
-                    $cod_item[] = $row[4];
                 }
 			}
-            //FORMATO ES: TIPOCODIGO_ID;FABRICANTE;MARCA;NOMBRE;CODIGO
-            //SI LA PRIMERA FILA TIENE LOS ENCABEZADOS SE BORRA
-            if($m[0][0] === 'TIPOCODIGO' || $m[0][4] === 'CODIGO') unset($m[0]);
-            
 
-            //SE VERIFICA QUE TODOS LOS SKU TENGAN 13 DIG, ADEMAS SE VALIDA QUE EL SKU NO ESTE EN LA BD
-            $sql = "SELECT i.codigo as codigo FROM ITEM i
-                    WHERE i.codigo IN ( ? )
-                    ORDER BY i.codigo";
-            $param = array($cod_item);
-            $tipo_param = array(\Doctrine\DBAL\Connection::PARAM_STR_ARRAY);
-            $query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
-            $cod_encontrados = array();
-            foreach ($query as $v) $cod_encontrados[] = $v['codigo'];
 
-            foreach ($m as $k => $fila) {
-                if(strlen($fila[4]) !== 13){//ERROR
-                    return new JsonResponse(array(
-                        'status' => false,
-                        'mensaje' => 'EL SKU '.$fila[4].' CERCA DE LA LINEA '.$k.', NO TIENE 13 DIGITOS'
-                    ));
-                }
-                $tipo_codigo[] = $fila[0];
-                if($fila[1] !== '') $fabricante[] = $fila[1];
-                if($fila[2] !== '') $marca[] = $fila[2];
-                if(in_array($fila[4], $cod_encontrados)){//SE BUSCAN Y DESCARTA LOS SKU ENCONTRADOS Y SE REGISTRA
-                    unset($m[$k]);
-                    $item_descartados++;
-                }
-            }
+            switch ($tipo_carga) {
+                case 'item'://DATOS DE ITEM
 
-            //SE VALIDA QUE EXISTA TIPOCODIGO_ID
-            if(count($tipo_codigo)){
-                $tipo_codigo = array_unique($tipo_codigo);
-                sort($tipo_codigo);
 
-                $sql = "SELECT tc.NOMBRE as nombre, tc.ID as id FROM TIPOCODIGO tc
-                        WHERE tc.NOMBRE IN ( ? )";
-                $param = array($tipo_codigo);
-                $tipo_param = array(\Doctrine\DBAL\Connection::PARAM_STR_ARRAY);
-                $query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
+                    $fabricante = array();
+                    $marca = array();
+                    foreach ($m as $value) $cod_item[] = $value[4];
+                    //FORMATO ES: TIPOCODIGO_ID;FABRICANTE;MARCA;NOMBRE;CODIGO
+                    //SI LA PRIMERA FILA TIENE LOS ENCABEZADOS SE BORRA
+                    if($m[0][0] === 'TIPOCODIGO' || $m[0][4] === 'CODIGO') unset($m[0]);
+                    
 
-                usort($query, array($this,"cmp"));
+                    //SE VERIFICA QUE TODOS LOS SKU TENGAN 13 DIG, ADEMAS SE VALIDA QUE EL SKU NO ESTE EN LA BD
+                    $sql = "SELECT i.codigo as codigo FROM ITEM i
+                            WHERE i.codigo IN ( ? )
+                            ORDER BY i.codigo";
+                    $param = array($cod_item);
+                    $tipo_param = array(\Doctrine\DBAL\Connection::PARAM_STR_ARRAY);
+                    $query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
+                    $cod_encontrados = array();
+                    foreach ($query as $v) $cod_encontrados[] = $v['codigo'];
 
-                foreach ($tipo_codigo as $k => $v) {
-                    if($v !== $query[$k]['nombre']){
-                        return new JsonResponse(array(
-                            'status' => false,
-                            'mensaje' => 'EL TIPO CODIGO "'.$v.'" NO EXISTE EN LA BD.'
-                        ));
+                    foreach ($m as $k => $fila) {
+                        if(strlen($fila[4]) !== 13){//ERROR
+                            return new JsonResponse(array(
+                                'status' => false,
+                                'mensaje' => 'EL SKU '.$fila[4].' CERCA DE LA LINEA '.$k.', NO TIENE 13 DIGITOS'
+                            ));
+                        }
+                        $tipo_codigo[] = $fila[0];
+                        if($fila[1] !== '') $fabricante[] = $fila[1];
+                        if($fila[2] !== '') $marca[] = $fila[2];
+                        if(in_array($fila[4], $cod_encontrados)){//SE BUSCAN Y DESCARTA LOS SKU ENCONTRADOS Y SE REGISTRA
+                            unset($m[$k]);
+                            $item_descartados++;
+                        }
                     }
-                    $tipo_codigo_[$v] = $query[$k]['id'];
-                }
-            }
-            
 
-            //SE VALIDA QUE EXISTA FABRICANTE
-            if(count($fabricante) > 0){
-                 $fabricante = array_unique($fabricante);
-                sort($fabricante);
+                    //SE VALIDA QUE EXISTA TIPOCODIGO_ID
+                    if(count($tipo_codigo)){
+                        $tipo_codigo = array_unique($tipo_codigo);
+                        sort($tipo_codigo);
 
-                $sql = "SELECT f.NOMBRE as nombre, f.ID as id FROM FABRICANTE f
-                        WHERE f.NOMBRE IN ( ? )";
-                $param = array($fabricante);
-                $tipo_param = array(\Doctrine\DBAL\Connection::PARAM_STR_ARRAY);
-                $query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
+                        $sql = "SELECT tc.NOMBRE as nombre, tc.ID as id FROM TIPOCODIGO tc
+                                WHERE tc.NOMBRE IN ( ? )";
+                        $param = array($tipo_codigo);
+                        $tipo_param = array(\Doctrine\DBAL\Connection::PARAM_STR_ARRAY);
+                        $query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
 
-                usort($query, array($this,"cmp"));
+                        usort($query, array($this,"cmp"));
 
-                foreach ($fabricante as $k => $v) {
-                    if($v !== $query[$k]['nombre']){
-                        return new JsonResponse(array(
-                            'status' => false,
-                            'mensaje' => 'EL FABRICANTE "'.$v.'" NO EXISTE EN LA BD.'
-                        ));
+                        foreach ($tipo_codigo as $k => $v) {
+                            if($v !== $query[$k]['nombre']){
+                                return new JsonResponse(array(
+                                    'status' => false,
+                                    'mensaje' => 'EL TIPO CODIGO "'.$v.'" NO EXISTE EN LA BD.'
+                                ));
+                            }
+                            $tipo_codigo_[$v] = $query[$k]['id'];
+                        }
                     }
-                    $fabricante_[$v] = $query[$k]['id'];
-                }
-            }
-               
+                    
 
-            //SE VALIDA QUE EXITA MARCA
-            if(count($marca)){
-                $marca = array_unique($marca);
-                sort($marca);
+                    //SE VALIDA QUE EXISTA FABRICANTE
+                    if(count($fabricante) > 0){
+                         $fabricante = array_unique($fabricante);
+                        sort($fabricante);
 
-                $sql = "SELECT m.NOMBRE as nombre, m.ID as id FROM MARCA m
-                        WHERE m.NOMBRE IN ( ? )
-                        ORDER BY m.NOMBRE";
-                $param = array($marca);
-                $tipo_param = array(\Doctrine\DBAL\Connection::PARAM_STR_ARRAY);
-                $query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
+                        $sql = "SELECT f.NOMBRE as nombre, f.ID as id FROM FABRICANTE f
+                                WHERE f.NOMBRE IN ( ? )";
+                        $param = array($fabricante);
+                        $tipo_param = array(\Doctrine\DBAL\Connection::PARAM_STR_ARRAY);
+                        $query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
 
-                usort($query, array($this,"cmp"));
+                        usort($query, array($this,"cmp"));
 
-                foreach ($marca as $k => $v) {
-                    if($v !== $query[$k]['nombre']){
-                        return new JsonResponse(array(
-                            'status' => false,
-                            'mensaje' => 'LA MARCA "'.$v.'" NO EXISTE EN LA BD.'
-                        ));
+                        foreach ($fabricante as $k => $v) {
+                            if($v !== $query[$k]['nombre']){
+                                return new JsonResponse(array(
+                                    'status' => false,
+                                    'mensaje' => 'EL FABRICANTE "'.$v.'" NO EXISTE EN LA BD.'
+                                ));
+                            }
+                            $fabricante_[$v] = $query[$k]['id'];
+                        }
                     }
-                    $marca_[$v] = $query[$k]['id'];
-                }
+                       
+
+                    //SE VALIDA QUE EXITA MARCA
+                    if(count($marca)){
+                        $marca = array_unique($marca);
+                        sort($marca);
+
+                        $sql = "SELECT m.NOMBRE as nombre, m.ID as id FROM MARCA m
+                                WHERE m.NOMBRE IN ( ? )
+                                ORDER BY m.NOMBRE";
+                        $param = array($marca);
+                        $tipo_param = array(\Doctrine\DBAL\Connection::PARAM_STR_ARRAY);
+                        $query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
+
+                        usort($query, array($this,"cmp"));
+
+                        foreach ($marca as $k => $v) {
+                            if($v !== $query[$k]['nombre']){
+                                return new JsonResponse(array(
+                                    'status' => false,
+                                    'mensaje' => 'LA MARCA "'.$v.'" NO EXISTE EN LA BD.'
+                                ));
+                            }
+                            $marca_[$v] = $query[$k]['id'];
+                        }
+                    }
+
+
+                    //FORMATO ES: TIPOCODIGO_ID;FABRICANTE;MARCA;NOMBRE;CODIGO
+                    //ARCHIVO A ESCRIBIR CON LOS IDs FINALES
+                    $file = new \SplFileObject($this->uploadDIR.$name.'_proc.csv', 'w');
+
+                    foreach ($m as $fields) {
+                        $id_tipo_codigo = (isset($tipo_codigo_[$fields[0]]))?$tipo_codigo_[$fields[0]]:"NULL";
+                        $id_fabricante = (isset($fabricante_[$fields[1]]))?$fabricante_[$fields[1]]:"NULL";
+                        $id_marca = (isset($marca_[$fields[2]]))?$marca_[$fields[2]]:"NULL";
+                        $fila = array_merge($fields, array($id_tipo_codigo, $id_fabricante, $id_marca));
+                        $file->fputcsv($fila,";");
+                    }
+
+
+                    break;//TERMINA ITEM
+                
+                default:
+                    
+                    break;
             }
+                    
                 
 
-            //FORMATO ES: TIPOCODIGO_ID;FABRICANTE;MARCA;NOMBRE;CODIGO
-            //ARCHIVO A ESCRIBIR CON LOS IDs FINALES
-            $file = new \SplFileObject($this->uploadDIR.$name.'_proc.csv', 'w');
-
-            foreach ($m as $fields) {
-                $id_tipo_codigo = (isset($tipo_codigo_[$fields[0]]))?$tipo_codigo_[$fields[0]]:"NULL";
-                $id_fabricante = (isset($fabricante_[$fields[1]]))?$fabricante_[$fields[1]]:"NULL";
-                $id_marca = (isset($marca_[$fields[2]]))?$marca_[$fields[2]]:"NULL";
-                $fila = array_merge($fields, array($id_tipo_codigo, $id_fabricante, $id_marca));
-                $file->fputcsv($fila,";");
-            }
+            
 
 
             return new JsonResponse(array(
@@ -204,6 +239,7 @@ class AdminController extends Controller
         $em = $this->getDoctrine()->getManager();
         $data = $request->query->all();
         $name = $data['name'];
+        $tipo_carga = $data['tipo_carga'];
         $file = new File($this->uploadDIR.$name);
         if($file->isReadable() && $file->getExtension() === 'csv'){
             //LEER Y PROCESAR

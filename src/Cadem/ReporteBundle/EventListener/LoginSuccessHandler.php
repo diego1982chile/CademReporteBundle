@@ -32,7 +32,7 @@ class LoginSuccessHandler implements AuthenticationSuccessHandlerInterface
 		}
 		elseif ($this->security->isGranted('ROLE_ADMIN'))
 		{
-			$response = new RedirectResponse($this->router->generate('admin_index'));
+			$response = new RedirectResponse($this->router->generate('admin_carga_item'));
 		} 
 		elseif ($this->security->isGranted('ROLE_USER'))
 		{

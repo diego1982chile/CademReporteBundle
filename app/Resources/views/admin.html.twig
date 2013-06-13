@@ -39,7 +39,7 @@
       }
 
       .hero-unit{
-        padding: 10px !important;
+        padding: 20px !important;
         margin-bottom: 10px !important;
         line-height: 25px !important;
       }
@@ -85,9 +85,9 @@
         <div class="span3">
           <div class="well sidebar-nav">
             <ul class="nav nav-list">
-              <li class="nav-header">Sidebar</li>
-              <li class="active"><a href="#">Link</a></li>
-              <li><a href="#">Link</a></li>
+              <li class="nav-header">Cargas de datos</li>
+              <li class="{% if app.request.attributes.get('_route') == 'admin_carga_item' %}active{% endif %}"><a href="{{ path('admin_carga_item') }}">Item</a></li>
+              <li class="{% if app.request.attributes.get('_route') == 'admin_carga_sala' %}active{% endif %}"><a href="{{ path('admin_carga_sala') }}">Sala</a></li>
               <li><a href="#">Link</a></li>
               <li><a href="#">Link</a></li>
               <li class="nav-header">Sidebar</li>
