@@ -1,6 +1,6 @@
 # Bootstrap
 app/bootstrap*
-bootstrap*
+bootstrap.php*
 
 # Symfony directories
 vendor/*
