@@ -626,11 +626,11 @@ class ResumenController extends Controller
 			INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )
 			INNER JOIN CADENA cad on cad.ID = s.CADENA_ID
 			INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
-			INNER JOIN USUARIO u on u.cliente_id=c.id and u.id=2
+			INNER JOIN USUARIO u on u.cliente_id=c.id and u.id=".$user->getId()."
 			INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID AND ic.CLIENTE_ID = c.ID
 			INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
 			INNER JOIN NIVELITEM ni2 on ni2.ID = ic.NIVELITEM_ID2				
-			GROUP BY ni2.NOMBRE, ni.NOMBRE, cad.NOMBRE";				
+			GROUP BY ni2.NOMBRE, ni.NOMBRE, cad.NOMBRE";			
 				
 		$resumen_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();						
 		
@@ -667,9 +667,6 @@ class ResumenController extends Controller
 		{
 			array_push($cadenas,$cadena);
 			array_push($head,$cadena);						
-			$fila= array();
-			$fila['mDataProp']=$cadena;
-			array_push($aoColumns,$fila);	
 		}		
 		
 		foreach(array_reverse($prefixes) as $prefix)		
