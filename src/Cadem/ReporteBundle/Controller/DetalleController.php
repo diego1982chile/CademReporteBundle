@@ -346,12 +346,13 @@ class DetalleController extends Controller
 				'form_cadena' => $form_cadena->createView(),
 				'form_region' 	=> $form_region->createView(),
 				'form_provincia' => $form_provincia->createView(),
-				'form_comuna' 	=> $form_comuna->createView(),	
+				'form_comuna' 	=> $form_comuna->createView(),													
 			),
 			'head' => $head,
 			'max_width' => $max_width,
 			'logofilename' => $logofilename,
 			'logostyle' => $logostyle,
+			'estudios' => $estudios,
 			)
 		);
 		$time_taken = microtime(true) - $start;

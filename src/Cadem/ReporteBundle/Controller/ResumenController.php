@@ -348,7 +348,8 @@ class ResumenController extends Controller
 			'logofilename' => $logofilename,
 			'logostyle' => $logostyle,
 			'evolutivo' => json_encode($evolutivo),
-			'periodos' => json_encode($periodos),			
+			'periodos' => json_encode($periodos),
+			'estudios' => $estudios,			
 			)
 		);		
 		//CACHE

@@ -328,7 +328,8 @@ class EvolucionController extends Controller
 			'head' => $head,
 			'max_width' => $max_width,
 			'logofilename' => $logofilename,
-			'logostyle' => $logostyle,			
+			'logostyle' => $logostyle,		
+			'estudios' => $estudios,						
 			// 'evolutivo' => json_encode($evolutivo),
 			// 'periodos' => json_encode($periodos)
 			)

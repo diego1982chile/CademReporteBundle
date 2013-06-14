@@ -14,7 +14,7 @@
 {% block body %}
     <div class="span9">
 		<div class="container-fluid well" style="padding-top:0">
-			<h4>Resumen de Quiebres</h4>
+			<h4>Resumen de {{estudios[0].getEstudioVariables[0].getNombrevariable}}</h4>
 				<div class="hero-unit" style="padding:15px;margin-bottom:10px">
 					<div id='container' class="row-fluid">
 							<table id="tabla_resumen" class="table table-bordered display" cellpadding="0" cellspacing="0" border="0">                      
@@ -183,7 +183,7 @@ function construirTabla()
 				}	
 		//	"sDom": '<"H"Cfr>t<"F"ip>',					
 		});
-		$('div.fg-toolbar:first').append("<h5 style='float:left;margin:0em'>Tabla Resumen Quiebre: (%)</h5>");
+		$('div.fg-toolbar:first').append("<h5 style='float:left;margin:0em'>Tabla Resumen {{estudios[0].getEstudioVariables[0].getNombrevariable}}: (%)</h5>");
 	});
 }
 
@@ -322,7 +322,7 @@ $(document).ready(function () {
 			height: 350
 		},
 		title: {
-			text: 'Evolución Quiebre'
+			text: 'Evolución {{estudios[0].getEstudioVariables[0].getNombrevariable}}'
 		},
 		tooltip: {
 			pointFormat: ' <span style="color:{series.color}">{series.name}</span>: <b>{point.y}%</b><br/>',
