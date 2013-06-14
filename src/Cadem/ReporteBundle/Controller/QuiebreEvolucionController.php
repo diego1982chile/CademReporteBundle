@@ -9,7 +9,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 
 use Symfony\Component\HttpFoundation\Session;
 
-class EvolucionController extends Controller
+class QuiebreEvolucionController extends Controller
 {
     
 	public function indexAction()

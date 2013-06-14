@@ -10,7 +10,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Session;
 
 
-class ResumenController extends Controller
+class QuiebreResumenController extends Controller
 {		
 	
 	public function indexAction()

@@ -7,7 +7,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
-class RankingController extends Controller
+class QuiebreRankingController extends Controller
 {
     
 	public function indexAction()
