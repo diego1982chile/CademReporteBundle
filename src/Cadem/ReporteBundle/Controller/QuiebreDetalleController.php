@@ -335,8 +335,19 @@ class QuiebreDetalleController extends Controller
 			
 		$max_width=100+$extension;
 
-			
+		// Oonstruir inicialización de columnas
+		$aoColumnDefs=array();
 		
+		$fila=array();
+		$fila['aTargets']=array(0);
+		$fila['sClass']="tag";
+		array_push($aoColumnDefs,$fila);
+		
+		$fila=array();
+		$fila['aTargets']=array(1);
+		$fila['bVisible']=false;
+		array_push($aoColumnDefs,$fila);				
+				
 		//RESPONSE
 		$response = $this->render('CademReporteBundle:Detalle:index.html.twig',
 		array(
@@ -352,6 +363,11 @@ class QuiebreDetalleController extends Controller
 			'max_width' => $max_width,
 			'logofilename' => $logofilename,
 			'logostyle' => $logostyle,
+			'estudios' => $estudios,
+			'variable' => 1,
+			'header_action' => 'quiebre_detalle_header',
+			'body_action' => 'quiebre_detalle_body',	
+			'aoColumnDefs' => json_encode($aoColumnDefs)
 			)
 		);
 		$time_taken = microtime(true) - $start;

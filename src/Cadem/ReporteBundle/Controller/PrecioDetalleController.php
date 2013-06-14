@@ -301,10 +301,7 @@ class PrecioDetalleController extends Controller
 		usort($salas_aux, array($this,"sortFunction"));		
 		// CONSTRUIR EL ENCABEZADO DE LA TABLA
 			
-		if($niveles==1)
-			$prefixes=array('SKU/SALA');
-		else
-			$prefixes=array('SKU/SALA','SEGMENTO');
+		$prefixes=array('CATEGORIA','SKU','POLITICA');
 		
 		$head=array();
 		
@@ -328,15 +325,26 @@ class PrecioDetalleController extends Controller
 		$session->set("total",$total);	
 
 		// Calcula el ancho máximo de la tabla	
-		$extension=count($head)*16-100;
+		$extension=count($head)*19-100;
 	
 		if($extension<0)
 			$extension=0;
 			
 		$max_width=100+$extension;
-
-			
 		
+		// Oonstruir inicialización de columnas
+		$aoColumnDefs=array();
+		
+		$fila=array();
+		$fila['aTargets']=array(0);
+		$fila['sClass']="tag2";
+		array_push($aoColumnDefs,$fila);
+		
+		$fila=array();
+		$fila['aTargets']=array(1);
+		$fila['sClass']="tag";
+		array_push($aoColumnDefs,$fila);			
+					
 		//RESPONSE
 		$response = $this->render('CademReporteBundle:Detalle:index.html.twig',
 		array(
@@ -352,6 +360,11 @@ class PrecioDetalleController extends Controller
 			'max_width' => $max_width,
 			'logofilename' => $logofilename,
 			'logostyle' => $logostyle,
+			'estudios' => $estudios,
+			'variable' => 2,
+			'header_action' => 'precio_detalle_header',
+			'body_action' => 'precio_detalle_body',
+			'aoColumnDefs' => json_encode($aoColumnDefs)			
 			)
 		);
 		$time_taken = microtime(true) - $start;
@@ -405,7 +418,7 @@ class PrecioDetalleController extends Controller
 		{
 			$nivel1=$detalle_quiebre[$cont_regs]['COD_PRODUCTO'];		
 			// Lleno la fila con vacios, le agrego 1 posiciones, correspondientes al total					
-			$fila=array_fill(0,$num_salas+3,"<div style='background:grey;height:1.9em'></div>");								
+			$fila=array_fill(0,$num_salas+4," ");								
 			$nivel2=$detalle_quiebre[$cont_regs]['SEGMENTO'];																								
 			$cont_totales_producto=0;				
 		
@@ -416,40 +429,25 @@ class PrecioDetalleController extends Controller
 				// Mientras el primer nivel de agregación no cambie			
 				if($nivel1==$detalle_quiebre[$cont_regs]['COD_PRODUCTO'])
 				{									
-					$fila[0]=$detalle_quiebre[$cont_regs]['NOM_PRODUCTO'];//.' ['.$detalle_quiebre[$cont_regs]['COD_PRODUCTO'].']';					
-					$fila[1]=$detalle_quiebre[$cont_regs]['SEGMENTO'];	
-					switch($detalle_quiebre[$cont_regs]['quiebre'])
-					{
-						case '0':
-							$fila[$columna_quiebre+2]="<div style='background:green;height:1.9em'></div>";	
-							break;
-						case '1':
-							$fila[$columna_quiebre+2]="<div style='background:red;height:1.9em'></div>";	
-							break;
-					}																			
+					$fila[0]=$detalle_quiebre[$cont_regs]['SEGMENTO'];	
+					$fila[1]=$detalle_quiebre[$cont_regs]['NOM_PRODUCTO'];//.' ['.$detalle_quiebre[$cont_regs]['COD_PRODUCTO'].']';										
+					$fila[$columna_quiebre+3]=mt_rand(0, 20000);//.' ['.$detalle_quiebre[$cont_regs]['COD_PRODUCTO'].']';										
+																				
 					$cont_regs++;						
 				}	
 				else
 				{ // Si el primer nivel de agregacion cambió, lo actualizo, agrego la fila al body y reseteo el contador de cadenas												
-					$fila[$num_salas+2]=round($totales_producto[$cont_totales_producto]['QUIEBRE']*100,1);					
+					$fila[$num_salas+3]=round($totales_producto[$cont_totales_producto]['QUIEBRE']*100,1);					
 					$cont_totales_producto++;																			
 					$nivel1=$detalle_quiebre[$cont_regs]['COD_PRODUCTO'];
 					array_push($body,$fila);
-					$fila=array_fill(0,$num_salas+3,"<div style='background:grey;height:1.9em'></div>");	
+					$fila=array_fill(0,$num_salas+4," ");	
 				}
 				if($cont_regs==$num_regs)		
 				{						
-					$columna_quiebre=array_search($detalle_quiebre[$cont_regs-1]['COD_SALA'],$salas);											
-					switch($detalle_quiebre[$cont_regs-1]['quiebre'])
-					{
-						case '0':
-							$fila[$columna_quiebre+2]="<div style='background:green;height:1.9em'></div>";	
-							break;
-						case '1':
-							$fila[$columna_quiebre+2]="<div style='background:red;height:1.9em'></div>";	
-							break;
-					}					
-					$fila[$num_salas+2]=round($totales_producto[$cont_totales_producto]['QUIEBRE']*100,1);					
+					$columna_quiebre=array_search($detalle_quiebre[$cont_regs-1]['COD_SALA'],$salas);	
+					$fila[$columna_quiebre+3]=mt_rand(0, 20000);														
+					$fila[$num_salas+3]=round($totales_producto[$cont_totales_producto]['QUIEBRE']*100,1);					
 					$cont_totales_producto++;								
 					array_push($body,$fila);
 					$cont_regs++;
@@ -691,7 +689,7 @@ class PrecioDetalleController extends Controller
 		$session->set("totales_verticales_segmento",$totales_verticales_segmento);	
 		$session->set("total",$total);		
 		// Calcula el ancho máximo de la tabla	
-		$extension=count($head)*16-100;
+		$extension=count($head)*19-100;
 	
 		if($extension<0)
 			$extension=0;

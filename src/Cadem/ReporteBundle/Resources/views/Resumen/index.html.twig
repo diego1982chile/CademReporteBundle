@@ -1,9 +1,5 @@
 {% extends '::base.html.twig' %}
 
-{% set url_body = path('quiebre_resumen_body') %}
-{% set url_evolutivo = path('quiebre_resumen_evolutivo') %}
-{% set url_header = path('quiebre_resumen_header') %}
-
 {% block title %}Cadem Analytics{% endblock %}
 
 {% block filtro %}
@@ -18,7 +14,7 @@
 {% block body %}
     <div class="span9">
 		<div class="container-fluid well" style="padding-top:0">
-			<h4>Resumen de Quiebres</h4>
+			<h4>Resumen de {{estudios[0].getEstudioVariables[0].getNombrevariable}}</h4>
 				<div class="hero-unit" style="padding:15px;margin-bottom:10px">
 					<div id='container' class="row-fluid">
 							<table id="tabla_resumen" class="table table-bordered display" cellpadding="0" cellspacing="0" border="0">                      
@@ -138,7 +134,7 @@ function construirTabla()
 		oTable = $('#tabla_resumen').dataTable({
 			"bProcessing": true,
 			"bServerSide": true,
-			"sAjaxSource": "{{ url_body }}",
+			"sAjaxSource": "{{ path('quiebre_resumen_body') }}",
 			"fnServerData": function ( sSource, aoData, fnCallback ) {				
 				//AGREGAMOS LOS DATOS SOLO SI HAY
 				if (DatosAdicionales.length > 0) for(i in DatosAdicionales) aoData.push(DatosAdicionales[i]);
@@ -187,7 +183,7 @@ function construirTabla()
 				}	
 		//	"sDom": '<"H"Cfr>t<"F"ip>',					
 		});
-		$('div.fg-toolbar:first').append("<h5 style='float:left;margin:0em'>Tabla Resumen Quiebre: (%)</h5>");
+		$('div.fg-toolbar:first').append("<h5 style='float:left;margin:0em'>Tabla Resumen {{estudios[0].getEstudioVariables[0].getNombrevariable}}: (%)</h5>");
 	});
 }
 
@@ -326,7 +322,7 @@ $(document).ready(function () {
 			height: 350
 		},
 		title: {
-			text: 'Evolución Quiebre'
+			text: 'Evolución {{estudios[0].getEstudioVariables[0].getNombrevariable}}'
 		},
 		tooltip: {
 			pointFormat: ' <span style="color:{series.color}">{series.name}</span>: <b>{point.y}%</b><br/>',
@@ -453,7 +449,7 @@ $(document).ready(function () {
 			}
 			
 			$(this).find('.DataTables_sort_icon').append('<img class="loader" alt="" style="float:left;margin-left:20px" src="/bundles/cademreporte/images/loader-minitrans.gif">');
-			$.get("{{ url_evolutivo }}",dataform,function(data){
+			$.get("{{ path('quiebre_resumen_evolutivo') }}",dataform,function(data){
 				if(data.evo_ejey != -1){//HAY DATOS
 					i_quiebre.addSeries({
 						name: label,
@@ -490,7 +486,7 @@ $(document).ready(function () {
 			dataform = dataform + '&cadena=' + label;
 			
 			$(this).find('.DataTables_sort_icon').append('<img class="loader" alt="" style="float:left;margin-left:20px" src="/bundles/cademreporte/images/loader-minitrans.gif">');
-			$.get("{{ url_evolutivo }}",dataform,function(data){
+			$.get("{{ path('quiebre_resumen_evolutivo') }}",dataform,function(data){
 				if(data.evo_ejey != -1){//HAY DATOS
 					//SE REMUEVEN TODOS y SE AGREGA
 					if (i_quiebre.series.length > 1){
@@ -551,7 +547,7 @@ $(document).ready(function () {
 			
 			
 			$('.DTFC_Cloned').find('.DataTables_sort_icon').append('<img class="loader" alt="" style="float:left;margin-left:20px" src="/bundles/cademreporte/images/loader-minitrans.gif">');
-			$.get("{{ url_evolutivo }}",dataform,function(data){
+			$.get("{{ path('quiebre_resumen_evolutivo') }}",dataform,function(data){
 				if(data.evo_ejey != -1){//HAY DATOS
 					i_quiebre.addSeries({
 						name: label,
@@ -589,7 +585,7 @@ $(document).ready(function () {
 			dataform = dataform + '&nivel=' + label + '&cat=' + categoria;
 			
 			$('.DTFC_Cloned').find('.DataTables_sort_icon').append('<img class="loader" alt="" style="float:left;margin-left:20px" src="/bundles/cademreporte/images/loader-minitrans.gif">');
-			$.get("{{ url_evolutivo }}",dataform,function(data){
+			$.get("{{ path('quiebre_resumen_evolutivo') }}",dataform,function(data){
 				if(data.evo_ejey != -1){//HAY DATOS
 					//SE REMUEVEN TODOS y SE AGREGA
 					if (i_quiebre.series.length > 1){
@@ -637,7 +633,7 @@ $(document).ready(function () {
 		
 		//CARGAR EVOLUTIVO
 		$('form#filtros input').last().after('<img id="evolutivo" class="loader" alt="" style="float:right" src="/bundles/cademreporte/images/loader.gif">');
-		$.get("{{ url_evolutivo }}",dataform,function(data_){
+		$.get("{{ path('quiebre_resumen_evolutivo') }}",dataform,function(data_){
 			//SE REMUEVEN TODOS y SE AGREGA
 			if (i_quiebre.series.length > 0){
 				var len = i_quiebre.series.length;
@@ -655,7 +651,7 @@ $(document).ready(function () {
 	
 	function recargarTabla()
 	{		
-		$.get("{{ url_header }}",DatosAdicionales,function(data){
+		$.get("{{ path('quiebre_resumen_header') }}",DatosAdicionales,function(data){
 		
 			maxWidth=parseInt(data.max_width);
 			// Primero destruimos la tabla si existe (la removemos del DOM)	

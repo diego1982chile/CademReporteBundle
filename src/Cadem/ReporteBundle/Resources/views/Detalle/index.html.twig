@@ -1,9 +1,5 @@
 {% extends '::base.html.twig' %}
 
-{% set url_excel = path('quiebre_detalle_excel') %}
-{% set url_body = path('quiebre_detalle_body') %}
-{% set url_header = path('quiebre_detalle_header') %}
-
 {% block title %}Cadem Analytics{% endblock %}
 
 {% block filtro %}
@@ -19,7 +15,7 @@
 {% block body %}
     <div class="span9">
 		<div class="container-fluid well" style="padding-top:0">
-			<h4>Detalle Quiebre</h4>
+			<h4>Detalle {{estudios[0].getEstudioVariables[0].getNombrevariable}}</h4>
 			<div class="hero-unit" style="padding:15px;margin-bottom:20px">												
 				<div id="container" class="row-fluid">
 					<table id="tabla_resumen" class="tabla_resumen table table-bordered display">                      
@@ -74,7 +70,7 @@
 								</div>
 							</th>
 							<th width='10%'>
-								<a target="_blank" href="{{ url_excel }}">Bajar Excel</a>
+								<a target="_blank" href="{{path('quiebre_detalle_excel')}}">Bajar Excel</a>
 							</th>
 						</tr>
 					</thead>
@@ -87,11 +83,11 @@
 {% block customstyles %}
 div.dataTables_scroll { 
 	clear: both !important; 
-	}
-
+	}	
+	
 table tbody tr{ 
-	height: 1.3em !important;
-} 	
+/*	height: 1.3em !important;*/
+} 
 	
 td{
 	text-align: center !important;
@@ -115,6 +111,10 @@ span.indenter{
 
 .tag{
 	text-align: left !important;
+}
+
+.tag2{
+	vertical-align: middle !important;
 }
 
 /* Block out what is behind the fixed column's header and footer */
@@ -152,12 +152,24 @@ var maxWidth={{max_width}};
 var maxHeight;
 var DatosAdicionales = [];
 var matriz_totales = [];
+var variable = {{variable}};
+var aoColumnDefs = {{aoColumnDefs|raw}};
 
-function calcularAnchoMaximo()
+function preInitTabla()
 {
 	// Calcula el ancho máximo de la tabla		
 	$('#tabla_resumen').css('max-width',maxWidth+'%');
 	maxHeight=400;
+	switch(parseInt(variable))
+	{
+		case 1:
+			$('table tbody tr').css('height','1.3em');
+			break;
+		case 2:	
+			// $('table tbody tr not(:first)').css('height','1.3em');		
+			break;		
+	}
+	$('table tbody tr').removeAttr('style');
 	// alert('maxWidth='+maxWidth);
 }
 
@@ -167,7 +179,7 @@ function construirTabla()
 		oTable = $('#tabla_resumen').dataTable({
 			"bProcessing": true,
 			"bServerSide": true,
-			"sAjaxSource": "{{ url_body }}",
+			"sAjaxSource": "{{ path(body_action) }}",
 			"fnServerData": function ( sSource, aoData, fnCallback ) {
 				//AGREGAMOS LOS DATOS SOLO SI HAY
 				if (DatosAdicionales.length > 0) for(i in DatosAdicionales) aoData.push(DatosAdicionales[i]);
@@ -200,22 +212,35 @@ function construirTabla()
 			"bJQueryUI": true,
 			"bAutoWidth": false, 
 			// "bScrollInfinite": true,
-			"aoColumnDefs": [
-				{ "bVisible": false, "aTargets": [1] },
-				{ "sClass": "tag", "aTargets": [0] }							
-			],
+			"aoColumnDefs": aoColumnDefs,
 			"aaSortingFixed": [[ 1, 'asc' ]],
 			"sPaginationType": "full_numbers",		
 			"fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {	
-						// str.replace(/\\n/g, '<br />');
-						if(aData[0].length>40)
-							$(nRow).children(':eq(0)').text(aData[0].substring(0,40).replace(/ /g,'_')+'...');
-						else
-							$(nRow).children(':eq(0)').text(aData[0].replace(/ /g,'_'));							 
-						$(nRow).attr('title',aData[0]);		  
-					},						
+								switch(variable)
+								{
+									case 1:
+										var col=0;
+										break;
+									case 2:
+										var col=1;
+										break;										
+								}
+								if(aData[col].length>40)
+									$(nRow).children(':eq('+col+')').text(aData[col].substring(0,40).replace(/ /g,'_')+'...');
+								else
+									$(nRow).children(':eq('+col+')').text(aData[col].replace(/ /g,'_'));							 
+								$(nRow).attr('title',aData[col]);		  
+							},						
 			"fnInitComplete": function() {
-					fixedColumn();
+					switch(parseInt(variable))
+					{
+						case 1:														
+							fixedColumn1();
+							break;
+						case 2:							
+							fixedColumn2();
+							break;							
+					}					
 					// $(window).resize(function(){								
 						// oTable.fnAdjustColumnSizing();
 					// });				  
@@ -224,11 +249,11 @@ function construirTabla()
 				  "sProcessing": "<b>Procesando...</b>"
 				}				
 		});
-		 $('div.fg-toolbar:first').append("<h5 style='float:left;margin:0em'>Tabla Resumen Quiebre: (%)</h5>");		
+		 $('div.fg-toolbar:first').append("<h5 style='float:left;margin:0em'>Tabla Resumen {{estudios[0].getEstudioVariables[0].getNombrevariable}}: (%)</h5>");		
 		});	
 }
 
-function fixedColumn()
+function fixedColumn1()
 {
 		new FixedColumns( oTable, {
 		"sHeightMatch": "none",
@@ -329,22 +354,57 @@ function fixedColumn()
 	});
 }
 
+function fixedColumn2()
+{
+		new FixedColumns( oTable, {		
+		"fnDrawCallback": function ( left, right ) {
+			/////////////////////////// Esta parte añade las filas de agregacion a la tabla //////////////////////////////////
+			var that = this, groupVal = null, matches = 0, heights = [], index = -1;
+			
+			/* Get the heights of the cells and remove redundant ones */
+			var cont=0;
+			$('tbody tr td', left.body).each( function ( i ) {		
+				
+				var currVal = this.innerHTML;				
+				/* Reset values on new cell data. */
+				if (currVal != groupVal) {
+					groupVal = currVal;
+					index++;
+					heights[index] = 0;
+					matches = 0;
+				} else  {
+					matches++;
+				}
+				
+				heights[ index ] += $(this.parentNode).height();
+				if ( currVal == groupVal && matches > 0 ) {
+					this.parentNode.parentNode.removeChild(this.parentNode);
+				}
+			} );
+
+			/* Now set the height of the cells which remain, from the summed heights */
+			$('tbody tr td', left.body).each( function ( i ) {
+				that.fnSetRowHeight( this.parentNode, heights[ i ] );
+			} );
+		}
+	});
+	
+	new FixedColumns( oTable, {		
+		"iLeftColumns": 2,
+	});
+}
+
 function colorTotales(){
 	var color_fondo = 'rgb(255, 235, 158)';
 	$('.DTFC_Cloned tbody tr:first td').css('background-color',color_fondo);
 	$('.table:not(.DTFC_Cloned) tbody tr:first td').css('background-color',color_fondo);
 	$('.table:not(.DTFC_Cloned) tbody tr td:last-of-type:not(.group)').css('background-color',color_fondo);
-	// $('.DTFC_Cloned tbody tr td:first-of-type:not(.group)').css({
-		// 'background-color':'rgb(238, 236, 255)',
-		// 'color': 'black',
-		// });
-	// $('.DTFC_Cloned tbody tr:not(:first) td:first-of-type').css('cursor','pointer');
 }
 
 $(document).ready(function () {
 	
 	var callbacks = $.Callbacks();	
-	callbacks.add( calcularAnchoMaximo() );
+	callbacks.add( preInitTabla() );
 	callbacks.add( construirTabla() );
 	// callbacks.add( fixedColumn() );	
 			
@@ -433,7 +493,7 @@ $(document).ready(function () {
 	
 	function recargarTabla()
 	{		
-		$.get("{{ url_header }}",DatosAdicionales,function(data){			
+		$.get("{{ path(header_action) }}",DatosAdicionales,function(data){			
 			maxWidth=parseInt(data.max_width);			
 			// Primero destruimos la tabla si existe (la removemos del DOM)	
 			var ex = document.getElementById('tabla_resumen');
@@ -485,7 +545,7 @@ $(document).ready(function () {
 			table.appendChild( thead );				
 			document.getElementById('container').appendChild(table);		
 			// Luego recalculamos el ancho maximo en base a la cardinalidad del head
-			calcularAnchoMaximo();			
+			preInitTabla();			
 			// Luego volvemos a construir la tabla con dataTables
 			construirTabla();
 			$('.DTFC_LeftFootWrapper').hide();
