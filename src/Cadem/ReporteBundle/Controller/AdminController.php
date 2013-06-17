@@ -120,7 +120,6 @@ class AdminController extends Controller
     	if($file->isReadable() && strcasecmp($file->getExtension(),'csv') === 0){
     		//LEER Y VALIDAR. SE GENERA UN ARCHIVO CON DATOS DE CARGA. LUEGO DEBERIA ESTAR EN MEMORIA
     		$fileobj = $file->openFile('r');
-
     		while (!$fileobj->eof()) {
 			    $row = $fileobj->fgetcsv(';');
                 $row = array_map("utf8_encode", $row);//SE PASA DE ANSI A UTF-8
@@ -290,21 +289,31 @@ class AdminController extends Controller
                 case 'sala'://DATOS DE SALA
                     
 
-                    foreach ($m as $value) $folio[] = $value[4];
+                    
                     //FORMATO ES: COMUNA;CANAL;CADENA;FORMATO;FOLIO;CALLE;NUMERO
                     //SI LA PRIMERA FILA TIENE LOS ENCABEZADOS SE BORRA
                     if($m[0][0] === 'COMUNA' || $m[0][4] === 'FOLIO') unset($m[0]);
+                    //SE SEPARA EN CHUNK PARA NO SOBRECARGAR
+                    $chunk = 0;
+                    foreach($m as $value){
+                        $folio[floor($chunk/2000)][] = $value[4];
+                        $chunk++;
+                    }
                     
 
                     //SE VALIDA QUE EL FOLIO NO ESTE EN LA BD
-                    $sql = "SELECT s.FOLIOCADEM as folio FROM SALA s
-                            WHERE s.FOLIOCADEM IN ( ? )
-                            ORDER BY s.FOLIOCADEM";
-                    $param = array($folio);
-                    $tipo_param = array(\Doctrine\DBAL\Connection::PARAM_STR_ARRAY);
-                    $query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
                     $folio_encontrados = array();
-                    foreach ($query as $v) $folio_encontrados[] = $v['folio'];
+                    foreach($folio as $k => $chunk){
+                        $sql = "SELECT s.FOLIOCADEM as folio FROM SALA s
+                                WHERE s.FOLIOCADEM IN ( ? )
+                                ORDER BY s.FOLIOCADEM";
+                        $param = array($chunk);
+                        $tipo_param = array(\Doctrine\DBAL\Connection::PARAM_STR_ARRAY);
+                        $query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
+                        
+                        foreach ($query as $v) $folio_encontrados[] = $v['folio'];
+                    }
+                    
 
                     foreach ($m as $k => $fila) {
                         if(count($fila) !== 7){//SIEMPRE DEBEN HABER 7 COLUMNAS
