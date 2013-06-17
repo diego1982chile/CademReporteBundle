@@ -135,21 +135,30 @@ class AdminController extends Controller
 
                     $fabricante = array();
                     $marca = array();
-                    foreach ($m as $value) $cod_item[] = $value[4];
+                    
                     //FORMATO ES: TIPOCODIGO;FABRICANTE;MARCA;NOMBRE;CODIGO
                     //SI LA PRIMERA FILA TIENE LOS ENCABEZADOS SE BORRA
                     if($m[0][0] === 'TIPOCODIGO' || $m[0][4] === 'CODIGO') unset($m[0]);
+                    //SE SEPARA EN CHUNK PARA NO SOBRECARGAR
+                    $chunk = 0;
+                    foreach($m as $value){
+                        $cod_item[floor($chunk/2000)][] = $value[4];
+                        $chunk++;
+                    }
                     
 
                     //SE VERIFICA QUE TODOS LOS SKU TENGAN 13 DIG, ADEMAS SE VALIDA QUE EL SKU NO ESTE EN LA BD
-                    $sql = "SELECT i.codigo as codigo FROM ITEM i
-                            WHERE i.codigo IN ( ? )
-                            ORDER BY i.codigo";
-                    $param = array($cod_item);
-                    $tipo_param = array(\Doctrine\DBAL\Connection::PARAM_STR_ARRAY);
-                    $query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
                     $cod_encontrados = array();
-                    foreach ($query as $v) $cod_encontrados[] = $v['codigo'];
+                    foreach($cod_item as $k => $chunk){
+                        $sql = "SELECT i.codigo as codigo FROM ITEM i
+                                WHERE i.codigo IN ( ? )
+                                ORDER BY i.codigo";
+                        $param = array($chunk);
+                        $tipo_param = array(\Doctrine\DBAL\Connection::PARAM_STR_ARRAY);
+                        $query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
+                        foreach ($query as $v) $cod_encontrados[] = $v['codigo'];
+                    }
+                    
 
                     foreach ($m as $k => $fila) {
                         if(count($fila) !== 5){//SIEMPRE DEBEN HABER 5 COLUMNAS
