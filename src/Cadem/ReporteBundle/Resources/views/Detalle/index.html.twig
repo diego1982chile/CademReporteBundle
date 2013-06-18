@@ -22,7 +22,7 @@
 						<thead>
 							<tr>
 								{% for key,value in head %}
-								{% if loop.index>2 %}										
+								{% if loop.index>columnas_reservadas and loop.index!=head|length %}										
 								<th>
 									{{key}}
 								</th>
@@ -35,7 +35,7 @@
 							</tr>
 							<tr>
 								{% for key,value in head %}
-								{% if loop.index>2 %}
+								{% if loop.index>columnas_reservadas and loop.index!=head|length %}
 								<th title='{{ value }}'>
 									{{value|replace({' ':'_'})[0:16]}}...											
 								</th>
@@ -45,36 +45,75 @@
 						</thead>                        					                   
 					</table>
 				</div>
-				<table id='encabezado' width='60%' style='float:right'>
+				{% if variable=='1' %}
+				<table id='encabezado' width='70%' style='float:right'>
 					<thead>
-						<tr>
+						<tr>							
 							<th width='10%' style='font-size:medium'>
-								Presencia:
+								<label>
+									Presencia:
+								</label>
 							</th>
 							<th width='10%'>
 								<div style='background:green;height:1.9em'>
 								</div>
 							</th>
 							<th width='10%'>
-								Quiebre:
+								<label>
+									Quiebre:
+								</label>
 							</th>
 							<th width='10%'>
 								<div style='background:red;height:1.9em'>
 								</div>
 							</th>
 							<th width='15%'>
-								No planogramado:
+								<label>
+									No planogramado:
+								</label>
 							</th>
 							<th width='10%'>
 								<div style='background:grey;height:1.9em'>
 								</div>
 							</th>
+							</th>							
 							<th width='10%'>
-								<a target="_blank" href="{{path('quiebre_detalle_excel')}}">Bajar Excel</a>
+								<a target="_blank" href="{{path('quiebre_detalle_excel')}}"><label>Bajar Excel</label></a>
 							</th>
 						</tr>
 					</thead>
-				</table>				
+				</table>		
+				{% else %}
+				<table width='100%'>
+					<thead>
+						<tr>
+							<th width='10%'>							
+								<label for="amount">Indice:</label>
+							</th>
+							<th width='5%'>
+								<input type="text" id="amount" style="border: 0; color: #f6931f; font-weight: bold;" />
+							</th>  							
+							<th width='20%'>
+								<div id="slider-range-min"></div>
+							</th>
+							<th width='5%'>
+								<button id='aplicar_indice'>
+									OK
+								</button>
+							</th>
+							<th width='15%'>
+								<label>
+									Fuera de rango:
+								</label>
+							</th>
+							<th width='10%'>
+								<div style='background:red;height:1.9em'>
+								</div>
+							</th>
+						</tr>
+					</thead>
+				</table>
+				{% endif %}
 			</div>					        
 		</div>
 	</div>
@@ -84,19 +123,20 @@
 div.dataTables_scroll { 
 	clear: both !important; 
 	}	
-	
+
+{% if variable=='1' %}
 table tbody tr{ 
-/*	height: 1.3em !important;*/
+	height: 1.1em !important;
 } 
-	
+{% endif %}
 td{
 	text-align: center !important;
-	font-size: .6em !important;
+	font-size: .55em !important;
 	padding: 0em !important;
 }
 
 th{
-	font-size: .6em !important;
+	font-size: .55em !important;
 	text-align: center !important;
 	padding: 0em !important;
 }
@@ -115,6 +155,8 @@ span.indenter{
 
 .tag2{
 	vertical-align: middle !important;
+	padding-left: .5em !important;
+	padding-right: .5em !important;	
 }
 
 /* Block out what is behind the fixed column's header and footer */
@@ -128,6 +170,11 @@ table.DTFC_Cloned tfoot {
  */
 div.DTFC_Blocker {
 	background-color: white !important;
+}
+
+.fueraRango{
+	background:red;
+	color:white;
 }
 
 {% endblock %}
@@ -152,25 +199,15 @@ var maxWidth={{max_width}};
 var maxHeight;
 var DatosAdicionales = [];
 var matriz_totales = [];
-var variable = {{variable}};
+var variable = parseInt({{variable}});
 var aoColumnDefs = {{aoColumnDefs|raw}};
+var columnas_reservadas = parseInt({{columnas_reservadas}});
 
 function preInitTabla()
 {
 	// Calcula el ancho máximo de la tabla		
 	$('#tabla_resumen').css('max-width',maxWidth+'%');
-	maxHeight=400;
-	switch(parseInt(variable))
-	{
-		case 1:
-			$('table tbody tr').css('height','1.3em');
-			break;
-		case 2:	
-			// $('table tbody tr not(:first)').css('height','1.3em');		
-			break;		
-	}
-	$('table tbody tr').removeAttr('style');
-	// alert('maxWidth='+maxWidth);
+	maxHeight=400;		
 }
 
 function construirTabla()
@@ -225,6 +262,10 @@ function construirTabla()
 										var col=1;
 										break;										
 								}
+								if(aData[0].length>14)
+									$(nRow).children(':eq(0)').text(aData[0].substring(0,14).replace(/ /g,'_')+'...');
+								else
+									$(nRow).children(':eq(0)').text(aData[0].replace(/ /g,'_'));									
 								if(aData[col].length>40)
 									$(nRow).children(':eq('+col+')').text(aData[col].substring(0,40).replace(/ /g,'_')+'...');
 								else
@@ -356,7 +397,9 @@ function fixedColumn1()
 
 function fixedColumn2()
 {
-		new FixedColumns( oTable, {		
+		new FixedColumns( oTable, {	
+		// "iLeftColumns": 3,
+		"sHeightMatch": "none",		
 		"fnDrawCallback": function ( left, right ) {
 			/////////////////////////// Esta parte añade las filas de agregacion a la tabla //////////////////////////////////
 			var that = this, groupVal = null, matches = 0, heights = [], index = -1;
@@ -365,7 +408,8 @@ function fixedColumn2()
 			var cont=0;
 			$('tbody tr td', left.body).each( function ( i ) {		
 				
-				var currVal = this.innerHTML;				
+				var currVal = this.innerHTML;	
+				
 				/* Reset values on new cell data. */
 				if (currVal != groupVal) {
 					groupVal = currVal;
@@ -375,8 +419,8 @@ function fixedColumn2()
 				} else  {
 					matches++;
 				}
-				
-				heights[ index ] += $(this.parentNode).height();
+				heights[ index ] += 21;
+				// heights[ index ] += $(this.parentNode).height();
 				if ( currVal == groupVal && matches > 0 ) {
 					this.parentNode.parentNode.removeChild(this.parentNode);
 				}
@@ -389,25 +433,64 @@ function fixedColumn2()
 		}
 	});
 	
-	new FixedColumns( oTable, {		
-		"iLeftColumns": 2,
+	new FixedColumns( oTable, {
+		"sHeightMatch": "none",	
+		"iLeftColumns": 3,
 	});
+	
+	$('#aplicar_indice').trigger('mousedown');
 }
 
 function colorTotales(){
-	var color_fondo = 'rgb(255, 235, 158)';
-	$('.DTFC_Cloned tbody tr:first td').css('background-color',color_fondo);
-	$('.table:not(.DTFC_Cloned) tbody tr:first td').css('background-color',color_fondo);
-	$('.table:not(.DTFC_Cloned) tbody tr td:last-of-type:not(.group)').css('background-color',color_fondo);
+	switch(parseInt(variable))
+	{
+		case 1:
+			var color_fondo = 'rgb(255, 235, 158)';
+			$('.DTFC_Cloned tbody tr:first td').css('background-color',color_fondo);
+			$('.table:not(.DTFC_Cloned) tbody tr:first td').css('background-color',color_fondo);
+			$('.table:not(.DTFC_Cloned) tbody tr td:last-of-type:not(.group)').css('background-color',color_fondo);		
+			break;
+		case 2:						
+			// $('.DTFC_Cloned tbody tr td:first-of-type:not(.group)').css({
+				// 'background-color':'rgb(217, 214, 247)',
+				// 'color': 'black',
+				// 'border': '1px solid #B2B2B2'
+			// });
+			// $('.DTFC_Cloned tbody tr td:nth-last-of-type(2):not(.group)').css({
+				// 'background-color':'rgb(232, 231, 245)',
+				// 'color': 'black',				
+			// });	
+			$('.DTFC_Cloned tbody tr td:first-of-type:not(.group)').css({
+				'background-color':'rgb(232, 231, 245)',
+				'color': 'black',
+				'border': '1px solid #B2B2B2'
+			});
+			
+			$('.DTFC_Cloned tbody tr td:nth-last-of-type(2):not(.group)').css({
+				'background-color':'rgb(255, 235, 158)',
+				'color': 'black',				
+			});				
+			break;
+	}		
 }
 
-$(document).ready(function () {
-	
+$(document).ready(function () {		
+			
 	var callbacks = $.Callbacks();	
 	callbacks.add( preInitTabla() );
 	callbacks.add( construirTabla() );
 	// callbacks.add( fixedColumn() );	
-			
+		
+	$( "#slider-range-min" ).slider({
+      range: "min",
+      value: 25,
+      min: 0,
+      max: 100,
+      slide: function( event, ui ) {
+        $( "#amount" ).val( ui.value + '%');
+      }
+    });
+    $( "#amount" ).val( "$" + $( "#slider-range-min" ).slider( "value" ) );		
 	/*
 	$(window).bind('resize', function () {
 		oTable.fnAdjustColumnSizing();
@@ -466,6 +549,26 @@ $(document).ready(function () {
 		.fail(function() { alert("Se produjo un error al cargar las comunas"); })
 		.always(function() { /*alert("finished");*/ quitarloader();});
 	});
+	
+	$('#aplicar_indice').mousedown(function(){
+		var indice=parseInt($( "#slider-range-min" ).slider( "value" ));
+		$('#tabla_resumen tbody tr').each(function(){
+			var politica=parseInt(parseInt($(this).children(':eq(2)').text()));				
+			$(this).children().each(function(i){
+				if(i>2)
+				{
+					var precio= parseInt($(this).text());
+					// alert('precio='+precio+' politica='+politica);			
+					// alert(Math.abs(precio-politica));
+					// alert(indice*politica);
+					if(Math.abs(precio-politica)>indice*politica/100)
+						$(this).addClass('fueraRango');
+					else
+						$(this).removeClass();
+				}
+			});			
+		});
+	});
 });
 	
 	//LOGICA DEL SUBMIT DEL FORMULARIO, SE DEBERIA OCUPAR AJAX
@@ -494,7 +597,10 @@ $(document).ready(function () {
 	function recargarTabla()
 	{		
 		$.get("{{ path(header_action) }}",DatosAdicionales,function(data){			
+			if(data.head.length>30)
+				alerta('Advertencia','Esta búsqueda retornó muchas salas, es posible que la carga y la respuesta tarden más de lo habitual. Se recomienda filtrar la búsqueda o utilizar "Chrome"');
 			maxWidth=parseInt(data.max_width);			
+			aoColumnDefs=JSON.parse(data.aoColumnDefs);			
 			// Primero destruimos la tabla si existe (la removemos del DOM)	
 			var ex = document.getElementById('tabla_resumen');
 			if ( $.fn.DataTable.fnIsDataTable( ex ) ) {
@@ -509,36 +615,28 @@ $(document).ready(function () {
 			var cols=data.head.length-1;
 			$(data.head).each(function(key,value){				
 				var tableHeading = document.createElement( 'th' );											
-				switch(key)
-				{
-					case 0:
-					case 1:
-					case cols:
-						tableHeading.innerHTML = value;
-						tableHeading.setAttribute('rowspan',2);				
-						tableHeading.setAttribute('style',"vertical-align:middle");															
-						break;					
-					default:
-						tableHeading.innerHTML = value['cod_sala'];
-						break;						
+				
+				if(key<columnas_reservadas || key==cols)
+				{					
+					tableHeading.innerHTML = value;
+					tableHeading.setAttribute('rowspan',2);				
+					tableHeading.setAttribute('style',"vertical-align:middle");	
+				}
+				else
+				{					
+					tableHeading.innerHTML = value['cod_sala'];										
 				}												
 				tableHead.appendChild( tableHeading );				
 			});	
 			thead.appendChild( tableHead );
 			tableHead = document.createElement( 'tr' );	 //tableheader 				
 			$(data.head).each(function(key,value){										
-				switch(key)
-				{
-					case 0:
-					case 1:			
-					case cols:
-						break;					
-					default: 		
-						var tableHeading = document.createElement( 'th' );						
-						tableHeading.innerHTML = value['nom_sala'].substring(0,16).replace(/ /g,'_')+'...';
-						tableHeading.setAttribute('title',value['nom_sala']);		
-						tableHead.appendChild( tableHeading );	
-						break;						
+				if(key>=columnas_reservadas && key!=cols)
+				{					
+					var tableHeading = document.createElement( 'th' );						
+					tableHeading.innerHTML = value['nom_sala'].substring(0,16).replace(/ /g,'_')+'...';
+					tableHeading.setAttribute('title',value['nom_sala']);		
+					tableHead.appendChild( tableHeading );									
 				}																		
 			});							
 			thead.appendChild( tableHead );
@@ -560,7 +658,15 @@ $(document).ready(function () {
 		else{
 			$(id_+'.loader').remove();
 		}
-	}
+	}	
+	
+	function alerta(strong,text){
+		var alerttipo = '<div class="alert alert-info">' +
+		  '<button type="button" class="close" data-dismiss="alert">×</button>'+
+		  '<strong>'+strong+'</strong> '+text+
+		'</div>';
+		$('#container').prepend(alerttipo);
+	}	
 	
  </script>
 {% endblock %}
