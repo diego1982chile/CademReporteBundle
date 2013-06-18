@@ -301,16 +301,46 @@ class PrecioDetalleController extends Controller
 		usort($salas_aux, array($this,"sortFunction"));		
 		// CONSTRUIR EL ENCABEZADO DE LA TABLA
 			
-		$prefixes=array('CATEGORIA','SKU','POLITICA');
+		$prefixes=array('CATEGORIA','DESCRIPCIÓN','POLITICA');
 		
 		$head=array();
+		
+		// Oonstruir inicialización de columnas
+		$aoColumnDefs=array();
+		
+		$fila=array();
+		$fila['aTargets']=array(0);
+		$fila['sClass']="tag2";
+		// $fila['sWidth']="10%";
+		array_push($aoColumnDefs,$fila);
+		
+		$fila=array();
+		$fila['aTargets']=array(1);
+		$fila['sClass']="tag";
+		// $fila['sWidth']="10%";
+		array_push($aoColumnDefs,$fila);		
+
+		$fila=array();
+		$fila['aTargets']=array(2);		
+		// $fila['sWidth']="2%";
+		array_push($aoColumnDefs,$fila);	
+
+		$cont=3;
 		
 		foreach($salas_aux as $sala)
 		{
 			array_push($salas,$sala['ID_SALA']);	
-			$head[$sala['COD_SALA']]=$sala['NOM_SALA'];						
+			$head[$sala['COD_SALA']]=$sala['NOM_SALA'];	
+			$fila=array();
+			$fila['aTargets']=array($cont);		
+			// $fila['sWidth']="2%";
+			$cont++;
+			array_push($aoColumnDefs,$fila);				
 		}		
-						
+		$fila=array();
+		$fila['aTargets']=array($cont);		
+		// $fila['sWidth']="2%";
+		array_push($aoColumnDefs,$fila);
 		foreach(array_reverse($prefixes) as $prefix)		
 			array_unshift($head,$prefix);		
 		array_push($head,'TOTAL');			
@@ -325,25 +355,12 @@ class PrecioDetalleController extends Controller
 		$session->set("total",$total);	
 
 		// Calcula el ancho máximo de la tabla	
-		$extension=count($head)*19-100;
+		$extension=count($head)*15-100;
 	
 		if($extension<0)
 			$extension=0;
 			
-		$max_width=100+$extension;
-		
-		// Oonstruir inicialización de columnas
-		$aoColumnDefs=array();
-		
-		$fila=array();
-		$fila['aTargets']=array(0);
-		$fila['sClass']="tag2";
-		array_push($aoColumnDefs,$fila);
-		
-		$fila=array();
-		$fila['aTargets']=array(1);
-		$fila['sClass']="tag";
-		array_push($aoColumnDefs,$fila);			
+		$max_width=100+$extension;				
 					
 		//RESPONSE
 		$response = $this->render('CademReporteBundle:Detalle:index.html.twig',
@@ -364,7 +381,8 @@ class PrecioDetalleController extends Controller
 			'variable' => 2,
 			'header_action' => 'precio_detalle_header',
 			'body_action' => 'precio_detalle_body',
-			'aoColumnDefs' => json_encode($aoColumnDefs)			
+			'aoColumnDefs' => json_encode($aoColumnDefs),
+			'columnas_reservadas' => 3			
 			)
 		);
 		$time_taken = microtime(true) - $start;
@@ -431,7 +449,8 @@ class PrecioDetalleController extends Controller
 				{									
 					$fila[0]=$detalle_quiebre[$cont_regs]['SEGMENTO'];	
 					$fila[1]=$detalle_quiebre[$cont_regs]['NOM_PRODUCTO'];//.' ['.$detalle_quiebre[$cont_regs]['COD_PRODUCTO'].']';										
-					$fila[$columna_quiebre+3]=mt_rand(0, 20000);//.' ['.$detalle_quiebre[$cont_regs]['COD_PRODUCTO'].']';										
+					$fila[2]=mt_rand(5000, 20000);
+					$fila[$columna_quiebre+3]=mt_rand(5000, 20000);//.' ['.$detalle_quiebre[$cont_regs]['COD_PRODUCTO'].']';										
 																				
 					$cont_regs++;						
 				}	
@@ -446,7 +465,7 @@ class PrecioDetalleController extends Controller
 				if($cont_regs==$num_regs)		
 				{						
 					$columna_quiebre=array_search($detalle_quiebre[$cont_regs-1]['COD_SALA'],$salas);	
-					$fila[$columna_quiebre+3]=mt_rand(0, 20000);														
+					$fila[$columna_quiebre+3]=mt_rand(5000, 20000);														
 					$fila[$num_salas+3]=round($totales_producto[$cont_totales_producto]['QUIEBRE']*100,1);					
 					$cont_totales_producto++;								
 					array_push($body,$fila);
@@ -659,12 +678,31 @@ class PrecioDetalleController extends Controller
 		usort($salas_aux, array($this,"sortFunction"));		
 		// CONSTRUIR EL ENCABEZADO DE LA TABLA
 			
-		if($niveles==1)
-			$prefixes=array('SKU/SALA');
-		else
-			$prefixes=array('SKU/SALA','SEGMENTO');
+		$prefixes=array('CATEGORIA','SKU','POLITICA');
 		
 		$head=array();
+		
+		// Oonstruir inicialización de columnas
+		$aoColumnDefs=array();
+		
+		$fila=array();
+		$fila['aTargets']=array(0);
+		$fila['sClass']="tag2";
+		// $fila['sWidth']="10%";
+		array_push($aoColumnDefs,$fila);
+		
+		$fila=array();
+		$fila['aTargets']=array(1);
+		$fila['sClass']="tag";
+		// $fila['sWidth']="10%";
+		array_push($aoColumnDefs,$fila);		
+
+		$fila=array();
+		$fila['aTargets']=array(2);		
+		// $fila['sWidth']="2%";
+		array_push($aoColumnDefs,$fila);	
+
+		$cont=3;		
 		
 		foreach($salas_aux as $sala)
 		{
@@ -673,9 +711,17 @@ class PrecioDetalleController extends Controller
 			$fila['nom_sala']=$sala['NOM_SALA'];			
 			array_push($salas,$sala['ID_SALA']);		
 			array_push($head,$fila);
+			$fila=array();
+			$fila['aTargets']=array($cont);		
+			// $fila['sWidth']="2%";
+			$cont++;
+			array_push($aoColumnDefs,$fila);			
 			// $head[$sala['COD_SALA']]=$sala['NOM_SALA'];											
 		}		
-		
+		$fila=array();
+		$fila['aTargets']=array($cont);		
+		// $fila['sWidth']="2%";
+		array_push($aoColumnDefs,$fila);		
 		foreach(array_reverse($prefixes) as $prefix)		
 			array_unshift($head,$prefix);		
 		array_push($head,'TOTAL');						
@@ -689,11 +735,13 @@ class PrecioDetalleController extends Controller
 		$session->set("totales_verticales_segmento",$totales_verticales_segmento);	
 		$session->set("total",$total);		
 		// Calcula el ancho máximo de la tabla	
-		$extension=count($head)*19-100;
+		$extension=count($head)*15-100;
 	
 		if($extension<0)
 			$extension=0;
 			
+		// print_r($aoColumnDefs);
+		
 		$max_width=100+$extension;	
 		/*
 		 * Output
@@ -702,6 +750,7 @@ class PrecioDetalleController extends Controller
 		$output = array(
 			"head" => (array)$head,
 			"max_width" => $max_width,
+			'aoColumnDefs' => json_encode($aoColumnDefs),			
 		);		
 		return new JsonResponse($output);		
 	}
