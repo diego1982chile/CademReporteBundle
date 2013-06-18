@@ -106,6 +106,7 @@ class AdminController extends Controller
 
     public function filevalidAction(Request $request)
     {
+        $start = microtime(true);
     	$em = $this->getDoctrine()->getManager();
         $data = $request->query->all();
         $tipo_carga = $data['tipo_carga'];
@@ -123,6 +124,7 @@ class AdminController extends Controller
     		while (!$fileobj->eof()) {
 			    $row = $fileobj->fgetcsv(';');
                 $row = array_map("utf8_encode", $row);//SE PASA DE ANSI A UTF-8
+                $row = array_map("trim", $row);//SE ELIMINAN ESPACIOS
                 if(isset($row[4])){
                     $m[] = $row;
                 }
@@ -145,10 +147,13 @@ class AdminController extends Controller
                         $cod_item[floor($chunk/2000)][] = $value[4];
                         $chunk++;
                     }
+
+
                     
 
                     //SE VERIFICA QUE TODOS LOS SKU TENGAN 13 DIG, ADEMAS SE VALIDA QUE EL SKU NO ESTE EN LA BD
                     $cod_encontrados = array();
+                    $start_select = microtime(true);
                     foreach($cod_item as $k => $chunk){
                         $sql = "SELECT i.codigo as codigo FROM ITEM i
                                 WHERE i.codigo IN ( ? )
@@ -157,9 +162,17 @@ class AdminController extends Controller
                         $tipo_param = array(\Doctrine\DBAL\Connection::PARAM_STR_ARRAY);
                         $query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
                         foreach ($query as $v) $cod_encontrados[] = $v['codigo'];
+                        set_time_limit(10);
+                        $time_taken = microtime(true) - $start_select;
+                        if($time_taken >= 600){
+                            return new JsonResponse(array(
+                                'status' => false,
+                                'mensaje' => 'TIEMPO EXCEDIDO ('.round($time_taken,1).' SEG) EN CONSULTAR. EL TIEMPO MAX ES DE 600 SEG. LO QUE DEBERIA ALCANZAR PARA PROCESAR APROX 45 MIL FILAS. SI SU ARCHIVO TIENE MAS, POR FAVOR SAQUE LAS SUFICIENTES FILAS.'
+                            ));
+                        }
                     }
                     
-
+                    $start_valid = microtime(true);
                     foreach ($m as $k => $fila) {
                         if(count($fila) !== 5){//SIEMPRE DEBEN HABER 5 COLUMNAS
                             return new JsonResponse(array(
@@ -185,6 +198,7 @@ class AdminController extends Controller
                                 'mensaje' => 'EL NOMBRE NO PUEDE ESTAR VACIO, CERCA DE LA LINEA '.$k
                             ));
                         }
+                        
                         if(in_array($fila[4], $cod_encontrados)){//SE BUSCAN Y DESCARTA LOS SKU ENCONTRADOS Y SE REGISTRA
                             unset($m[$k]);
                             $item_descartados++;
@@ -194,7 +208,19 @@ class AdminController extends Controller
                             if($fila[1] !== '') $fabricante[] = $fila[1];
                             if($fila[2] !== '') $marca[] = $fila[2];
                         }
+                        set_time_limit(10);
+                        $time_taken = microtime(true) - $start_valid;
+                        if($time_taken >= 600){
+                            return new JsonResponse(array(
+                                'status' => false,
+                                'mensaje' => 'TIEMPO EXCEDIDO ('.round($time_taken,1).' SEG) EN VALIDAR. EL TIEMPO MAX ES DE 600 SEG. LO QUE DEBERIA ALCANZAR PARA PROCESAR APROX 45 MIL FILAS. SI SU ARCHIVO TIENE MAS, POR FAVOR SAQUE LAS SUFICIENTES FILAS.'
+                            ));
+                        }
                     }
+
+                    
+
+                    
 
                     if(count($m) === 0){//NO SE INGRESAN DATOS
                         return new JsonResponse(array(
@@ -278,7 +304,7 @@ class AdminController extends Controller
                         }
                     }
 
-
+                    set_time_limit(10);
                     //FORMATO ES: TIPOCODIGO_ID;FABRICANTE;MARCA;NOMBRE;CODIGO
                     //ARCHIVO A ESCRIBIR CON LOS IDs FINALES
                     $fp = fopen($this->uploadDIR.$name.'_proc.csv', 'w');
@@ -832,13 +858,14 @@ class AdminController extends Controller
                     
                 
 
-            
+            $time_taken = microtime(true) - $start;
 
 
             return new JsonResponse(array(
                 'status' => true,
                 'name' => $name.'_proc.csv',
-                'tipo_carga' => $tipo_carga
+                'tipo_carga' => $tipo_carga,
+                'time_taken' => $time_taken*1000
             ));
 
     	}else{
@@ -888,7 +915,7 @@ class AdminController extends Controller
                     $id = intval($query[0]['id']);
 
                     try{
-
+                        $start_insert = microtime(true);
                         foreach ($m as $key => $fila) {
                             $id++;
                             $sql = "INSERT INTO ITEM
@@ -911,6 +938,15 @@ class AdminController extends Controller
                                 \PDO::PARAM_STR
                                 );
                             $row_affected += $conn->executeUpdate($sql,$param,$tipo_param);
+                            set_time_limit(10);
+                            $time_taken = microtime(true) - $start_insert;
+                            if($time_taken >= 600){
+                                $conn->rollback();
+                                return new JsonResponse(array(
+                                    'status' => false,
+                                    'mensaje' => 'TIEMPO EXCEDIDO ('.round($time_taken,1).' SEG) EN INSERT. EL TIEMPO MAX ES DE 600 SEG. LO QUE DEBERIA ALCANZAR PARA PROCESAR APROX 45 MIL FILAS. SI SU ARCHIVO TIENE MAS, POR FAVOR SAQUE LAS SUFICIENTES FILAS.'
+                                ));
+                            }
                         }
 
                         $conn->commit();
