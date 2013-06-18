@@ -202,17 +202,38 @@ class QuiebreEvolucionController extends Controller
 		usort($mediciones, array($this,"sortFunction"));
 		// CONSTRUIR EL ENCABEZADO DE LA TABLA
 		
-		if($niveles==1)
-			$head=array('SKU/MEDICIÓN');
-		else
-			$head=array('SKU/MEDICIÓN','CATEGORIA');	
+		$head=array('SKU/MEDICIÓN','CATEGORIA');	
+		
+		// Oonstruir inicialización de columnas
+		$aoColumnDefs=array();
+		
+		$fila=array();
+		$fila['aTargets']=array(0);
+		$fila['sClass']="tag";
+		$fila['sWidth']="3%";
+		array_push($aoColumnDefs,$fila);
+		
+		$fila=array();
+		$fila['aTargets']=array(1);
+		$fila['bVisible']=false;
+		array_push($aoColumnDefs,$fila);		
+		
+		$cont=2;		
 		
 		foreach($mediciones as $medicion)
 		{
 			array_push($mediciones2,$medicion['nombre']);					
-			array_push($head,$medicion['nombre']);					
+			array_push($head,$medicion['nombre']);
+			$fila=array();
+			$fila['aTargets']=array($cont);		
+			$fila['sWidth']="2%";
+			array_push($aoColumnDefs,$fila);	
+			$cont++;			
 		}
-
+		$fila=array();
+		$fila['aTargets']=array($cont);		
+		$fila['sWidth']="2%";	
+		array_push($aoColumnDefs,$fila);
 		array_push($head,'TOTAL');
 		
 		// Obtener totales horizontales por producto
@@ -299,7 +320,7 @@ class QuiebreEvolucionController extends Controller
 		$total = $em->getConnection()->executeQuery($sql)->fetchAll();									
 
 		// Calcula el ancho máximo de la tabla	
-		$extension=count($head)*12-100;
+		$extension=count($head)*11-100;
 	
 		if($extension<0)
 			$extension=0;
@@ -328,9 +349,13 @@ class QuiebreEvolucionController extends Controller
 			'head' => $head,
 			'max_width' => $max_width,
 			'logofilename' => $logofilename,
-			'logostyle' => $logostyle,			
-			// 'evolutivo' => json_encode($evolutivo),
-			// 'periodos' => json_encode($periodos)
+			'logostyle' => $logostyle,	
+			'estudios' => $estudios,
+			'variable' => 1,
+			'header_action' => 'quiebre_evolucion_header',
+			'body_action' => 'quiebre_evolucion_body',	
+			'aoColumnDefs' => json_encode($aoColumnDefs),
+			'columnas_reservadas' => 2			
 			)
 		);
 		//CACHE
@@ -543,13 +568,38 @@ class QuiebreEvolucionController extends Controller
 		else
 			$prefixes=array('SKU/MEDICION','SEGMENTO');
 		
-		$head=array();																
+		$head=array();	
+
+		// Oonstruir inicialización de columnas
+		$aoColumnDefs=array();
+		
+		$fila=array();
+		$fila['aTargets']=array(0);
+		$fila['sClass']="tag";
+		$fila['sWidth']="10%";
+		array_push($aoColumnDefs,$fila);
+		
+		$fila=array();
+		$fila['aTargets']=array(1);
+		$fila['bVisible']=false;
+		array_push($aoColumnDefs,$fila);		
+		
+		$cont=2;		
 		
 		foreach($mediciones_aux as $medicion)
 		{
 			array_push($mediciones,$medicion['nombre']);					
-			array_push($head,$medicion['nombre']);											
-		}										
+			array_push($head,$medicion['nombre']);
+			$fila['aTargets']=array($cont);		
+			$fila['sWidth']="2%";
+			array_push($aoColumnDefs,$fila);	
+			$cont++;				
+		}		
+		$fila=array();
+		$fila['aTargets']=array($cont);		
+		$fila['sWidth']="2%";	
+		array_push($aoColumnDefs,$fila);
+		
 		foreach(array_reverse($prefixes) as $prefix)		
 			array_unshift($head,$prefix);		
 		array_push($head,'TOTAL');			
