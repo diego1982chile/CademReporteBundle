@@ -246,7 +246,7 @@ class AdminController extends Controller
                             if($v !== $query[$k]['nombre']){
                                 return new JsonResponse(array(
                                     'status' => false,
-                                    'mensaje' => 'EL TIPO CODIGO "'.$v.'" NO EXISTE EN LA BD.'
+                                    'mensaje' => 'EL TIPO CODIGO "'.$v.'" NO EXISTE EN LA BD O NO CONCUERDA.'
                                 ));
                             }
                             $tipo_codigo_[$v] = $query[$k]['id'];
@@ -271,7 +271,7 @@ class AdminController extends Controller
                             if($v !== $query[$k]['nombre']){
                                 return new JsonResponse(array(
                                     'status' => false,
-                                    'mensaje' => 'EL FABRICANTE "'.$v.'" NO EXISTE EN LA BD.'
+                                    'mensaje' => 'EL FABRICANTE "'.$v.'" NO EXISTE EN LA BD O NO CONCUERDA.'
                                 ));
                             }
                             $fabricante_[$v] = $query[$k]['id'];
@@ -293,11 +293,13 @@ class AdminController extends Controller
 
                         usort($query, array($this,"cmp"));
 
+                        return new Response(print_r($query));
+
                         foreach ($marca as $k => $v) {
                             if($v !== $query[$k]['nombre']){
                                 return new JsonResponse(array(
                                     'status' => false,
-                                    'mensaje' => 'LA MARCA "'.$v.'" NO EXISTE EN LA BD.'
+                                    'mensaje' => 'LA MARCA "'.$v.'" NO EXISTE EN LA BD O NO CONCUERDA.'
                                 ));
                             }
                             $marca_[$v] = $query[$k]['id'];
@@ -538,17 +540,33 @@ class AdminController extends Controller
                     
 
                     //SE VALIDA QUE EL ITEM NO ESTE EN LA BD
-                    foreach ($m as $value) if(strlen($value[12]) !== 0) $item[] = $value[12];
+                    $chunk = 0;
+                    foreach($m as $value){
+                        if(strlen($value[12]) !== 0) $item[floor($chunk/2000)][] = $value[12];
+                        $chunk++;
+                    }
 
-                    $sql = "SELECT ic.CODIGOITEM1 as codigo FROM ITEMCLIENTE ic
-                            WHERE ic.CODIGOITEM1 IN ( ? ) and ic.CLIENTE_ID = ? and ic.MEDICION_ID = ?
-                            ORDER BY ic.CODIGOITEM1";
-                    $param = array($item, $id_cliente, $id_medicion);
-                    $tipo_param = array(\Doctrine\DBAL\Connection::PARAM_STR_ARRAY, \PDO::PARAM_INT, \PDO::PARAM_INT);
-                    $query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
                     $item_encontrados = array();
-                    foreach ($query as $v) $item_encontrados[] = $v['codigo'];
-
+                    $start_select = microtime(true);
+                    foreach($item as $k => $chunk){
+                        $sql = "SELECT ic.CODIGOITEM1 as codigo FROM ITEMCLIENTE ic
+                                WHERE ic.CODIGOITEM1 IN ( ? ) and ic.CLIENTE_ID = ? and ic.MEDICION_ID = ?
+                                ORDER BY ic.CODIGOITEM1";
+                        $param = array($chunk, $id_cliente, $id_medicion);
+                        $tipo_param = array(\Doctrine\DBAL\Connection::PARAM_STR_ARRAY, \PDO::PARAM_INT, \PDO::PARAM_INT);
+                        $query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
+                        foreach ($query as $v) $item_encontrados[] = $v['codigo'];
+                        set_time_limit(10);
+                        $time_taken = microtime(true) - $start_select;
+                        if($time_taken >= 600){
+                            return new JsonResponse(array(
+                                'status' => false,
+                                'mensaje' => 'TIEMPO EXCEDIDO ('.round($time_taken,1).' SEG) EN CONSULTAR. EL TIEMPO MAX ES DE 600 SEG. LO QUE DEBERIA ALCANZAR PARA PROCESAR APROX 45 MIL FILAS. SI SU ARCHIVO TIENE MAS, POR FAVOR SAQUE LAS SUFICIENTES FILAS.'
+                            ));
+                        }
+                    }
+                    
+                    $start_valid = microtime(true);
                     foreach ($m as $k => $fila) {
                         if(count($fila) !== 14){//SIEMPRE DEBEN HABER 14 COLUMNAS
                             return new JsonResponse(array(
@@ -592,6 +610,14 @@ class AdminController extends Controller
                             if($fila[10] !== '') $item_padre[] = $fila[10];
                             if($fila[11] !== '') $tipo_codigo[] = $fila[11];
                         }
+                        set_time_limit(10);
+                        $time_taken = microtime(true) - $start_valid;
+                        if($time_taken >= 600){
+                            return new JsonResponse(array(
+                                'status' => false,
+                                'mensaje' => 'TIEMPO EXCEDIDO ('.round($time_taken,1).' SEG) EN VALIDAR. EL TIEMPO MAX ES DE 600 SEG. LO QUE DEBERIA ALCANZAR PARA PROCESAR APROX 45 MIL FILAS. SI SU ARCHIVO TIENE MAS, POR FAVOR SAQUE LAS SUFICIENTES FILAS.'
+                            ));
+                        }
                     }
 
                     if(count($m) === 0){//NO SE INGRESAN DATOS
@@ -620,14 +646,12 @@ class AdminController extends Controller
                             if($v !== $query[$k]['nombre']){
                                 return new JsonResponse(array(
                                     'status' => false,
-                                    'mensaje' => 'LA CLASE "'.$v.'" NO EXISTE EN LA BD.'
+                                    'mensaje' => 'LA CLASE "'.$v.'" DEL NIVEL1 NO EXISTE EN LA BD.'
                                 ));
                             }
                             $nni_ni1_[$v] = $query[$k]['id'];
                         }
                     }
-
-                    return new Response(print_r($nni_ni1_));
 
 
                     //SE VALIDA QUE EXISTA "NOMBRE NIVELITEM_ID2" y "NIVELITEM_ID2"
@@ -649,7 +673,7 @@ class AdminController extends Controller
                             if($v !== $query[$k]['nombre']){
                                 return new JsonResponse(array(
                                     'status' => false,
-                                    'mensaje' => 'LA CLASE "'.$v.'" NO EXISTE EN LA BD.'
+                                    'mensaje' => 'LA CLASE "'.$v.'" DEL NIVEL2 NO EXISTE EN LA BD.'
                                 ));
                             }
                             $nni_ni2_[$v] = $query[$k]['id'];
@@ -675,7 +699,7 @@ class AdminController extends Controller
                             if($v !== $query[$k]['nombre']){
                                 return new JsonResponse(array(
                                     'status' => false,
-                                    'mensaje' => 'LA CLASE "'.$v.'" NO EXISTE EN LA BD.'
+                                    'mensaje' => 'LA CLASE "'.$v.'" DEL NIVEL3 NO EXISTE EN LA BD.'
                                 ));
                             }
                             $nni_ni3_[$v] = $query[$k]['id'];
@@ -701,7 +725,7 @@ class AdminController extends Controller
                             if($v !== $query[$k]['nombre']){
                                 return new JsonResponse(array(
                                     'status' => false,
-                                    'mensaje' => 'LA CLASE "'.$v.'" NO EXISTE EN LA BD.'
+                                    'mensaje' => 'LA CLASE "'.$v.'" DEL NIVEL4 NO EXISTE EN LA BD.'
                                 ));
                             }
                             $nni_ni4_[$v] = $query[$k]['id'];
@@ -728,7 +752,7 @@ class AdminController extends Controller
                             if($v !== $query[$k]['nombre']){
                                 return new JsonResponse(array(
                                     'status' => false,
-                                    'mensaje' => 'LA CLASE "'.$v.'" NO EXISTE EN LA BD.'
+                                    'mensaje' => 'LA CLASE "'.$v.'" DEL NIVEL5 NO EXISTE EN LA BD.'
                                 ));
                             }
                             $nni_ni5_[$v] = $query[$k]['id'];

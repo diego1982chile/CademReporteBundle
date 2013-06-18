@@ -51,13 +51,14 @@ $(document).ready(function () {
             alert('SE PRODUJO UN ERROR EN LA VALIDACION DEL ARCHIVO: ' + data2.mensaje);
             return;
           }
-          // $.get("{{ path('admin_fileprocess') }}", {name: data2.name, tipo_carga: data2.tipo_carga}, function(data3) {
-          //   if(data3.status == false){
-          //     alert('SE PRODUJO UN ERROR EN LA CARGA DEL ARCHIVO: ' + data3.mensaje);
-          //     return;
-          //   }
-          //   else alert('PROCESO DE CARGA EXITOSO. REGISTROS GUARDADOS: ' + data3.row_affected);
-          // } );
+          $.get("{{ path('admin_fileprocess') }}", {name: data2.name, tipo_carga: data2.tipo_carga}, function(data3) {
+            if(data3.status == false){
+              alert('SE PRODUJO UN ERROR EN LA CARGA DEL ARCHIVO: ' + data3.mensaje);
+              return;
+            }
+            else alert('PROCESO DE CARGA EXITOSO. REGISTROS GUARDADOS: ' + data3.row_affected);
+          } );
+          alert('VALIDADO EXITOSO ('+data2.time_taken+ MS'). COMENZO CARGA A LA BD.');
         })
         .fail(function() { alert("ERROR AL VALIDAR"); });
     },
