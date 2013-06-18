@@ -31,6 +31,12 @@ dashboard_indicadores:
 precio_evolucion_index:
     pattern: /precio/evolucion
     defaults: { _controller: CademReporteBundle:PrecioEvolucion:index } 
+precio_evolucion_header:
+    pattern:  /precio/evolucion/header
+    defaults: { _controller: CademReporteBundle:PrecioEvolucion:header }	
+precio_evolucion_body:
+    pattern:  /precio/evolucion/body
+    defaults: { _controller: CademReporteBundle:PrecioEvolucion:body }	
 precio_detalle_index:
     pattern: /precio/detalle
     defaults: { _controller: CademReporteBundle:PrecioDetalle:index } 
