@@ -1,6 +1,6 @@
 <?php
 
-namespace Cadem\ReporteBundle\Controller\Precio;
+namespace Cadem\ReporteBundle\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
@@ -177,10 +177,7 @@ class PrecioEvolucionController extends Controller
 			$evolucion_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();
 			$session->set($sha1,$evolucion_quiebre);
 		}
-		else $evolucion_quiebre = $session->get($sha1);
-		
-		
-
+		else $evolucion_quiebre = $session->get($sha1);				
 		
 		$niveles=2;
 				
@@ -205,20 +202,45 @@ class PrecioEvolucionController extends Controller
 		usort($mediciones, array($this,"sortFunction"));
 		// CONSTRUIR EL ENCABEZADO DE LA TABLA
 		
-		if($niveles==1)
-			$head=array('SKU/MEDICIÓN');
-		else
-			$head=array('SKU/MEDICIÓN','CATEGORIA');	
+		$head=array('CATEGORIA','DESCRIPCIÓN','POLÍTICA');	
+		
+		// Oonstruir inicialización de columnas		
+		$aoColumnDefs=array();
+		
+		$fila=array();
+		$fila['aTargets']=array(0);
+		$fila['sClass']="tag2";
+		$fila['sWidth']="5%";
+		array_push($aoColumnDefs,$fila);
+		
+		$fila=array();
+		$fila['aTargets']=array(1);
+		$fila['sClass']="tag";
+		// $fila['sWidth']="2%";
+		array_push($aoColumnDefs,$fila);		
+
+		$fila=array();
+		$fila['aTargets']=array(2);		
+		// $fila['sWidth']="2%";
+		array_push($aoColumnDefs,$fila);	
+
+		$cont=3;		
 		
 		foreach($mediciones as $medicion)
 		{
 			array_push($mediciones2,$medicion['nombre']);					
-			array_push($head,$medicion['nombre']);					
+			array_push($head,$medicion['nombre']);
+			$fila=array();
+			$fila['aTargets']=array($cont);		
+			// $fila['sWidth']="2%";
+			array_push($aoColumnDefs,$fila);	
+			$cont++;			
 		}
-
+		$fila=array();
+		$fila['aTargets']=array($cont);	
+		array_push($aoColumnDefs,$fila);		
+		// $fila['sWidth']="2%";	
 		array_push($head,'TOTAL');
-
-
 		
 		// Obtener totales horizontales por producto
 			
@@ -304,7 +326,7 @@ class PrecioEvolucionController extends Controller
 		$total = $em->getConnection()->executeQuery($sql)->fetchAll();									
 
 		// Calcula el ancho máximo de la tabla	
-		$extension=count($head)*12-100;
+		$extension=count($head)*11-100;
 	
 		if($extension<0)
 			$extension=0;
@@ -333,9 +355,13 @@ class PrecioEvolucionController extends Controller
 			'head' => $head,
 			'max_width' => $max_width,
 			'logofilename' => $logofilename,
-			'logostyle' => $logostyle,			
-			// 'evolutivo' => json_encode($evolutivo),
-			// 'periodos' => json_encode($periodos)
+			'logostyle' => $logostyle,
+			'estudios' => $estudios,			
+			'variable' => 2,
+			'header_action' => 'precio_evolucion_header',
+			'body_action' => 'precio_evolucion_body',	
+			'aoColumnDefs' => json_encode($aoColumnDefs),
+			'columnas_reservadas' => 3
 			)
 		);
 		//CACHE
@@ -379,7 +405,7 @@ class PrecioEvolucionController extends Controller
 			// Para llevar los cambios del 1er nivel de agregacion
 			$nivel1=$evolucion_quiebre[$cont_regs]['PRODUCTO'];			
 			// Lleno la fila con vacios, le agrego 3 posiciones, correspondientes a los niveles de agregación y al total															
-			$fila=array_fill(0,$num_meds+3,'-');																				
+			$fila=array_fill(0,$num_meds+4,'-');																				
 			$cont_totales_producto=0;			
 		
 			while($cont_regs<$num_regs)
@@ -389,27 +415,28 @@ class PrecioEvolucionController extends Controller
 				// Mientras el primer nivel de agregación no cambie
 				if($nivel1==$evolucion_quiebre[$cont_regs]['PRODUCTO'])
 				{					
-					$fila[0]=trim($evolucion_quiebre[$cont_regs]['PRODUCTO']);
-					$fila[1]=$evolucion_quiebre[$cont_regs]['SEGMENTO'];													
-					$fila[$columna_quiebre+2]=round($evolucion_quiebre[$cont_regs]['quiebre'],1);											
+					$fila[0]=$evolucion_quiebre[$cont_regs]['SEGMENTO'];	
+					$fila[1]=trim($evolucion_quiebre[$cont_regs]['PRODUCTO']);																
+					$fila[2]=mt_rand(5000, 20000);
+					$fila[$columna_quiebre+3]=mt_rand(5000, 20000);
 					$cont_regs++;
 					// $cont_meds++;
 				}	
 				else
 				{			
 					// Si el primer nivel de agregacion cambió, lo actualizo, agrego la fila al body y reseteo el contador de mediciones								
-					$fila[$num_meds+2]=round($totales_producto[$cont_totales_producto]['QUIEBRE']*100,1);					
+					$fila[$num_meds+3]=round($totales_producto[$cont_totales_producto]['QUIEBRE']*100,1);					
 					$cont_totales_producto++;					
 					// $cont_meds=0;								
 					$nivel1=$evolucion_quiebre[$cont_regs]['PRODUCTO'];				
 					array_push($body,(object)$fila);
-					$fila=array_fill(0,$num_meds+3,'-');					
+					$fila=array_fill(0,$num_meds+4,'-');					
 				}
 				if($cont_regs==$num_regs-1)		
 				{	
 					$columna_quiebre=array_search($evolucion_quiebre[$cont_regs]['NOMBRE'],$mediciones);
-					$fila[$columna_quiebre+2]=round($evolucion_quiebre[$cont_regs]['quiebre'],1);				
-					$fila[$num_meds+2]=round($totales_producto[$cont_totales_producto]['QUIEBRE']*100,1);					
+					$fila[$columna_quiebre+3]=mt_rand(5000, 20000);					
+					$fila[$num_meds+3]=round($totales_producto[$cont_totales_producto]['QUIEBRE']*100,1);					
 					array_push($body,(object)$fila);									
 					$cont_regs++;
 				}		
