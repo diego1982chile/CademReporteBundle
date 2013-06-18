@@ -26,7 +26,7 @@
 									<tr>
 										{% for item in head %}
 										<th title='{{item}}' style='vertical-align:middle'>
-											{% if loop.index>2 and loop.index<head|length %}
+											{% if loop.index>columnas_reservadas and loop.index!=head|length %}										
 												{{item|replace({' ':''})}}
 											{% else %}	
 												{{item}}
@@ -57,20 +57,22 @@ div.dataTables_scroll {
 	clear: both !important; 
 	}
 
+{% if variable=='1' %}
 table tbody tr{ 
-	height: 1.3em !important;
-} 	
+	height: 1.1em !important;
+}
+{% endif %} 	
 	
 td{
 	text-align: center !important;
-	font-size: .6em !important;
+	font-size: .55em !important;
 	padding: 0em !important;
 }
 
 th{
-	font-size: .6em !important;
+	font-size: .55em !important;
 	text-align: center !important;
-	// padding: 0em !important;
+	padding: 0em !important;
 }
 	
 .head{
@@ -78,11 +80,17 @@ th{
 }	
 
 span.indenter{
-	padding-left:0em !important;
+	padding-left:0em !important;	
 }
 
 .tag{
 	text-align: left !important;
+}
+
+.tag2{
+	vertical-align: middle !important;
+	padding-left: .5em !important;
+	padding-right: .5em !important;
 }
 
 /* Block out what is behind the fixed column's header and footer */
@@ -121,81 +129,103 @@ var maxWidth={{max_width}};
 var maxHeight;
 var DatosAdicionales = [];
 var matriz_totales = [];
-var max_largo_cadena = 0;
+var variable = parseInt({{variable}});
+var aoColumnDefs = {{aoColumnDefs|raw}};
+var columnas_reservadas = parseInt({{columnas_reservadas}});
 
-function calcularAnchoMaximo()
+function preInitTabla()
 {
 	// Calcula el ancho máximo de la tabla		
-	$('table').css('max-width',maxWidth+'%');
-	maxHeight=400;
-	// alert('maxWidth='+maxWidth);
+	$('#tabla_resumen').css('max-width',maxWidth+'%');
+	maxHeight=400;		
 }
 
 function construirTabla()
 {
-	oTable = $('#tabla_resumen').dataTable({
-		"bProcessing": true,
-		"bServerSide": true,
-		"sAjaxSource": "{{ url_body }}",
-		"fnServerData": function ( sSource, aoData, fnCallback ) {
-			//AGREGAMOS LOS DATOS SOLO SI HAY
-			if (DatosAdicionales.length > 0) for(i in DatosAdicionales) aoData.push(DatosAdicionales[i]);
-			$.ajax( {
-				"dataType": 'json', 
-				"type": "GET", 
-				"url": sSource, 
-				"data": aoData, 
-				"success": function(data){
-							matriz_totales=data.matriz_totales;	
-							maxWidth=parseInt(data.max_width);							
-							max_largo_cadena=parseInt(data.max_largo_cadena);			
-							fnCallback(data);
-							DatosAdicionales = [];//AL FINAL SE BORRAN
-						}
-			} )
-			.done(function() { colorTotales(); })
-			.fail(function() {  })
-			.always(function() { quitarloader(); });
-		},	
-		"sScrollY": maxHeight+'px',
-		"sScrollX": "100%",
- 		"sScrollXInner": maxWidth+'%',
- 		"bScrollCollapse": true,
-		"bFilter": false,
-		"bSort": false,
-		"bInfo": false,
-		"bPaginate": false,
-		"bJQueryUI": true,
-		"bAutoWidth": true, 
-		"aoColumnDefs": [
-			{ "bVisible": false, "aTargets": [1] },	
-			{ "sClass": "tag", "aTargets": [0], "sWidth": "12%" }				
-		],
-		"fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {	
-			// str.replace(/\\n/g, '<br />');
-			if(aData[0].length>40)
-				$(nRow).children(':eq(0)').text(aData[0].substring(0,40).replace(/ /g,'_')+'...');
-			else{
-				$(nRow).children(':eq(0)').text(aData[0].replace(/ /g,'_'));
-			}  
-			$(nRow).attr('title',aData[0]);		  
-		},			
-		"aaSortingFixed": [[ 1, 'asc' ]],
-		"fnInitComplete": function() {
-			  fixedColumn();
-			},
-		"bDeferRender": true,
-		"bSortClasses": false,	
-		"oLanguage": {
+	$('#tabla_resumen').ready(function(){		
+		oTable = $('#tabla_resumen').dataTable({
+			"bProcessing": true,
+			"bServerSide": true,
+			"sAjaxSource": "{{ path(body_action) }}",
+			"fnServerData": function ( sSource, aoData, fnCallback ) {
+				//AGREGAMOS LOS DATOS SOLO SI HAY
+				if (DatosAdicionales.length > 0) for(i in DatosAdicionales) aoData.push(DatosAdicionales[i]);
+				$.ajax( {
+					"dataType": 'json', 
+					"type": "GET", 
+					"url": sSource, 
+					"data": aoData, 
+					"success": function(data){//QUE PASA SI FALLA?									
+								matriz_totales=data.matriz_totales;	
+								maxWidth=parseInt(data.max_width);																							
+								// alert(JSON.stringify(matriz_totales));
+								fnCallback(data);
+								DatosAdicionales = [];//AL FINAL SE BORRAN
+							}
+				} )
+				.done(function() { colorTotales(); })
+				.fail(function() {  })
+				.always(function() { quitarloader(); });
+			},	
+			// "bDeferRender": true,
+			"sScrollY": maxHeight+'px',
+			"sScrollX": "100%",
+			"sScrollXInner": maxWidth+'%',
+			"bScrollCollapse": true,
+			"bFilter": false,
+			"bSort": false,
+			"bInfo": false,
+			"bPaginate": false,			
+			"bJQueryUI": true,
+			"bAutoWidth": false, 
+			// "bScrollInfinite": true,
+			"aoColumnDefs": aoColumnDefs,
+			"aaSortingFixed": [[ 1, 'asc' ]],
+			"sPaginationType": "full_numbers",		
+			"fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {	
+								switch(variable)
+								{
+									case 1:
+										var col=0;
+										break;
+									case 2:
+										var col=1;
+										break;										
+								}
+								if(aData[0].length>14)
+									$(nRow).children(':eq(0)').text(aData[0].substring(0,14).replace(/ /g,'_')+'...');
+								else
+									$(nRow).children(':eq(0)').text(aData[0].replace(/ /g,'_'));									
+								if(aData[col].length>40)
+									$(nRow).children(':eq('+col+')').text(aData[col].substring(0,40).replace(/ /g,'_')+'...');
+								else
+									$(nRow).children(':eq('+col+')').text(aData[col].replace(/ /g,'_'));							 
+								$(nRow).attr('title',aData[col]);		  
+							},						
+			"fnInitComplete": function() {
+					switch(parseInt(variable))
+					{
+						case 1:														
+							fixedColumn1();
+							break;
+						case 2:							
+							fixedColumn2();
+							break;							
+					}					
+					// $(window).resize(function(){								
+						// oTable.fnAdjustColumnSizing();
+					// });				  
+				},	
+			"oLanguage": {
 				  "sProcessing": "<b>Procesando...</b>"
-				}	
-		// "sDom": "frtiS",
-	//	"sDom": '<"H"Cfr>t<"F"ip>',	
-	});
-	$('div.fg-toolbar:first').append("<h5 style='float:left;margin:0em'>Tabla Resumen Quiebre: (%)</h5>");
+				}				
+		});
+		 $('div.fg-toolbar:first').append("<h5 style='float:left;margin:0em'>Tabla Resumen {{estudios[0].getEstudioVariables[0].getNombrevariable}}: (%)</h5>");		
+		});	
 }
 
-function fixedColumn()
+
+function fixedColumn1()
 {				
 		new FixedColumns( oTable, {
 		// "sLeftWidth": "relative",
@@ -298,23 +328,85 @@ function fixedColumn()
 	});
 }
 
+function fixedColumn2()
+{
+		new FixedColumns( oTable, {	
+		"iLeftColumns": 1,
+		"sHeightMatch": "none",		
+		"fnDrawCallback": function ( left, right ) {
+			/////////////////////////// Esta parte añade las filas de agregacion a la tabla //////////////////////////////////
+			var that = this, groupVal = null, matches = 0, heights = [], index = -1;
+			
+			/* Get the heights of the cells and remove redundant ones */
+			var cont=0;
+			$('tbody tr td', left.body).each( function ( i ) {		
+				
+				var currVal = this.innerHTML;	
+				
+				/* Reset values on new cell data. */
+				if (currVal != groupVal) {
+					groupVal = currVal;
+					index++;
+					heights[index] = 0;
+					matches = 0;
+				} else  {
+					matches++;
+				}
+				heights[ index ] += 21;
+				// heights[ index ] += $(this.parentNode).height();
+				if ( currVal == groupVal && matches > 0 ) {
+					this.parentNode.parentNode.removeChild(this.parentNode);
+				}
+			} );
+
+			/* Now set the height of the cells which remain, from the summed heights */
+			$('tbody tr td', left.body).each( function ( i ) {
+				that.fnSetRowHeight( this.parentNode, heights[ i ] );
+			} );
+		}
+	});
+	
+	new FixedColumns( oTable, {
+		"sHeightMatch": "none",	
+		"iLeftColumns": 3,		
+	});
+			
+}
+
 function colorTotales(){
-	var color_fondo = 'rgb(255, 235, 158)';
-	$('.DTFC_Cloned tbody tr:first td').css('background-color',color_fondo);
-	$('.table:not(.DTFC_Cloned) tbody tr:first td').css('background-color',color_fondo);
-	$('.table:not(.DTFC_Cloned) tbody tr td:last-of-type:not(.group)').css('background-color',color_fondo);
-	$('.DTFC_Cloned tbody tr td:first-of-type:not(.group)').css({
-		'background-color':'rgb(238, 236, 255)',
-		'color': 'black',
-		});
-	// $('.DTFC_Cloned tbody tr:not(:first) td:first-of-type').css('cursor','pointer');
+	switch(parseInt(variable))
+	{
+		case 1:
+			var color_fondo = 'rgb(255, 235, 158)';
+			$('.DTFC_Cloned tbody tr:first td').css('background-color',color_fondo);
+			$('.table:not(.DTFC_Cloned) tbody tr:first td').css('background-color',color_fondo);
+			$('.table:not(.DTFC_Cloned) tbody tr td:last-of-type:not(.group)').css('background-color',color_fondo);
+			$('.DTFC_Cloned tbody tr td:first-of-type:not(.group)').css({
+				'background-color':'rgb(238, 236, 255)',
+				'color': 'black',
+				});
+			// $('.DTFC_Cloned tbody tr:not(:first) td:first-of-type').css('cursor','pointer');
+			break;
+		case 2:					
+			$('.DTFC_Cloned tbody tr td:first-of-type:not(.group)').css({
+				'background-color':'rgb(232, 231, 245)',
+				'color': 'black',
+				'border': '1px solid #B2B2B2'
+			});
+			
+			$('.DTFC_Cloned tbody tr td:nth-last-of-type(2):not(.group)').css({
+				'background-color':'rgb(255, 235, 158)',
+				'color': 'black',				
+			});			
+			break;
+	}
 }
 
 $(document).ready(function () {
 
 	var callbacks = $.Callbacks();
 
-	callbacks.add( calcularAnchoMaximo() );	
+	callbacks.add( preInitTabla() );
 	callbacks.add( construirTabla() );
 	// callbacks.add( fixedColumn() );	
 		
@@ -409,7 +501,7 @@ $(document).ready(function () {
 	
 	function recargarTabla()
 	{		
-		$.get("{{ url_header }}",DatosAdicionales,function(data){			
+		$.get("{{ path(header_action) }}",DatosAdicionales,function(data){			
 			maxWidth=parseInt(data.max_width);
 			// Primero destruimos la tabla si existe (la removemos del DOM)	
 			var ex = document.getElementById('tabla_resumen');
@@ -436,7 +528,7 @@ $(document).ready(function () {
 			table.appendChild( thead );						
 			document.getElementById('container').appendChild(table);			
 			// Luego recalculamos el ancho maximo en base a la cardinalidad del head
-			calcularAnchoMaximo();			
+			callbacks.add( preInitTabla() );		
 			// Luego volvemos a construir la tabla con dataTables
 			construirTabla();
 		},"json")
