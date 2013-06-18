@@ -28,7 +28,11 @@ class RequestListener
 
 		$request = $event->getRequest();
 		$routeName = $request->attributes->get('_route');
-		if($routeName == "fos_user_security_login" && $this->security->isGranted('ROLE_USER')){
+		if($routeName === "fos_user_security_login" && $this->security->isGranted('ROLE_ADMIN')){
+			$url = $this->router->generate('admin_carga_item');
+			$event->setResponse(new RedirectResponse($url));
+		}
+		else if($routeName === "fos_user_security_login" && $this->security->isGranted('ROLE_USER')){
 			$url = $this->router->generate('dashboard_index');
 			$event->setResponse(new RedirectResponse($url));
 		}

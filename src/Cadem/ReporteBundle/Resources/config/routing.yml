@@ -11,6 +11,9 @@ admin_carga_item:
 admin_carga_sala:
     pattern:  /admin/carga/sala
     defaults: { _controller: CademReporteBundle:Admin:cargasala }
+admin_carga_itemcliente:
+    pattern:  /admin/carga/itemcliente
+    defaults: { _controller: CademReporteBundle:Admin:cargaitemcliente }
 admin_fileupload:
     pattern:  /admin/fileupload
     defaults: { _controller: CademReporteBundle:Admin:fileupload }
@@ -102,6 +105,14 @@ privacidad:
     defaults:
         _controller: FrameworkBundle:Template:template
         template: 'CademReporteBundle:Estaticas:privacidad.html.twig'
+        maxAge: 86400
+        sharedMaxAge: 86400
+        private: false
+navegadores_soportados:
+    pattern: /navegadores-soportados
+    defaults:
+        _controller: FrameworkBundle:Template:template
+        template: 'CademReporteBundle:Estaticas:navegadores.html.twig'
         maxAge: 86400
         sharedMaxAge: 86400
         private: false

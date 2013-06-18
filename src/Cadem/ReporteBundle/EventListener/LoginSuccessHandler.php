@@ -30,11 +30,11 @@ class LoginSuccessHandler implements AuthenticationSuccessHandlerInterface
 			// $response = new RedirectResponse($this->router->generate('algo'));
 			$response = new Response("NO PERMITIDO");//SE DEBE DESLOGIAR
 		}
-		elseif ($this->security->isGranted('ROLE_ADMIN'))
+		else if ($this->security->isGranted('ROLE_ADMIN'))
 		{
 			$response = new RedirectResponse($this->router->generate('admin_carga_item'));
 		} 
-		elseif ($this->security->isGranted('ROLE_USER'))
+		else if ($this->security->isGranted('ROLE_USER'))
 		{
 			// redirect the user to where they were before the login process begun.
 			// $referer_url = $request->headers->get('referer');

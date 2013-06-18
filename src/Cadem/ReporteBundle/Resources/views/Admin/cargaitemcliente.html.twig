@@ -2,19 +2,24 @@
 
 {% block body %}
 		  <div class="hero-unit">
-        <h2>Carga de Sala</h2>
-        <p>A continuación podrá cargar un archivo CSV, que contenga las “SALAS” que desea cargar. Se verificará si el FOLIO CADEM existe, de ser así se descartaran.</p>
-        <p>El formato del CSV debe ser: COMUNA;CANAL;CADENA;FORMATO;FOLIO;CALLE;NUMERO. Ya que hay varios formatos de CSV, se recomienda ocupar Excel 2010 y guardar como Delimitado por comas (CSV). Se debe tener en cuenta que el FOLIO no debe ser guardado como número.</p>
+        <h2>Carga de Item-Cliente</h2>
+        <p>A continuación podrá cargar un archivo CSV, que contenga las “Asignaciones de los item a los clientes” que desea cargar. Se verificará si el SKU existe para el CLIENTE y la MEDICION, de ser así se descartara.</p>
+        <p>El formato del CSV debe ser: NOMBRE NIVELITEM_ID1;NIVELITEM_ID1;NOMBRE NIVELITEM_ID2;NIVELITEM_ID2;NOMBRE NIVELITEM_ID3;NIVELITEM_ID3;NOMBRE NIVELITEM_ID4;NIVELITEM_ID4;NOMBRE NIVELITEM_ID5;NIVELITEM_ID5;ITEM_PADRE;TIPOCODIGO_ID;CODIGOITEM1;CODIGOITEM2. Ya que hay varios formatos de CSV, se recomienda ocupar Excel 2010 y guardar como Delimitado por comas (CSV). Se debe tener en cuenta que el SKU no debe ser guardado como número.</p>
         <p>Para iniciar rápidamente se deja un <a href="{{ asset('bundles/cademreporte/sala_ejemplo_v1.csv') }}">CSV de ejemplo</a>.</p>
         <br>
 
 
         <form id="f1" action="{{ path('admin_fileupload') }}" method="POST" enctype="multipart/form-data" encoding="multipart/form-data">
+
+          {{ form_widget(form_medicion) }}
+          <label class="required">CSV</label>
           <div id="fileupload1" class="fileupload fileupload-new" data-provides="fileupload">
             <div class="input-append">
               <div class="uneditable-input span3"><i class="icon-file fileupload-exists"></i> <span class="fileupload-preview"></span></div><span class="btn btn-file"><span class="fileupload-new">Seleccionar</span><span class="fileupload-exists">Cambiar</span><input type="file" name="file1" id="file1"/></span><a href="#" class="btn btn-danger fileupload-exists" data-dismiss="fileupload">Remover</a><input class="btn btn-success fileupload-exists" type="submit" value="Subir">
             </div>
           </div>
+
+
           
         </form>
         
@@ -41,18 +46,18 @@ $(document).ready(function () {
           return;
         }
         //AHORA SE DEBE VALIDAR EL ARCHIVO SUBIDO
-        $.get("{{ path('admin_filevalid') }}", {name: data.name, tipo_carga: data.tipo_carga}, function(data2) {
+        $.get("{{ path('admin_filevalid') }}", {name: data.name, tipo_carga: data.tipo_carga, id_cliente: data.id_cliente, id_medicion: data.id_medicion}, function(data2) {
           if(data2.status == false){
             alert('SE PRODUJO UN ERROR EN LA VALIDACION DEL ARCHIVO: ' + data2.mensaje);
             return;
           }
-          $.get("{{ path('admin_fileprocess') }}", {name: data2.name, tipo_carga: data2.tipo_carga}, function(data3) {
-            if(data3.status == false){
-              alert('SE PRODUJO UN ERROR EN LA CARGA DEL ARCHIVO: ' + data3.mensaje);
-              return;
-            }
-            else alert('PROCESO DE CARGA EXITOSO. REGISTROS GUARDADOS: ' + data3.row_affected);
-          } );
+          // $.get("{{ path('admin_fileprocess') }}", {name: data2.name, tipo_carga: data2.tipo_carga}, function(data3) {
+          //   if(data3.status == false){
+          //     alert('SE PRODUJO UN ERROR EN LA CARGA DEL ARCHIVO: ' + data3.mensaje);
+          //     return;
+          //   }
+          //   else alert('PROCESO DE CARGA EXITOSO. REGISTROS GUARDADOS: ' + data3.row_affected);
+          // } );
         })
         .fail(function() { alert("ERROR AL VALIDAR"); });
     },
@@ -60,7 +65,7 @@ $(document).ready(function () {
         alert('SE PRODUJO UN ERROR AL SUBIR EL ARCHIVO');
     },
     dataType:'json',
-    data: {tipo_carga: 'sala'}
+    data: {tipo_carga: 'itemcliente'}
   });
 
   $('#file1').change(function(){
