@@ -301,19 +301,40 @@ class QuiebreDetalleController extends Controller
 		usort($salas_aux, array($this,"sortFunction"));		
 		// CONSTRUIR EL ENCABEZADO DE LA TABLA
 			
-		if($niveles==1)
-			$prefixes=array('SKU/SALA');
-		else
-			$prefixes=array('SKU/SALA','SEGMENTO');
+		$prefixes=array('SKU/SALA','SEGMENTO');				
 		
 		$head=array();
+		
+		// Oonstruir inicialización de columnas
+		$aoColumnDefs=array();
+		
+		$fila=array();
+		$fila['aTargets']=array(0);
+		$fila['sClass']="tag";
+		$fila['sWidth']="5%";
+		array_push($aoColumnDefs,$fila);
+		
+		$fila=array();
+		$fila['aTargets']=array(1);
+		$fila['bVisible']=false;
+		array_push($aoColumnDefs,$fila);		
+		
+		$cont=2;
 		
 		foreach($salas_aux as $sala)
 		{
 			array_push($salas,$sala['ID_SALA']);	
-			$head[$sala['COD_SALA']]=$sala['NOM_SALA'];						
+			$head[$sala['COD_SALA']]=$sala['NOM_SALA'];
+			$fila=array();
+			$fila['aTargets']=array($cont);		
+			$fila['sWidth']="2%";
+			array_push($aoColumnDefs,$fila);
+			$cont++;
 		}		
-						
+		$fila=array();
+		$fila['aTargets']=array($cont);		
+		$fila['sWidth']="2%";	
+		array_push($aoColumnDefs,$fila);		
 		foreach(array_reverse($prefixes) as $prefix)		
 			array_unshift($head,$prefix);		
 		array_push($head,'TOTAL');			
@@ -328,15 +349,13 @@ class QuiebreDetalleController extends Controller
 		$session->set("total",$total);	
 
 		// Calcula el ancho máximo de la tabla	
-		$extension=count($head)*16-100;
+		$extension=count($head)*14+sqrt(count($head))-100;
 	
 		if($extension<0)
 			$extension=0;
 			
-		$max_width=100+$extension;
-
-			
-		
+		$max_width=100+$extension;		
+				
 		//RESPONSE
 		$response = $this->render('CademReporteBundle:Detalle:index.html.twig',
 		array(
@@ -352,6 +371,12 @@ class QuiebreDetalleController extends Controller
 			'max_width' => $max_width,
 			'logofilename' => $logofilename,
 			'logostyle' => $logostyle,
+			'estudios' => $estudios,
+			'variable' => 1,
+			'header_action' => 'quiebre_detalle_header',
+			'body_action' => 'quiebre_detalle_body',	
+			'aoColumnDefs' => json_encode($aoColumnDefs),
+			'columnas_reservadas' => 2
 			)
 		);
 		$time_taken = microtime(true) - $start;
@@ -659,12 +684,28 @@ class QuiebreDetalleController extends Controller
 		}						
 		// Ordenamos la estructura usando comparador personalizado
 		usort($salas_aux, array($this,"sortFunction"));		
+		
 		// CONSTRUIR EL ENCABEZADO DE LA TABLA
 			
-		if($niveles==1)
-			$prefixes=array('SKU/SALA');
-		else
-			$prefixes=array('SKU/SALA','SEGMENTO');
+		$prefixes=array('SKU/SALA','SEGMENTO');				
+		
+		$head=array();
+		
+		// Oonstruir inicialización de columnas
+		$aoColumnDefs=array();
+		
+		$fila=array();
+		$fila['aTargets']=array(0);
+		// $fila['sWidth']="2%";
+		$fila['sClass']="tag";
+		array_push($aoColumnDefs,$fila);
+		
+		$fila=array();
+		$fila['aTargets']=array(1);
+		$fila['bVisible']=false;
+		array_push($aoColumnDefs,$fila);
+		
+		$cont=2;
 		
 		$head=array();
 		
@@ -675,8 +716,18 @@ class QuiebreDetalleController extends Controller
 			$fila['nom_sala']=$sala['NOM_SALA'];			
 			array_push($salas,$sala['ID_SALA']);		
 			array_push($head,$fila);
+			$fila=array();
+			$fila['aTargets']=array($cont);		
+			// $fila['sWidth']="3%";
+			array_push($aoColumnDefs,$fila);
+			$cont++;			
 			// $head[$sala['COD_SALA']]=$sala['NOM_SALA'];											
-		}		
+		}	
+
+		$fila=array();
+		$fila['aTargets']=array($cont);		
+		// $fila['sWidth']="2%";		
+		array_push($aoColumnDefs,$fila);
 		
 		foreach(array_reverse($prefixes) as $prefix)		
 			array_unshift($head,$prefix);		
@@ -691,7 +742,7 @@ class QuiebreDetalleController extends Controller
 		$session->set("totales_verticales_segmento",$totales_verticales_segmento);	
 		$session->set("total",$total);		
 		// Calcula el ancho máximo de la tabla	
-		$extension=count($head)*16-100;
+		$extension=count($head)*15-100;
 	
 		if($extension<0)
 			$extension=0;
@@ -704,6 +755,7 @@ class QuiebreDetalleController extends Controller
 		$output = array(
 			"head" => (array)$head,
 			"max_width" => $max_width,
+			'aoColumnDefs' => json_encode($aoColumnDefs),
 		);		
 		return new JsonResponse($output);		
 	}
