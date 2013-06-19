@@ -923,6 +923,7 @@ class AdminController extends Controller
 
     public function fileprocessAction(Request $request)
     {
+        $start = microtime(true);
         $em = $this->getDoctrine()->getManager();
         $data = $request->query->all();
         $name = $data['name'];
@@ -1210,11 +1211,13 @@ class AdminController extends Controller
                     break;
 
             }
-                    
+            
+            $time_taken = microtime(true) - $start;
 
             return new JsonResponse(array(
                 'status' => true,
-                'row_affected' => $row_affected
+                'row_affected' => $row_affected,
+                'time_taken' => $time_taken*1000
             ));
         }else{
             return new JsonResponse(array(

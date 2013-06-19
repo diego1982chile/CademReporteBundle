@@ -56,7 +56,7 @@ $(document).ready(function () {
               alert('SE PRODUJO UN ERROR EN LA CARGA DEL ARCHIVO: ' + data3.mensaje);
               return;
             }
-            else alert('PROCESO DE CARGA EXITOSO. REGISTROS GUARDADOS: ' + data3.row_affected);
+            else alert('PROCESO DE CARGA EXITOSO ('+data3.time_taken+ 'MS). REGISTROS GUARDADOS: ' + data3.row_affected);
           } );
           alert('VALIDADO EXITOSO ('+data2.time_taken+ 'MS). COMENZO CARGA A LA BD.');
         })
