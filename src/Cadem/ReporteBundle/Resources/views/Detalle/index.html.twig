@@ -43,77 +43,80 @@
 								{% endfor %}
 							</tr>
 						</thead>                        					                   
-					</table>
-				</div>
+					</table>				
+				</div>		
 				{% if variable=='1' %}
-				<table id='encabezado' width='70%' style='float:right'>
+				<table id='controls' width='100%' style='float:right'>
 					<thead>
-						<tr>							
+						<tr class='ui-widget-content'>							
 							<th width='10%' style='font-size:medium'>
-								<label>
+								<label style='font-weight: bold;color:#2e6e9e'>
 									Presencia:
 								</label>
 							</th>
-							<th width='10%'>
+							<th width='10%' class='ui-widget-content'>
 								<div style='background:green;height:1.9em'>
 								</div>
 							</th>
 							<th width='10%'>
-								<label>
+								<label style='font-weight: bold;color:#2e6e9e'>
 									Quiebre:
 								</label>
 							</th>
-							<th width='10%'>
+							<th width='10%' class='ui-widget-content'>
 								<div style='background:red;height:1.9em'>
 								</div>
 							</th>
 							<th width='15%'>
-								<label>
+								<label style='font-weight: bold;color:#2e6e9e'>
 									No planogramado:
 								</label>
 							</th>
-							<th width='10%'>
+							<th width='10%' class='ui-widget-content'>
 								<div style='background:grey;height:1.9em'>
 								</div>
 							</th>
 							</th>							
 							<th width='10%'>
-								<a target="_blank" href="{{path('quiebre_detalle_excel')}}"><label>Bajar Excel</label></a>
+								<a target="_blank" href="{{path('quiebre_detalle_excel')}}"><img src='{{ asset('bundles/cademreporte/images/excel-8.png') }}' style='width:4em;height:4em' /></a>
 							</th>
 						</tr>
 					</thead>
 				</table>		
 				{% else %}
-				<table width='100%'>
+				<table id='controls' width='100%'>
 					<thead>
-						<tr>
-							<th width='10%'>							
-								<label for="amount">Indice:</label>
+						<tr class='ui-widget-content'>
+							<th width='5%' class='ui-widget-content'>							
+								<label for="amount" style='font-weight: bold;color:#2e6e9e' >Índice:</label>
 							</th>
-							<th width='5%'>
-								<input type="text" id="amount" style="border: 0; color: #f6931f; font-weight: bold;" />
+							<th width='5%' class='ui-widget-content'>
+								<input type="text" id="amount" style="font-size:1.5em; color:#2e6e9e; font-weight: bold; width:2.5em; margin-top:.5em" />
 							</th>  							
-							<th width='20%'>
+							<th width='20%' class='ui-widget-content'>
 								<div id="slider-range-min"></div>
 							</th>
-							<th width='5%'>
+							<th width='5%' class='ui-widget-content'>
 								<button id='aplicar_indice'>
 									OK
 								</button>
 							</th>
-							<th width='15%'>
-								<label>
+							<th width='10%' class='ui-widget-content'>
+								<label style='font-weight: bold;color:#2e6e9e'>
 									Fuera de rango:
 								</label>
 							</th>
-							<th width='10%'>
+							<th width='10%' class='ui-widget-content'>
 								<div style='background:red;height:1.9em'>
 								</div>
+							</th>
+							<th width='10%' class='ui-widget-content'>
+								<a target="_blank" href="{{path('quiebre_detalle_excel')}}"><img src='{{ asset('bundles/cademreporte/images/excel-8.png') }}' style='width:4em;height:4em' /></a>
 							</th>
 						</tr>
 					</thead>
 				</table>
-				{% endif %}
+				{% endif %}								
 			</div>					        
 		</div>
 	</div>
@@ -129,6 +132,7 @@ table tbody tr{
 	height: 1.1em !important;
 } 
 {% endif %}
+
 td{
 	text-align: center !important;
 	font-size: .55em !important;
@@ -163,6 +167,12 @@ span.indenter{
 table.DTFC_Cloned thead,
 table.DTFC_Cloned tfoot {
 	background-color: white !important;
+}
+
+#controls thead tr th{
+	padding-right: 1em !important;
+	padding-left: 1em !important;
+    vertical-align: middle !important;
 }
 
 /* Block out the gap above the scrollbar on the right, when there is a fixed
@@ -490,7 +500,8 @@ $(document).ready(function () {
         $( "#amount" ).val( ui.value + '%');
       }
     });
-    $( "#amount" ).val( "$" + $( "#slider-range-min" ).slider( "value" ) );		
+    $( "#amount" ).val( $( "#slider-range-min" ).slider( "value" ) + '%');		
+	$('#aplicar_indice').button();
 	/*
 	$(window).bind('resize', function () {
 		oTable.fnAdjustColumnSizing();
@@ -596,9 +607,7 @@ $(document).ready(function () {
 	
 	function recargarTabla()
 	{		
-		$.get("{{ path(header_action) }}",DatosAdicionales,function(data){			
-			if(data.head.length>30)
-				alerta('Advertencia','Esta búsqueda retornó muchas salas, es posible que la carga y la respuesta tarden más de lo habitual. Se recomienda filtrar la búsqueda o utilizar "Chrome"');
+		$.get("{{ path(header_action) }}",DatosAdicionales,function(data){						
 			maxWidth=parseInt(data.max_width);			
 			aoColumnDefs=JSON.parse(data.aoColumnDefs);			
 			// Primero destruimos la tabla si existe (la removemos del DOM)	
@@ -641,7 +650,9 @@ $(document).ready(function () {
 			});							
 			thead.appendChild( tableHead );
 			table.appendChild( thead );				
-			document.getElementById('container').appendChild(table);		
+			document.getElementById('container').appendChild(table);
+			if(data.head.length>30)
+				alerta('Advertencia','Esta búsqueda retornó muchas salas, es posible que la carga y la respuesta tarden más de lo habitual. Se recomienda filtrar la búsqueda o utilizar "Chrome"');			
 			// Luego recalculamos el ancho maximo en base a la cardinalidad del head
 			preInitTabla();			
 			// Luego volvemos a construir la tabla con dataTables
@@ -665,7 +676,7 @@ $(document).ready(function () {
 		  '<button type="button" class="close" data-dismiss="alert">×</button>'+
 		  '<strong>'+strong+'</strong> '+text+
 		'</div>';
-		$('#container').prepend(alerttipo);
+		$('#container').parent().append(alerttipo);
 	}	
 	
  </script>
