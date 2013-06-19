@@ -2,7 +2,7 @@ root:
     path:     /
     defaults:
         _controller: FrameworkBundle:Redirect:Redirect
-        route: dashboard_index
+        route: fos_user_security_login
         permanent: true
 #ADMIN
 admin_carga_item:

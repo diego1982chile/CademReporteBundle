@@ -1,5 +1,11 @@
 {% extends '::base.html.twig' %}
 
+{% set url_excel = path('quiebre_detalle_excel') %}
+{#% set url_body = path('quiebre_detalle_body') %#}
+{#% set url_header = path('quiebre_detalle_header') %#}
+{% set url_body_action = path(body_action) %}
+{% set url_header_action = path(header_action) %}
+
 {% block title %}Cadem Analytics{% endblock %}
 
 {% block filtro %}
@@ -78,7 +84,8 @@
 							</th>
 							</th>							
 							<th width='10%'>
-								<a target="_blank" href="{{path('quiebre_detalle_excel')}}"><img src='{{ asset('bundles/cademreporte/images/excel-8.png') }}' style='width:4em;height:4em' /></a>
+
+								<a target="_blank" href="{{ url_excel }}"><label>Bajar Excel</label></a>
 							</th>
 						</tr>
 					</thead>
@@ -200,9 +207,6 @@ div.DTFC_Blocker {
 <script src="{{ asset('bundles/cademreporte/js/dataTables.fixedColumns.js') }}"></script>
 
 <script>
-{#% for item in variables_clientes %#}
-{#{"var i_"~item.variable.nombre~";"}#}
-{#% endfor %#}
 
 var oTable;
 var maxWidth={{max_width}};
@@ -226,7 +230,7 @@ function construirTabla()
 		oTable = $('#tabla_resumen').dataTable({
 			"bProcessing": true,
 			"bServerSide": true,
-			"sAjaxSource": "{{ path(body_action) }}",
+			"sAjaxSource": "{{ url_body_action }}",
 			"fnServerData": function ( sSource, aoData, fnCallback ) {
 				//AGREGAMOS LOS DATOS SOLO SI HAY
 				if (DatosAdicionales.length > 0) for(i in DatosAdicionales) aoData.push(DatosAdicionales[i]);
@@ -607,7 +611,7 @@ $(document).ready(function () {
 	
 	function recargarTabla()
 	{		
-		$.get("{{ path(header_action) }}",DatosAdicionales,function(data){						
+		$.get("{{ url_header_action }}",DatosAdicionales,function(data){
 			maxWidth=parseInt(data.max_width);			
 			aoColumnDefs=JSON.parse(data.aoColumnDefs);			
 			// Primero destruimos la tabla si existe (la removemos del DOM)	

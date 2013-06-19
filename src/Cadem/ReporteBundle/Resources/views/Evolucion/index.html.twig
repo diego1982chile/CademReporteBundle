@@ -1,7 +1,9 @@
 {% extends '::base.html.twig' %}
 
-{% set url_body = path('quiebre_evolucion_body') %}
-{% set url_header = path('quiebre_evolucion_header') %}
+{#% set url_body = path('quiebre_evolucion_body') %#}
+{#% set url_header = path('quiebre_evolucion_header') %#}
+{% set url_body_action = path(body_action) %}
+{% set url_header_action = path(header_action) %}
 
 {% block title %}Cadem Analytics{% endblock %}
 
@@ -146,7 +148,7 @@ function construirTabla()
 		oTable = $('#tabla_resumen').dataTable({
 			"bProcessing": true,
 			"bServerSide": true,
-			"sAjaxSource": "{{ path(body_action) }}",
+			"sAjaxSource": "{{ url_body_action }}",
 			"fnServerData": function ( sSource, aoData, fnCallback ) {
 				//AGREGAMOS LOS DATOS SOLO SI HAY
 				if (DatosAdicionales.length > 0) for(i in DatosAdicionales) aoData.push(DatosAdicionales[i]);
@@ -501,7 +503,7 @@ $(document).ready(function () {
 	
 	function recargarTabla()
 	{		
-		$.get("{{ path(header_action) }}",DatosAdicionales,function(data){			
+		$.get("{{ url_header_action }}",DatosAdicionales,function(data){			
 			maxWidth=parseInt(data.max_width);
 			// Primero destruimos la tabla si existe (la removemos del DOM)	
 			var ex = document.getElementById('tabla_resumen');
