@@ -215,7 +215,7 @@ class QuiebreEvolucionController extends Controller
 		
 		$fila=array();
 		$fila['aTargets']=array(1);
-		$fila['bVisible']=false;
+		$fila['bVisible']=false;		
 		array_push($aoColumnDefs,$fila);		
 		
 		$cont=2;		
@@ -227,12 +227,14 @@ class QuiebreEvolucionController extends Controller
 			$fila=array();
 			$fila['aTargets']=array($cont);		
 			$fila['sWidth']="2%";
+			$fila['sClass']="medicion";
 			array_push($aoColumnDefs,$fila);	
 			$cont++;			
 		}
 		$fila=array();
 		$fila['aTargets']=array($cont);		
 		$fila['sWidth']="2%";	
+		$fila['sClass']="medicion";
 		array_push($aoColumnDefs,$fila);
 		array_push($head,'TOTAL');
 		
