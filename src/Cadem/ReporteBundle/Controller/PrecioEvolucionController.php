@@ -210,19 +210,19 @@ class PrecioEvolucionController extends Controller
 		$fila=array();
 		$fila['aTargets']=array(0);
 		$fila['sClass']="tag2";
-		$fila['sWidth']="5%";
+		$fila['sWidth']="100px";
 		array_push($aoColumnDefs,$fila);
 		
 		$fila=array();
 		$fila['aTargets']=array(1);
 		$fila['sClass']="tag";
-		// $fila['sWidth']="2%";
+		$fila['sWidth']="280px";
 		array_push($aoColumnDefs,$fila);		
 
 		$fila=array();
 		$fila['aTargets']=array(2);	
-		$fila['sClass']="medicion";			
-		// $fila['sWidth']="2%";
+		$fila['sClass']="tag2 medicion";			
+		$fila['sWidth']="20px";
 		array_push($aoColumnDefs,$fila);	
 
 		$cont=3;		
@@ -573,18 +573,49 @@ class PrecioEvolucionController extends Controller
 		usort($mediciones_aux, array($this,"sortFunction"));	
 		// CONSTRUIR EL ENCABEZADO DE LA TABLA
 
-		if($niveles==1)
-			$prefixes=array('SKU/MEDICION');
-		else
-			$prefixes=array('SKU/MEDICION','SEGMENTO');
+		$prefixes=array('CATEGORIA','DESCRIPCION','POLITICA');
 		
-		$head=array();																
+		$head=array();	
+
+		// Oonstruir inicialización de columnas		
+		$aoColumnDefs=array();
+		
+		$fila=array();
+		$fila['aTargets']=array(0);
+		$fila['sClass']="tag2";
+		$fila['sWidth']="100px";
+		array_push($aoColumnDefs,$fila);
+		
+		$fila=array();
+		$fila['aTargets']=array(1);
+		$fila['sClass']="tag";
+		$fila['sWidth']="280px";
+		array_push($aoColumnDefs,$fila);		
+
+		$fila=array();
+		$fila['aTargets']=array(2);	
+		$fila['sClass']="tag2 medicion";			
+		$fila['sWidth']="20px";
+		array_push($aoColumnDefs,$fila);	
+
+		$cont=3;
 		
 		foreach($mediciones_aux as $medicion)
 		{
 			array_push($mediciones,$medicion['nombre']);					
-			array_push($head,$medicion['nombre']);											
-		}										
+			array_push($head,$medicion['nombre']);		
+			$fila=array();
+			$fila['aTargets']=array($cont);	
+			$fila['sClass']="medicion";			
+			// $fila['sWidth']="2%";
+			array_push($aoColumnDefs,$fila);	
+			$cont++;						
+		}	
+		$fila=array();
+		$fila['aTargets']=array($cont);	
+		// $fila['sClass']="medicion";
+		array_push($aoColumnDefs,$fila);				
+		
 		foreach(array_reverse($prefixes) as $prefix)		
 			array_unshift($head,$prefix);		
 		array_push($head,'TOTAL');			
@@ -696,7 +727,8 @@ class PrecioEvolucionController extends Controller
 		// $session->close();
 		$output = array(
 			"head" => $head,
-			"max_width" => $max_width
+			"max_width" => $max_width,
+			'aoColumnDefs' => json_encode($aoColumnDefs),
 		);		
 		return new JsonResponse($output);		
 	}

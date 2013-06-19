@@ -210,7 +210,7 @@ class QuiebreEvolucionController extends Controller
 		$fila=array();
 		$fila['aTargets']=array(0);
 		$fila['sClass']="tag";
-		$fila['sWidth']="3%";
+		$fila['sWidth']="280px";
 		array_push($aoColumnDefs,$fila);
 		
 		$fila=array();
@@ -226,7 +226,7 @@ class QuiebreEvolucionController extends Controller
 			array_push($head,$medicion['nombre']);
 			$fila=array();
 			$fila['aTargets']=array($cont);		
-			$fila['sWidth']="2%";
+			// $fila['sWidth']="2%";
 			$fila['sClass']="medicion";
 			array_push($aoColumnDefs,$fila);	
 			$cont++;			
@@ -578,7 +578,7 @@ class QuiebreEvolucionController extends Controller
 		$fila=array();
 		$fila['aTargets']=array(0);
 		$fila['sClass']="tag";
-		$fila['sWidth']="10%";
+		$fila['sWidth']="280px";
 		array_push($aoColumnDefs,$fila);
 		
 		$fila=array();
@@ -593,13 +593,13 @@ class QuiebreEvolucionController extends Controller
 			array_push($mediciones,$medicion['nombre']);					
 			array_push($head,$medicion['nombre']);
 			$fila['aTargets']=array($cont);		
-			$fila['sWidth']="2%";
+			// $fila['sWidth']="2%";
 			array_push($aoColumnDefs,$fila);	
 			$cont++;				
 		}		
 		$fila=array();
 		$fila['aTargets']=array($cont);		
-		$fila['sWidth']="2%";	
+		// $fila['sWidth']="2%";	
 		array_push($aoColumnDefs,$fila);
 		
 		foreach(array_reverse($prefixes) as $prefix)		
