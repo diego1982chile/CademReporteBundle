@@ -529,20 +529,22 @@ class AdminController extends Controller
                     // 7->NIVELITEM_ID4;
                     // 8->NOMBRE NIVELITEM_ID5;
                     // 9->NIVELITEM_ID5;
-                    // 10->ITEM_PADRE;
-                    // 11->TIPOCODIGO_ID;
-                    // 12->CODIGOITEM1;
-                    // 13->CODIGOITEM2
+                    // 10->EAN_ITEM
+                    // 11->EAN_PADRE
+                    // 12->TIPOCODIGO_ID;
+                    // 13->CODIGOITEM1;
+                    // 14->CODIGOITEM2
 
                     
                     //SI LA PRIMERA FILA TIENE LOS ENCABEZADOS SE BORRA
-                    if($m[0][0] === 'NOMBRE NIVELITEM_ID1' || $m[0][1] === 'NIVELITEM_ID1' || $m[0][12] === 'CODIGOITEM1') unset($m[0]);
+                    if($m[0][0] === 'NOMBRE NIVELITEM_ID1' || $m[0][1] === 'NIVELITEM_ID1' || $m[0][13] === 'CODIGOITEM1') unset($m[0]);
                     
 
                     //SE VALIDA QUE EL ITEM NO ESTE EN LA BD
                     $chunk = 0;
                     foreach($m as $value){
-                        if(strlen($value[12]) !== 0) $item[floor($chunk/2000)][] = $value[12];
+                        if(strlen($value[13]) !== 0) $item[floor($chunk/2000)][] = $value[13];
+                        if(strlen($value[10]) !== 0) $item_ean[floor($chunk/2000)][] = $value[10];
                         $chunk++;
                     }
 
@@ -568,10 +570,10 @@ class AdminController extends Controller
                     
                     $start_valid = microtime(true);
                     foreach ($m as $k => $fila) {
-                        if(count($fila) !== 14){//SIEMPRE DEBEN HABER 14 COLUMNAS
+                        if(count($fila) !== 15){//SIEMPRE DEBEN HABER 14 COLUMNAS
                             return new JsonResponse(array(
                                 'status' => false,
-                                'mensaje' => 'NO HAY 14 COLUMNAS CERCA DE LA LINEA '.$k
+                                'mensaje' => 'NO HAY 15 COLUMNAS CERCA DE LA LINEA '.$k
                             ));
                         }
                         if(strlen($fila[0]) === 0){//LA "NOMBRE NIVELITEM_ID1" NO PUEDE SER VACIA
@@ -586,13 +588,19 @@ class AdminController extends Controller
                                 'mensaje' => 'EL "NIVELITEM_ID1" NO PUEDE ESTAR VACIA, CERCA DE LA LINEA '.$k
                             ));
                         }
-                        if(strlen($fila[12]) === 0){//EL CODIGOITEM1 NO PUEDE SER VACIO
+                        if(strlen($fila[10]) != 13){//EL EAN_ITEM DEBE SER VALIDO
+                            return new JsonResponse(array(
+                                'status' => false,
+                                'mensaje' => 'EL "EAN_ITEM" NO PUEDE ESTAR VACIO Y DEBE SER VALIDO, CERCA DE LA LINEA '.$k
+                            ));
+                        }
+                        if(strlen($fila[13]) === 0){//EL CODIGOITEM1 NO PUEDE SER VACIO
                             return new JsonResponse(array(
                                 'status' => false,
                                 'mensaje' => 'EL "CODIGOITEM1" NO PUEDE ESTAR VACIO, CERCA DE LA LINEA '.$k
                             ));
                         }
-                        if(in_array($fila[12], $item_encontrados)){//SE BUSCAN Y DESCARTA LOS CODIGOITEM1 ENCONTRADOS Y SE REGISTRA
+                        if(in_array($fila[13], $item_encontrados)){//SE BUSCAN Y DESCARTA LOS CODIGOITEM1 ENCONTRADOS Y SE REGISTRA
                             unset($m[$k]);
                             $item_descartados++;
                         }
@@ -607,8 +615,9 @@ class AdminController extends Controller
                             if($fila[7] !== '') $ni4[] = $fila[7];
                             if($fila[8] !== '') $nni5[] = $fila[8];
                             if($fila[9] !== '') $ni5[] = $fila[9];
-                            if($fila[10] !== '') $item_padre[] = $fila[10];
-                            if($fila[11] !== '') $tipo_codigo[] = $fila[11];
+                            
+                            if($fila[11] !== '') $item_padre[] = $fila[11];
+                            if($fila[12] !== '') $tipo_codigo[] = $fila[12];
                         }
                         set_time_limit(10);
                         $time_taken = microtime(true) - $start_valid;
@@ -635,9 +644,9 @@ class AdminController extends Controller
 
                         $sql = "SELECT cni.NOMBRE + '-' + ni.NOMBRE as nombre, ni.ID as id FROM NIVELITEM ni
                                 INNER JOIN CLASNIVELITEM cni on cni.ID = ni.CLASNIVELITEM_ID
-                                WHERE cni.NOMBRE + '-' + ni.NOMBRE IN ( ? )";
-                        $param = array($nni_ni1);
-                        $tipo_param = array(\Doctrine\DBAL\Connection::PARAM_STR_ARRAY);
+                                WHERE cni.NOMBRE + '-' + ni.NOMBRE IN ( ? ) and cni.CLIENTE_ID = ?";
+                        $param = array($nni_ni1,$id_cliente);
+                        $tipo_param = array(\Doctrine\DBAL\Connection::PARAM_STR_ARRAY, \PDO::PARAM_INT);
                         $query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
 
                         usort($query, array($this,"cmp"));
@@ -662,9 +671,9 @@ class AdminController extends Controller
 
                         $sql = "SELECT cni.NOMBRE + '-' + ni.NOMBRE as nombre, ni.ID as id FROM NIVELITEM ni
                                 INNER JOIN CLASNIVELITEM cni on cni.ID = ni.CLASNIVELITEM_ID
-                                WHERE cni.NOMBRE + '-' + ni.NOMBRE IN ( ? )";
-                        $param = array($nni_ni2);
-                        $tipo_param = array(\Doctrine\DBAL\Connection::PARAM_STR_ARRAY);
+                                WHERE cni.NOMBRE + '-' + ni.NOMBRE IN ( ? ) and cni.CLIENTE_ID = ?";
+                        $param = array($nni_ni2,$id_cliente);
+                        $tipo_param = array(\Doctrine\DBAL\Connection::PARAM_STR_ARRAY, \PDO::PARAM_INT);
                         $query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
 
                         usort($query, array($this,"cmp"));
@@ -688,9 +697,9 @@ class AdminController extends Controller
 
                         $sql = "SELECT cni.NOMBRE + '-' + ni.NOMBRE as nombre, ni.ID as id FROM NIVELITEM ni
                                 INNER JOIN CLASNIVELITEM cni on cni.ID = ni.CLASNIVELITEM_ID
-                                WHERE cni.NOMBRE + '-' + ni.NOMBRE IN ( ? )";
-                        $param = array($nni_ni3);
-                        $tipo_param = array(\Doctrine\DBAL\Connection::PARAM_STR_ARRAY);
+                                WHERE cni.NOMBRE + '-' + ni.NOMBRE IN ( ? ) and cni.CLIENTE_ID = ?";
+                        $param = array($nni_ni3,$id_cliente);
+                        $tipo_param = array(\Doctrine\DBAL\Connection::PARAM_STR_ARRAY, \PDO::PARAM_INT);
                         $query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
 
                         usort($query, array($this,"cmp"));
@@ -714,9 +723,9 @@ class AdminController extends Controller
 
                         $sql = "SELECT cni.NOMBRE + '-' + ni.NOMBRE as nombre, ni.ID as id FROM NIVELITEM ni
                                 INNER JOIN CLASNIVELITEM cni on cni.ID = ni.CLASNIVELITEM_ID
-                                WHERE cni.NOMBRE + '-' + ni.NOMBRE IN ( ? )";
-                        $param = array($nni_ni4);
-                        $tipo_param = array(\Doctrine\DBAL\Connection::PARAM_STR_ARRAY);
+                                WHERE cni.NOMBRE + '-' + ni.NOMBRE IN ( ? ) and cni.CLIENTE_ID = ?";
+                        $param = array($nni_ni4,$id_cliente);
+                        $tipo_param = array(\Doctrine\DBAL\Connection::PARAM_STR_ARRAY, \PDO::PARAM_INT);
                         $query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
 
                         usort($query, array($this,"cmp"));
@@ -741,9 +750,9 @@ class AdminController extends Controller
 
                         $sql = "SELECT cni.NOMBRE + '-' + ni.NOMBRE as nombre, ni.ID as id FROM NIVELITEM ni
                                 INNER JOIN CLASNIVELITEM cni on cni.ID = ni.CLASNIVELITEM_ID
-                                WHERE cni.NOMBRE + '-' + ni.NOMBRE IN ( ? )";
-                        $param = array($nni_ni5);
-                        $tipo_param = array(\Doctrine\DBAL\Connection::PARAM_STR_ARRAY);
+                                WHERE cni.NOMBRE + '-' + ni.NOMBRE IN ( ? ) and cni.CLIENTE_ID = ?";
+                        $param = array($nni_ni5,$id_cliente);
+                        $tipo_param = array(\Doctrine\DBAL\Connection::PARAM_STR_ARRAY, \PDO::PARAM_INT);
                         $query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
 
                         usort($query, array($this,"cmp"));
@@ -761,31 +770,33 @@ class AdminController extends Controller
                        
 
                     //SE VALIDA QUE EXISTA EL ITEM
-                    if(count($item) > 0){
-                        $item = array_unique($item);
-                        sort($item);
+                    foreach($item_ean as $chunk){
+                        if(count($chunk) > 0){
+                            $chunk = array_unique($chunk);
+                            sort($chunk);
 
-                        $sql = "SELECT i.NOMBRE as nombre, i.ID as id FROM ITEM i
-                                WHERE i.NOMBRE IN ( ? )";
-                        $param = array($item);
-                        $tipo_param = array(\Doctrine\DBAL\Connection::PARAM_STR_ARRAY);
-                        $query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
+                            $sql = "SELECT i.CODIGO as nombre, i.ID as id FROM ITEM i
+                                    WHERE i.CODIGO IN ( ? )";
+                            $param = array($chunk);
+                            $tipo_param = array(\Doctrine\DBAL\Connection::PARAM_STR_ARRAY);
+                            $query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
 
-                        usort($query, array($this,"cmp"));
+                            usort($query, array($this,"cmp"));
 
-                        foreach ($item as $k => $v) {
-                            if($v !== $query[$k]['nombre']){
-                                return new JsonResponse(array(
-                                    'status' => false,
-                                    'mensaje' => 'EL ITEM "'.$v.'" NO EXISTE EN LA BD.'
-                                ));
+                            foreach ($chunk as $k => $v) {
+                                if($v !== $query[$k]['nombre']){
+                                    return new JsonResponse(array(
+                                        'status' => false,
+                                        'mensaje' => 'EL ITEM "'.$v.'" NO EXISTE EN LA BD.'
+                                    ));
+                                }
+                                $item_ean_[$v] = $query[$k]['id'];
                             }
-                            $item_[$v] = $query[$k]['id'];
                         }
                     }
 
                     //SE VALIDA QUE EXISTA EL ITEMPADRE
-                    if(count($item_padre) > 0){
+                    if(isset($item_padre) && count($item_padre) > 0){
                         $item_padre = array_unique($item_padre);
                         sort($item_padre);
 
@@ -845,19 +856,20 @@ class AdminController extends Controller
                     // 7->NIVELITEM_ID4;
                     // 8->NOMBRE NIVELITEM_ID5;
                     // 9->NIVELITEM_ID5;
-                    // 10->ITEM_PADRE;
-                    // 11->TIPOCODIGO_ID;
-                    // 12->CODIGOITEM1;
-                    // 13->CODIGOITEM2
+                    // 10->EAN_ITEM
+                    // 11->EAN_PADRE
+                    // 12->TIPOCODIGO_ID;
+                    // 13->CODIGOITEM1;
+                    // 14->CODIGOITEM2
 
-                    // 14->ID_NIVELITEM1
-                    // 15->ID_NIVELITEM2
-                    // 16->ID_NIVELITEM3
-                    // 17->ID_NIVELITEM4
-                    // 18->ID_NIVELITEM5
-                    // 19->ID_ITEM
-                    // 20->ID_ITEM2
-                    // 21->ID_TIPOCODIGO
+                    // 15->ID_NIVELITEM1
+                    // 16->ID_NIVELITEM2
+                    // 17->ID_NIVELITEM3
+                    // 18->ID_NIVELITEM4
+                    // 19->ID_NIVELITEM5
+                    // 20->ID_ITEM
+                    // 21->ID_ITEM2
+                    // 22->ID_TIPOCODIGO
 
                     //ARCHIVO A ESCRIBIR CON LOS IDs FINALES
                     $fp = fopen($this->uploadDIR.$name.'_proc.csv', 'w');
@@ -868,9 +880,10 @@ class AdminController extends Controller
                         $id_ni3 = (isset($nni_ni3_[$fields[4].'-'.$fields[5]]))?$nni_ni3_[$fields[4].'-'.$fields[5]]:"NULL";
                         $id_ni4 = (isset($nni_ni4_[$fields[6].'-'.$fields[7]]))?$nni_ni4_[$fields[6].'-'.$fields[7]]:"NULL";
                         $id_ni5 = (isset($nni_ni5_[$fields[8].'-'.$fields[9]]))?$nni_ni5_[$fields[8].'-'.$fields[9]]:"NULL";
-                        $id_item = (isset($item_[$fields[12]]))?$item_[$fields[12]]:"NULL";
-                        $id_item_padre = (isset($item_padre_[$fields[10]]))?$item_padre_[$fields[10]]:"NULL";
-                        $id_tipo_codigo = (isset($tipo_codigo_[$fields[11]]))?$tipo_codigo_[$fields[11]]:"NULL";
+
+                        $id_item = (isset($item_ean_[$fields[10]]))?$item_ean_[$fields[10]]:"NULL";
+                        $id_item_padre = (isset($item_padre_[$fields[11]]))?$item_padre_[$fields[11]]:"NULL";
+                        $id_tipo_codigo = (isset($tipo_codigo_[$fields[12]]))?$tipo_codigo_[$fields[12]]:"NULL";
 
                         $fila = array_merge($fields, array($id_ni1, $id_ni2, $id_ni3, $id_ni4, $id_ni5, $id_item, $id_item_padre, $id_tipo_codigo));
                         fputcsv($fp, $fila,";");
@@ -885,12 +898,19 @@ class AdminController extends Controller
             $time_taken = microtime(true) - $start;
 
 
-            return new JsonResponse(array(
+            //DATOS ADICIONALES
+            $dat = array();
+            if($tipo_carga === 'itemcliente'){
+                $dat['id_cliente'] = $id_cliente;
+                $dat['id_medicion'] = $id_medicion;
+            }
+
+            return new JsonResponse(array_merge(array(
                 'status' => true,
                 'name' => $name.'_proc.csv',
                 'tipo_carga' => $tipo_carga,
                 'time_taken' => $time_taken*1000
-            ));
+            ),$dat));
 
     	}else{
     		return new JsonResponse(array(
@@ -907,6 +927,10 @@ class AdminController extends Controller
         $data = $request->query->all();
         $name = $data['name'];
         $tipo_carga = $data['tipo_carga'];
+        if($tipo_carga === 'itemcliente'){
+            $id_cliente = intval($data['id_cliente']);
+            $id_medicion = intval($data['id_medicion']);
+        }
         $file = new File($this->uploadDIR.$name);
         if($file->isReadable() && strcasecmp($file->getExtension(),'csv') === 0){
             //LEER Y PROCESAR
@@ -936,7 +960,7 @@ class AdminController extends Controller
                     $sql = "SELECT TOP(1) i.ID as id FROM ITEM i
                             ORDER BY i.ID DESC";
                     $query = $em->getConnection()->executeQuery($sql)->fetchAll();
-                    $id = intval($query[0]['id']);
+                    $id = (isset($query[0]))?intval($query[0]['id']):0;
 
                     try{
                         $start_insert = microtime(true);
@@ -997,7 +1021,7 @@ class AdminController extends Controller
                     $sql = "SELECT TOP(1) s.ID as id FROM SALA s
                             ORDER BY s.ID DESC";
                     $query = $em->getConnection()->executeQuery($sql)->fetchAll();
-                    $id = intval($query[0]['id']);
+                    $id = (isset($query[0]))?intval($query[0]['id']):0;
 
                     try{
 
@@ -1055,6 +1079,133 @@ class AdminController extends Controller
                     }
 
 
+
+                    break;
+
+
+                case 'itemcliente'://DATOS DE ITEMCLIENTE
+
+                    //FORMATO ES:
+                    // 0->NOMBRE NIVELITEM_ID1;
+                    // 1->NIVELITEM_ID1;
+                    // 2->NOMBRE NIVELITEM_ID2;
+                    // 3->NIVELITEM_ID2;
+                    // 4->NOMBRE NIVELITEM_ID3;
+                    // 5->NIVELITEM_ID3;
+                    // 6->NOMBRE NIVELITEM_ID4;
+                    // 7->NIVELITEM_ID4;
+                    // 8->NOMBRE NIVELITEM_ID5;
+                    // 9->NIVELITEM_ID5;
+                    // 10->EAN_ITEM
+                    // 11->EAN_PADRE
+                    // 12->TIPOCODIGO_ID;
+                    // 13->CODIGOITEM1;
+                    // 14->CODIGOITEM2
+
+                    // 15->ID_NIVELITEM1
+                    // 16->ID_NIVELITEM2
+                    // 17->ID_NIVELITEM3
+                    // 18->ID_NIVELITEM4
+                    // 19->ID_NIVELITEM5
+                    // 20->ID_ITEM
+                    // 21->ID_ITEM2
+                    // 22->ID_TIPOCODIGO
+
+                    //SE CARGA EN LA BD, USANDO TRANSACCIONES
+                    
+                    $conn->beginTransaction();
+                    
+
+                    //OBTENEMOS EL ULTIMO ID INGRESADO
+                    $sql = "SELECT TOP(1) i.ID as id FROM ITEMCLIENTE i
+                            ORDER BY i.ID DESC";
+                    $query = $em->getConnection()->executeQuery($sql)->fetchAll();
+                    $id = (isset($query[0]))?intval($query[0]['id']):0;
+
+                    try{
+                        $start_insert = microtime(true);
+                        foreach ($m as $key => $fila) {
+                            $id++;
+                            $sql = "INSERT INTO ITEMCLIENTE
+                                   ([ID]
+                                   ,[NIVELITEM_ID]
+                                   ,[CLIENTE_ID]
+                                   ,[MEDICION_ID]
+                                   ,[NIVELITEM_ID2]
+                                   ,[NIVELITEM_ID3]
+                                   ,[NIVELITEM_ID4]
+                                   ,[ITEM_ID]
+                                   ,[NIVELITEM_ID5]
+                                   ,[ITEM_ID2]
+                                   ,[TIPOCODIGO_ID]
+                                   ,[CODIGOITEM1]
+                                   ,[CODIGOITEM2]
+                                   ,[ACTIVO])
+                             VALUES
+                                   (?
+                                   ,?
+                                   ,?
+                                   ,?
+                                   ,?
+                                   ,?
+                                   ,?
+                                   ,?
+                                   ,?
+                                   ,?
+                                   ,?
+                                   ,?
+                                   ,?
+                                   ,1)";
+                            $param = array(
+                                $id,
+                                $fila[15],
+                                $id_cliente,
+                                $id_medicion,
+                                $fila[16],
+                                $fila[17],
+                                $fila[18],
+                                $fila[20],
+                                $fila[19],
+                                $fila[21],
+                                $fila[22],
+                                $fila[13],
+                                $fila[14],
+                                );
+                            $tipo_param = array(
+                                \PDO::PARAM_INT,
+                                ($fila[15] === "NULL")?\PDO::PARAM_NULL:\PDO::PARAM_INT,
+                                \PDO::PARAM_INT,
+                                \PDO::PARAM_INT,
+                                ($fila[16] === "NULL")?\PDO::PARAM_NULL:\PDO::PARAM_INT,
+                                ($fila[17] === "NULL")?\PDO::PARAM_NULL:\PDO::PARAM_INT,
+                                ($fila[18] === "NULL")?\PDO::PARAM_NULL:\PDO::PARAM_INT,
+                                \PDO::PARAM_INT,
+                                ($fila[19] === "NULL")?\PDO::PARAM_NULL:\PDO::PARAM_INT,
+                                ($fila[21] === "NULL")?\PDO::PARAM_NULL:\PDO::PARAM_INT,
+                                \PDO::PARAM_INT,
+                                ($fila[13] === "NULL")?\PDO::PARAM_NULL:\PDO::PARAM_STR,
+                                ($fila[14] === "NULL")?\PDO::PARAM_NULL:\PDO::PARAM_STR,
+                                );
+                            $row_affected += $conn->executeUpdate($sql,$param,$tipo_param);
+                            set_time_limit(10);
+                            $time_taken = microtime(true) - $start_insert;
+                            if($time_taken >= 600){
+                                $conn->rollback();
+                                return new JsonResponse(array(
+                                    'status' => false,
+                                    'mensaje' => 'TIEMPO EXCEDIDO ('.round($time_taken,1).' SEG) EN INSERT. EL TIEMPO MAX ES DE 600 SEG. LO QUE DEBERIA ALCANZAR PARA PROCESAR APROX 45 MIL FILAS. SI SU ARCHIVO TIENE MAS, POR FAVOR SAQUE LAS SUFICIENTES FILAS.'
+                                ));
+                            }
+                        }
+
+                        $conn->commit();
+                    } catch(Exception $e) {
+                        $conn->rollback();
+                        return new JsonResponse(array(
+                            'status' => false, 
+                            'mensaje' => 'ERROR EN EL INSERT DE DATOS. NO SE INGRESO NADA'
+                        ));
+                    }
 
                     break;
 
