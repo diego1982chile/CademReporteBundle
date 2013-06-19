@@ -338,7 +338,8 @@ class PrecioDetalleController extends Controller
 			array_push($aoColumnDefs,$fila);				
 		}		
 		$fila=array();
-		$fila['aTargets']=array($cont);		
+		$fila['aTargets']=array($cont);	
+		$fila['bVisible']=false;			
 		// $fila['sWidth']="2%";
 		array_push($aoColumnDefs,$fila);
 		foreach(array_reverse($prefixes) as $prefix)		
