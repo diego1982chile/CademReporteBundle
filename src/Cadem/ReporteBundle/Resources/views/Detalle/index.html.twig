@@ -54,8 +54,8 @@
 				{% if variable=='1' %}
 				<table id='controls' width='100%' style='float:right'>
 					<thead>
-						<tr class='ui-widget-content'>							
-							<th width='10%' style='font-size:medium'>
+						<tr>							
+							<th width='10%' class='ui-widget-content' style='font-size:medium'>
 								<label style='font-weight: bold;color:#2e6e9e'>
 									Presencia:
 								</label>
@@ -64,7 +64,7 @@
 								<div style='background:green;height:1.9em'>
 								</div>
 							</th>
-							<th width='10%'>
+							<th width='10%' class='ui-widget-content'>
 								<label style='font-weight: bold;color:#2e6e9e'>
 									Quiebre:
 								</label>
@@ -73,7 +73,7 @@
 								<div style='background:red;height:1.9em'>
 								</div>
 							</th>
-							<th width='15%'>
+							<th class='ui-widget-content' width='15%'>
 								<label style='font-weight: bold;color:#2e6e9e'>
 									No planogramado:
 								</label>
@@ -84,7 +84,6 @@
 							</th>
 							</th>							
 							<th width='10%'>
-
 								<a target="_blank" href="{{ url_excel }}"><label>Bajar Excel</label></a>
 							</th>
 						</tr>
@@ -93,7 +92,7 @@
 				{% else %}
 				<table id='controls' width='100%'>
 					<thead>
-						<tr class='ui-widget-content'>
+						<tr >
 							<th width='5%' class='ui-widget-content'>							
 								<label for="amount" style='font-weight: bold;color:#2e6e9e' >Índice:</label>
 							</th>
@@ -117,8 +116,8 @@
 								<div style='background:red;height:1.9em'>
 								</div>
 							</th>
-							<th width='10%' class='ui-widget-content'>
-								<a target="_blank" href="{{path('quiebre_detalle_excel')}}"><img src='{{ asset('bundles/cademreporte/images/excel-8.png') }}' style='width:4em;height:4em' /></a>
+							<th width='10%'>
+								<a target="_blank" href="{{ url_excel }}"><label>Bajar Excel</label></a>
 							</th>
 						</tr>
 					</thead>
@@ -676,8 +675,8 @@ $(document).ready(function () {
 	}	
 	
 	function alerta(strong,text){
-		var alerttipo = '<div class="alert alert-info">' +
-		  '<button type="button" class="close" data-dismiss="alert">×</button>'+
+		var alerttipo = '<br><div class="alert alert-info">' +
+		  '<button id="alerta" type="button" class="close" data-dismiss="alert" style="margin:1em">×</button>'+
 		  '<strong>'+strong+'</strong> '+text+
 		'</div>';
 		$('#container').parent().append(alerttipo);

@@ -311,7 +311,7 @@ class QuiebreDetalleController extends Controller
 		$fila=array();
 		$fila['aTargets']=array(0);
 		$fila['sClass']="tag";
-		$fila['sWidth']="90px";
+		$fila['sWidth']="300px";
 		array_push($aoColumnDefs,$fila);
 		
 		$fila=array();
@@ -327,13 +327,13 @@ class QuiebreDetalleController extends Controller
 			$head[$sala['COD_SALA']]=$sala['NOM_SALA'];
 			$fila=array();
 			$fila['aTargets']=array($cont);		
-			$fila['sWidth']="2%";
+			// $fila['sWidth']="2%";
 			array_push($aoColumnDefs,$fila);
 			$cont++;
 		}		
 		$fila=array();
 		$fila['aTargets']=array($cont);		
-		$fila['sWidth']="2%";	
+		// $fila['sWidth']="2%";	
 		array_push($aoColumnDefs,$fila);		
 		foreach(array_reverse($prefixes) as $prefix)		
 			array_unshift($head,$prefix);		
@@ -696,7 +696,7 @@ class QuiebreDetalleController extends Controller
 		
 		$fila=array();
 		$fila['aTargets']=array(0);
-		$fila['sWidth']="100px";
+		$fila['sWidth']="300px";
 		$fila['sClass']="tag";
 		array_push($aoColumnDefs,$fila);
 		
@@ -742,7 +742,7 @@ class QuiebreDetalleController extends Controller
 		$session->set("totales_verticales_segmento",$totales_verticales_segmento);	
 		$session->set("total",$total);		
 		// Calcula el ancho máximo de la tabla	
-		$extension=count($head)*15-100;
+		$extension=count($head)*(15+log(count($head),50))-100;
 	
 		if($extension<0)
 			$extension=0;
