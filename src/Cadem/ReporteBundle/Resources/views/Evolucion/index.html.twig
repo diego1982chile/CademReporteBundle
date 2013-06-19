@@ -71,14 +71,14 @@ td{
 	padding: 0em !important;
 }
 
+.medicion{
+	text-align: center !important;	
+}
+
 th{
 	font-size: .55em !important;
 	text-align: center !important;
 	padding: 0em !important;
-}
-	
-.head{
-	text-align: left !important;
 }	
 
 span.indenter{
@@ -87,6 +87,7 @@ span.indenter{
 
 .tag{
 	text-align: left !important;
+	vertical-align: middle !important;
 }
 
 .tag2{
@@ -530,7 +531,7 @@ $(document).ready(function () {
 			table.appendChild( thead );						
 			document.getElementById('container').appendChild(table);			
 			// Luego recalculamos el ancho maximo en base a la cardinalidad del head
-			callbacks.add( preInitTabla() );		
+			preInitTabla();		
 			// Luego volvemos a construir la tabla con dataTables
 			construirTabla();
 		},"json")

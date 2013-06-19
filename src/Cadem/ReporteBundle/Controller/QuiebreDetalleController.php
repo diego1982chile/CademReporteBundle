@@ -311,12 +311,12 @@ class QuiebreDetalleController extends Controller
 		$fila=array();
 		$fila['aTargets']=array(0);
 		$fila['sClass']="tag";
-		$fila['sWidth']="5%";
+		$fila['sWidth']="300px";
 		array_push($aoColumnDefs,$fila);
 		
 		$fila=array();
 		$fila['aTargets']=array(1);
-		$fila['bVisible']=false;
+		$fila['bVisible']=false;		
 		array_push($aoColumnDefs,$fila);		
 		
 		$cont=2;
@@ -327,13 +327,13 @@ class QuiebreDetalleController extends Controller
 			$head[$sala['COD_SALA']]=$sala['NOM_SALA'];
 			$fila=array();
 			$fila['aTargets']=array($cont);		
-			$fila['sWidth']="2%";
+			// $fila['sWidth']="2%";
 			array_push($aoColumnDefs,$fila);
 			$cont++;
 		}		
 		$fila=array();
 		$fila['aTargets']=array($cont);		
-		$fila['sWidth']="2%";	
+		// $fila['sWidth']="2%";	
 		array_push($aoColumnDefs,$fila);		
 		foreach(array_reverse($prefixes) as $prefix)		
 			array_unshift($head,$prefix);		
@@ -504,10 +504,10 @@ class QuiebreDetalleController extends Controller
 					$fila=array_fill(0,$num_salas+1,"-");
 					$nivel2=$totales_segmento[$cont_regs]['SEGMENTO'];					
 				}
-				if($cont_regs==$num_regs-1)		
+				if($cont_regs==$num_regs)		
 				{	
-					$columna_quiebre=array_search($totales_segmento[$cont_regs]['ID_SALA'],$salas);
-					$fila[$columna_quiebre]=round($totales_segmento[$cont_regs]['QUIEBRE']*100,1);					
+					$columna_quiebre=array_search($totales_segmento[$cont_regs-1]['ID_SALA'],$salas);
+					$fila[$columna_quiebre]=round($totales_segmento[$cont_regs-1]['QUIEBRE']*100,1);					
 					$fila[$num_salas]=round($totales_horizontales_segmento[$cont_totales_horizontales_segmento]['QUIEBRE']*100,1);
 					array_push($matriz_totales,(object)$fila);		
 					$cont_regs++;					
@@ -696,7 +696,7 @@ class QuiebreDetalleController extends Controller
 		
 		$fila=array();
 		$fila['aTargets']=array(0);
-		// $fila['sWidth']="2%";
+		$fila['sWidth']="300px";
 		$fila['sClass']="tag";
 		array_push($aoColumnDefs,$fila);
 		
@@ -742,7 +742,7 @@ class QuiebreDetalleController extends Controller
 		$session->set("totales_verticales_segmento",$totales_verticales_segmento);	
 		$session->set("total",$total);		
 		// Calcula el ancho máximo de la tabla	
-		$extension=count($head)*15-100;
+		$extension=count($head)*(15+log(count($head),50))-100;
 	
 		if($extension<0)
 			$extension=0;
