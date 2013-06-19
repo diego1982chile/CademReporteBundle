@@ -735,7 +735,7 @@ class PrecioDetalleController extends Controller
 		$session->set("totales_verticales_segmento",$totales_verticales_segmento);	
 		$session->set("total",$total);		
 		// Calcula el ancho máximo de la tabla	
-		$extension=count($head)*15-100;
+		$extension=count($head)*16-100;
 	
 		if($extension<0)
 			$extension=0;

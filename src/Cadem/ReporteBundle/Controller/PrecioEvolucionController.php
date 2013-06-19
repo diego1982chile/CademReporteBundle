@@ -202,7 +202,7 @@ class PrecioEvolucionController extends Controller
 		usort($mediciones, array($this,"sortFunction"));
 		// CONSTRUIR EL ENCABEZADO DE LA TABLA
 		
-		$head=array('CATEGORIA','DESCRIPCIÓN','POLÍTICA');	
+		$head=array('CATEGORIA',' DESCRIPCIÓN',' POLÍTICA');	
 		
 		// Oonstruir inicialización de columnas		
 		$aoColumnDefs=array();
@@ -220,7 +220,8 @@ class PrecioEvolucionController extends Controller
 		array_push($aoColumnDefs,$fila);		
 
 		$fila=array();
-		$fila['aTargets']=array(2);		
+		$fila['aTargets']=array(2);	
+		$fila['sClass']="medicion";			
 		// $fila['sWidth']="2%";
 		array_push($aoColumnDefs,$fila);	
 
@@ -231,13 +232,15 @@ class PrecioEvolucionController extends Controller
 			array_push($mediciones2,$medicion['nombre']);					
 			array_push($head,$medicion['nombre']);
 			$fila=array();
-			$fila['aTargets']=array($cont);		
+			$fila['aTargets']=array($cont);	
+			$fila['sClass']="medicion";			
 			// $fila['sWidth']="2%";
 			array_push($aoColumnDefs,$fila);	
 			$cont++;			
 		}
 		$fila=array();
 		$fila['aTargets']=array($cont);	
+		// $fila['sClass']="medicion";
 		array_push($aoColumnDefs,$fila);		
 		// $fila['sWidth']="2%";	
 		array_push($head,'TOTAL');
@@ -326,7 +329,7 @@ class PrecioEvolucionController extends Controller
 		$total = $em->getConnection()->executeQuery($sql)->fetchAll();									
 
 		// Calcula el ancho máximo de la tabla	
-		$extension=count($head)*11-100;
+		$extension=count($head)*10-100;
 	
 		if($extension<0)
 			$extension=0;
