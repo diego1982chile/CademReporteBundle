@@ -7,6 +7,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
+use Symfony\Component\HttpFoundation\Session;
+
 class RankingController extends Controller
 {
     
@@ -15,6 +17,7 @@ class RankingController extends Controller
 		
 		$user = $this->getUser();
 		$em = $this->getDoctrine()->getManager();
+		$session = $this->get("session");
 		//CLIENTE Y ESTUDIO, LOGO
 		$query = $em->createQuery(
 			'SELECT c,e FROM CademReporteBundle:Cliente c
@@ -155,7 +158,21 @@ class RankingController extends Controller
 			))
 			->getForm();
 			
+		$estudio_variable=$estudios[0]->getEstudiovariables();	
 		
+		$variable=$estudio_variable[0]->getVariable()->getId();				
+				
+		$session->set("variable",$variable);		
+		
+		switch($variable)
+		{
+			case 1: // Si el tag de la variable es quiebre ordenamos por % de quiebre ascendente
+				$order=' ASC';
+				break;
+			case 5: // Si el tag de la variable es presencia ordenamos por % de quiebre descendente
+				$order=' DESC';
+				break;			
+		}
 		
 		//RANKING POR SALA--------------------------------------------------------------------
 		$sql = "DECLARE @id_cliente integer = :id_cliente;
@@ -180,7 +197,7 @@ class RankingController extends Controller
 			WHERE c.id = @id_cliente AND m.id = :id_medicion_anterior
 			GROUP BY sc.id, s.id, s.calle, s.numerocalle, sc.codigosala
 			) AS B on A.ID = B.id2
-			ORDER BY quiebre ASC";
+			ORDER BY quiebre ".$order;
 		$param = array('id_cliente' => $id_cliente, 'id_medicion_actual' => $id_medicion_actual, 'id_medicion_anterior' => $id_medicion_anterior);
 		$ranking_sala = $em->getConnection()->executeQuery($sql,$param)->fetchAll();
 		
@@ -207,7 +224,7 @@ class RankingController extends Controller
 			WHERE c.ID = @id_cliente AND m.ID = :id_medicion_anterior
 			GROUP BY ic.id
 			) AS B on A.ID = B.ID2
-			ORDER BY quiebre ASC";
+			ORDER BY quiebre ".$order;
 		$param = array('id_cliente' => $id_cliente, 'id_medicion_actual' => $id_medicion_actual, 'id_medicion_anterior' => $id_medicion_anterior);
 		$ranking_item = $em->getConnection()->executeQuery($sql,$param)->fetchAll();
 		
@@ -236,7 +253,7 @@ class RankingController extends Controller
 			WHERE c.ID = @id_cliente AND m.ID = :id_medicion_anterior
 			GROUP BY e.ID
 			) AS B on A.ID = B.ID2
-			ORDER BY quiebre ASC";
+			ORDER BY quiebre ".$order;
 			
 		$param = array('id_cliente' => $id_cliente, 'id_medicion_actual' => $id_medicion_actual, 'id_medicion_anterior' => $id_medicion_anterior);
 		$ranking_empleado = $em->getConnection()->executeQuery($sql,$param)->fetchAll();
@@ -294,13 +311,28 @@ class RankingController extends Controller
 		$id_medicion_anterior = $this->get('cadem_reporte.helper.medicion')->getIdMedicionAnterior($id_medicion_actual);
 		
 		
-
-		if($data['tb_sala'] === 't') $orderby_sala = "ASC";
-		else $orderby_sala = "DESC";
-		if($data['tb_producto'] === 't') $orderby_producto = "ASC";
-		else $orderby_producto = "DESC";
-		if($data['tb_empleado'] === 't') $orderby_empleado = "ASC";
-		else $orderby_empleado = "DESC";
+		$session=$this->get("session");			
+		$variable=$session->get("variable");			
+						
+		switch($variable)
+		{
+			case 1: // Si el tag de la variable es quiebre ordenamos por % de quiebre ascendente
+				if($data['tb_sala'] === 't') $orderby_sala = "ASC";
+				else $orderby_sala = "DESC";
+				if($data['tb_producto'] === 't') $orderby_producto = "ASC";
+				else $orderby_producto = "DESC";
+				if($data['tb_empleado'] === 't') $orderby_empleado = "ASC";
+				else $orderby_empleado = "DESC";
+				break;
+			case 5: // Si el tag de la variable es presencia ordenamos por % de quiebre descendente
+				if($data['tb_sala'] === 't') $orderby_sala = "DESC";
+				else $orderby_sala = "ASC";
+				if($data['tb_producto'] === 't') $orderby_producto = "DESC";
+				else $orderby_producto = "ASC";
+				if($data['tb_empleado'] === 't') $orderby_empleado = "DESC";
+				else $orderby_empleado = "ASC";
+				break;			
+		}
 		
 		
 		
