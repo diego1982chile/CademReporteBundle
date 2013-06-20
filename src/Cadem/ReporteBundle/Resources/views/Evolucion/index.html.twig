@@ -20,7 +20,7 @@
 {% block body %}
     <div class="span9">
 		<div class="container-fluid well" style="padding-top:0">
-			<h4>Evolución de Quiebres</h4>
+			<h4>Evolución de {{tag_variable}}</h4>
 				<div class="hero-unit" style="padding:15px;margin-bottom:10px">
 					<div id='container' class="row-fluid">
 							<table id="tabla_resumen" class="tabla_resumen table-bordered table display">                      
@@ -227,7 +227,7 @@ function construirTabla()
 				  "sProcessing": "<b>Procesando...</b>"
 				}				
 		});
-		 $('div.fg-toolbar:first').append("<h5 style='float:left;margin:0em'>Tabla Resumen {{estudios[0].getEstudioVariables[0].getNombrevariable}}: (%)</h5>");		
+		 $('div.fg-toolbar:first').append("<h5 style='float:left;margin:0em'>Tabla Evolución {{tag_variable}}: (%)</h5>");		
 		});	
 }
 

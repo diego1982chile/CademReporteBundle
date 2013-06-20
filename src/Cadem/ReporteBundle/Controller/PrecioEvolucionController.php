@@ -337,6 +337,12 @@ class PrecioEvolucionController extends Controller
 			
 		$max_width=100+$extension;
 		
+		// Obtener tag de la variable para ser desplegada en la vista
+		$estudio_variable=$estudios[0]->getEstudiovariables();	
+		
+		$id_variable=$estudio_variable[0]->getVariable()->getId();				
+		$tag_variable=$estudio_variable[0]->getVariable()->getNombre();			
+		
 		// Guardamos resultado de consulta en variables de sesión para reusarlas en un action posterior
 		$session->set("mediciones",$mediciones2);
 		$session->set("evolucion_quiebre",$evolucion_quiebre);	
@@ -345,6 +351,9 @@ class PrecioEvolucionController extends Controller
 		$session->set("totales_horizontales_segmento",$totales_horizontales_segmento);	
 		$session->set("totales_verticales_segmento",$totales_verticales_segmento);	
 		$session->set("total",$total);
+		
+		$session->set("id_variable",$total);
+		$session->set("tag_variable",$total);		
 						
 		//RESPONSE
 		$response = $this->render('CademReporteBundle:Evolucion:index.html.twig',
@@ -365,7 +374,8 @@ class PrecioEvolucionController extends Controller
 			'header_action' => 'precio_evolucion_header',
 			'body_action' => 'precio_evolucion_body',	
 			'aoColumnDefs' => json_encode($aoColumnDefs),
-			'columnas_reservadas' => 3
+			'columnas_reservadas' => 3,
+			'tag_variable' => 'PRECIO'				
 			)
 		);
 		//CACHE

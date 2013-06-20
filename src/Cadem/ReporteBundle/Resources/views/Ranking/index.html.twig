@@ -30,15 +30,15 @@
 							  Bottom
 							</label>
 						</form>
-					
+						{% set variable=estudios[0].getEstudioVariables[0].getNombrevariable|split(' ')|first|lower %}
 						<table class="datatable">
                           <thead>
-                            <tr>
+                            <tr>							
                               <th>#</th>
                               <th>Cod.</th>
                               <th>Sala</th>
-                              <th>%Quiebre ant</th>
-                              <th>%Quiebre act</th>
+                              <th>%{{variable}} ant</th>
+                              <th>%{{variable}} act</th>
                               <th>Ptos Dif</th>
                               <th></th>
                             </tr>
@@ -97,8 +97,8 @@
                               <th>#</th>
                               <th>Cod.</th>
                               <th>Producto</th>
-                              <th>%Quiebre ant</th>
-                              <th>%Quiebre act</th>
+                              <th>%{{variable}} ant</th>
+                              <th>%{{variable}} act</th>
                               <th>Ptos Dif</th>
                               <th></th>
                             </tr>
@@ -156,8 +156,8 @@
                               <th>#</th>
                               <th>Empleado</th>
                               <th>Cargo</th>
-                              <th>%Quiebre ant</th>
-                              <th>%Quiebre act</th>
+							  <th>%{{variable}} ant</th>
+                              <th>%{{variable}} act</th>
                               <th>Ptos Dif</th>
                               <th></th>
                             </tr>

@@ -354,7 +354,14 @@ class QuiebreDetalleController extends Controller
 		if($extension<0)
 			$extension=0;
 			
-		$max_width=100+$extension;		
+		$max_width=100+$extension;	
+
+		// Obtener id de la variable
+		$estudio_variable=$estudios[0]->getEstudiovariables();	
+		
+		$variable=$estudio_variable[0]->getVariable()->getId();				
+				
+		$session->set("variable",$variable);			
 				
 		//RESPONSE
 		$response = $this->render('CademReporteBundle:Detalle:index.html.twig',
@@ -376,7 +383,8 @@ class QuiebreDetalleController extends Controller
 			'header_action' => 'quiebre_detalle_header',
 			'body_action' => 'quiebre_detalle_body',	
 			'aoColumnDefs' => json_encode($aoColumnDefs),
-			'columnas_reservadas' => 2
+			'columnas_reservadas' => 2,
+			'tag_variable' => 'QUIEBRE'				
 			)
 		);
 		$time_taken = microtime(true) - $start;
@@ -424,7 +432,21 @@ class QuiebreDetalleController extends Controller
 		$cont_salas=0;
 		$cont_regs=0;
 		$num_salas=count($salas);			
-		$matriz_totales=array();					
+		$matriz_totales=array();		
+
+		$variable=$session->get("variable");						
+		
+		switch($variable)
+		{
+			case 1: // Si el tag de la variable es quiebre 
+				$color_positivo='green';
+				$color_negativo='red';
+				break;
+			case 5: // Si el tag de la variable es presencia invertimos los colores
+				$color_positivo='red';
+				$color_negativo='green';
+				break;				
+		}
 	
 		if($num_regs>0)
 		{
@@ -446,10 +468,10 @@ class QuiebreDetalleController extends Controller
 					switch($detalle_quiebre[$cont_regs]['quiebre'])
 					{
 						case '0':
-							$fila[$columna_quiebre+2]="<div style='background:green;height:1.9em'></div>";	
+							$fila[$columna_quiebre+2]="<div style='background:$color_positivo;height:1.9em'></div>";	
 							break;
 						case '1':
-							$fila[$columna_quiebre+2]="<div style='background:red;height:1.9em'></div>";	
+							$fila[$columna_quiebre+2]="<div style='background:$color_negativo;height:1.9em'></div>";	
 							break;
 					}																			
 					$cont_regs++;						
@@ -468,10 +490,10 @@ class QuiebreDetalleController extends Controller
 					switch($detalle_quiebre[$cont_regs]['quiebre'])
 					{
 						case '0':
-							$fila[$columna_quiebre+2]="<div style='background:green;height:1.9em'></div>";	
+							$fila[$columna_quiebre+2]="<div style='background:$color_positivo;height:1.9em'></div>";	
 							break;
 						case '1':
-							$fila[$columna_quiebre+2]="<div style='background:red;height:1.9em'></div>";	
+							$fila[$columna_quiebre+2]="<div style='background:$color_negativo;height:1.9em'></div>";	
 							break;
 					}					
 					$fila[$num_salas+2]=round($totales_producto[$cont_totales_producto]['QUIEBRE']*100,1);					
