@@ -383,7 +383,8 @@ class PrecioDetalleController extends Controller
 			'header_action' => 'precio_detalle_header',
 			'body_action' => 'precio_detalle_body',
 			'aoColumnDefs' => json_encode($aoColumnDefs),
-			'columnas_reservadas' => 3			
+			'columnas_reservadas' => 3,
+			'tag_variable' => 'PRECIO'			
 			)
 		);
 		$time_taken = microtime(true) - $start;
