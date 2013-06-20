@@ -59,14 +59,14 @@ div.dataTables_scroll {
 }
 
 td{
-	font-size: .6em !important;
+	font-size: .55em !important;
 	text-align: center !important;
 	font-family: "Arial",Georgia,Serif !important;	
 	padding: 0em !important;
 }
 
 th{
-	font-size: .6em !important;
+	font-size: .55em !important;
 	text-align: center !important;
 }
 
@@ -172,7 +172,7 @@ function construirTabla()
 			"bAutoWidth": false, 
 			"aoColumnDefs": [
 				{ "bVisible": false, "aTargets": [1] },
-				{ "sClass": "tag", "aTargets": [0] }
+				{ "sClass": "tag", "aTargets": [0], "sWidth": "150px" }
 				// { "sWidth": "20%", "aTargets": [0] }
 			],
 			// "fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {			

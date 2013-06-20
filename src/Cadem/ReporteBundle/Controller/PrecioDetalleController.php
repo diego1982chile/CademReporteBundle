@@ -311,18 +311,18 @@ class PrecioDetalleController extends Controller
 		$fila=array();
 		$fila['aTargets']=array(0);
 		$fila['sClass']="tag2";
-		// $fila['sWidth']="10%";
+		$fila['sWidth']="120px";
 		array_push($aoColumnDefs,$fila);
 		
 		$fila=array();
 		$fila['aTargets']=array(1);
 		$fila['sClass']="tag";
-		// $fila['sWidth']="10%";
+		$fila['sWidth']="280px";
 		array_push($aoColumnDefs,$fila);		
 
 		$fila=array();
 		$fila['aTargets']=array(2);		
-		// $fila['sWidth']="2%";
+		$fila['sWidth']="20px";
 		array_push($aoColumnDefs,$fila);	
 
 		$cont=3;
@@ -338,7 +338,8 @@ class PrecioDetalleController extends Controller
 			array_push($aoColumnDefs,$fila);				
 		}		
 		$fila=array();
-		$fila['aTargets']=array($cont);		
+		$fila['aTargets']=array($cont);	
+		$fila['bVisible']=false;			
 		// $fila['sWidth']="2%";
 		array_push($aoColumnDefs,$fila);
 		foreach(array_reverse($prefixes) as $prefix)		
@@ -678,7 +679,7 @@ class PrecioDetalleController extends Controller
 		usort($salas_aux, array($this,"sortFunction"));		
 		// CONSTRUIR EL ENCABEZADO DE LA TABLA
 			
-		$prefixes=array('CATEGORIA','SKU','POLITICA');
+		$prefixes=array('CATEGORIA','DESCRIPCION','POLITICA');
 		
 		$head=array();
 		
@@ -688,18 +689,18 @@ class PrecioDetalleController extends Controller
 		$fila=array();
 		$fila['aTargets']=array(0);
 		$fila['sClass']="tag2";
-		// $fila['sWidth']="10%";
+		$fila['sWidth']="120px";
 		array_push($aoColumnDefs,$fila);
 		
 		$fila=array();
 		$fila['aTargets']=array(1);
 		$fila['sClass']="tag";
-		// $fila['sWidth']="10%";
+		$fila['sWidth']="280px";
 		array_push($aoColumnDefs,$fila);		
 
 		$fila=array();
 		$fila['aTargets']=array(2);		
-		// $fila['sWidth']="2%";
+		$fila['sWidth']="20px";
 		array_push($aoColumnDefs,$fila);	
 
 		$cont=3;		
@@ -735,7 +736,7 @@ class PrecioDetalleController extends Controller
 		$session->set("totales_verticales_segmento",$totales_verticales_segmento);	
 		$session->set("total",$total);		
 		// Calcula el ancho máximo de la tabla	
-		$extension=count($head)*15-100;
+		$extension=count($head)*(15+log(count($head),50))-100;
 	
 		if($extension<0)
 			$extension=0;
