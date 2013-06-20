@@ -718,7 +718,7 @@ class QuiebreDetalleController extends Controller
 		
 		$fila=array();
 		$fila['aTargets']=array(0);
-		// $fila['sWidth']="300px";
+		$fila['sWidth']="300px";
 		$fila['sClass']="tag";
 		array_push($aoColumnDefs,$fila);
 		
@@ -777,6 +777,7 @@ class QuiebreDetalleController extends Controller
 		$output = array(
 			"head" => (array)$head,
 			"max_width" => $max_width,
+			'aoColumnDefs' => json_encode($aoColumnDefs),	
 				
 		);		
 		return new JsonResponse($output);		
