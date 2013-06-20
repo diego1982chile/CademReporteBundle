@@ -240,6 +240,7 @@ class PrecioEvolucionController extends Controller
 		}
 		$fila=array();
 		$fila['aTargets']=array($cont);	
+		$fila['bVisible']=false;	
 		// $fila['sClass']="medicion";
 		array_push($aoColumnDefs,$fila);		
 		// $fila['sWidth']="2%";	
@@ -329,7 +330,7 @@ class PrecioEvolucionController extends Controller
 		$total = $em->getConnection()->executeQuery($sql)->fetchAll();									
 
 		// Calcula el ancho máximo de la tabla	
-		$extension=count($head)*12-100;
+		$extension=count($head)*11-100;
 	
 		if($extension<0)
 			$extension=0;

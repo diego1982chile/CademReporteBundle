@@ -56,7 +56,7 @@
 					<thead>
 						<tr>							
 							<th width='10%' class='ui-widget-content' style='font-size:medium'>
-								<label style='font-weight: bold;color:#2e6e9e'>
+								<label style=';color:#2e6e9e'>
 									Presencia:
 								</label>
 							</th>
@@ -65,7 +65,7 @@
 								</div>
 							</th>
 							<th width='10%' class='ui-widget-content'>
-								<label style='font-weight: bold;color:#2e6e9e'>
+								<label style=';color:#2e6e9e'>
 									Quiebre:
 								</label>
 							</th>
@@ -74,7 +74,7 @@
 								</div>
 							</th>
 							<th class='ui-widget-content' width='15%'>
-								<label style='font-weight: bold;color:#2e6e9e'>
+								<label style=';color:#2e6e9e'>
 									No planogramado:
 								</label>
 							</th>
@@ -87,6 +87,11 @@
 								<a target="_blank" href="{{ url_excel }}"><label>Bajar Excel</label></a>
 							</th>
 						</tr>
+						<tr>
+							<th>
+								% Incumplimiento general
+							</th>
+						</tr>
 					</thead>
 				</table>		
 				{% else %}
@@ -94,7 +99,7 @@
 					<thead>
 						<tr >
 							<th width='5%' class='ui-widget-content'>							
-								<label for="amount" style='font-weight: bold;color:#2e6e9e' >Índice:</label>
+								<label for="amount" style=';color:#2e6e9e' >Índice:</label>
 							</th>
 							<th width='5%' class='ui-widget-content'>
 								<input type="text" id="amount" style="font-size:1.5em; color:#2e6e9e; font-weight: bold; width:2.5em; margin-top:.5em" />
@@ -103,12 +108,11 @@
 								<div id="slider-range-min"></div>
 							</th>
 							<th width='5%' class='ui-widget-content'>
-								<button id='aplicar_indice'>
-									OK
-								</button>
+								<label id='pctje_incumplimiento' style="font-size:1.5em; color:#2e6e9e; font-weight: bold; width:2.5em; margin-top:.5em;color:red">
+								</label>								
 							</th>
 							<th width='10%' class='ui-widget-content'>
-								<label style='font-weight: bold;color:#2e6e9e'>
+								<label style=';color:#2e6e9e'>
 									Fuera de rango:
 								</label>
 							</th>
@@ -191,6 +195,11 @@ div.DTFC_Blocker {
 .fueraRango{
 	background:red;
 	color:white;
+}
+
+div.DataTables_sort_wrapper {
+	padding-right: 4px !important;
+	padding-left: 4px !important;
 }
 
 {% endblock %}
@@ -500,8 +509,35 @@ $(document).ready(function () {
       min: 0,
       max: 100,
       slide: function( event, ui ) {
-        $( "#amount" ).val( ui.value + '%');
-      }
+        $( "#amount" ).val( ui.value + '%');	
+      },
+	  change: function( event, ui ) {
+		var indice=parseInt($( "#slider-range-min" ).slider( "value" ));
+		var total=0;
+		var cont=0;
+		$('#tabla_resumen tbody tr').each(function(){
+			var politica=parseInt(parseInt($(this).children(':eq(2)').text()));							
+			$(this).children().each(function(i){
+				if(i>2)
+				{
+					var precio= parseInt($(this).text());					
+					if(precio.toString()!='NaN')
+					{
+						if(Math.abs(precio-politica)>indice*politica/100)
+						{
+							$(this).addClass('fueraRango');
+							cont++;
+						}
+						else
+							$(this).removeClass();
+						
+						total++;
+					}					
+				}
+			});			
+		});		
+		$('#pctje_incumplimiento').text((100*cont/total).toFixed(1)+'%');
+	  }
     });
     $( "#amount" ).val( $( "#slider-range-min" ).slider( "value" ) + '%');		
 	$('#aplicar_indice').button();
@@ -564,25 +600,6 @@ $(document).ready(function () {
 		.always(function() { /*alert("finished");*/ quitarloader();});
 	});
 	
-	$('#aplicar_indice').mousedown(function(){
-		var indice=parseInt($( "#slider-range-min" ).slider( "value" ));
-		$('#tabla_resumen tbody tr').each(function(){
-			var politica=parseInt(parseInt($(this).children(':eq(2)').text()));				
-			$(this).children().each(function(i){
-				if(i>2)
-				{
-					var precio= parseInt($(this).text());
-					// alert('precio='+precio+' politica='+politica);			
-					// alert(Math.abs(precio-politica));
-					// alert(indice*politica);
-					if(Math.abs(precio-politica)>indice*politica/100)
-						$(this).addClass('fueraRango');
-					else
-						$(this).removeClass();
-				}
-			});			
-		});
-	});
 });
 	
 	//LOGICA DEL SUBMIT DEL FORMULARIO, SE DEBERIA OCUPAR AJAX
