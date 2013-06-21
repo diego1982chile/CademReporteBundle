@@ -361,8 +361,6 @@ class AdminController extends Controller
 
                         usort($query, array($this,"cmp"));
 
-                        return new Response(print_r($query));
-
                         foreach ($marca as $k => $v) {
                             if(!isset($query[$k]['nombre']) || $v !== $query[$k]['nombre']){
                                 return new JsonResponse(array(
@@ -1237,8 +1235,6 @@ class AdminController extends Controller
                         $query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
 
                         usort($query, array($this,"cmp"));
-
-                        // return new Response(print_r($query,true));
 
                         foreach ($folio as $k => $v) {
                             if(!isset($query[$k]['nombre']) || $v !== $query[$k]['nombre']){
