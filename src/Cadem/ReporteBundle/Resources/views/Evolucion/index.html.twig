@@ -42,13 +42,11 @@
 							</table>
 					</div><!--/row-->   
 				</div>
-					<!--div class="hero-unit" style="padding:30px">
+					<div class="hero-unit" style="padding:30px">
 							<div class="row-fluid">
-							{#% for item in variables_clientes %#}
-								<div id="i_{#{item.variable.nombre}#}" ></div>
-							{#% endfor %#}					
+								<div id="i_quiebre" ></div>								
 							</div>
-					</div-->             
+					</div>             
 				</div><!--/span-->
 			</div>
 		</div>
@@ -139,6 +137,8 @@ var matriz_totales = [];
 var variable = parseInt({{variable}});
 var aoColumnDefs = {{aoColumnDefs|raw}};
 var columnas_reservadas = parseInt({{columnas_reservadas}});
+var i_quiebre;
+var mediciones = {{mediciones|raw}};
 
 function preInitTabla()
 {
@@ -198,7 +198,8 @@ function construirTabla()
 									case 2:
 										var col=1;
 										break;										
-								}
+								}								
+								$(nRow).children(':eq(0)').attr('index',iDisplayIndex);
 								if(aData[0].length>14)
 									$(nRow).children(':eq(0)').text(aData[0].substring(0,14).replace(/ /g,'_')+'...');
 								else
@@ -273,27 +274,25 @@ function fixedColumn1()
 						nCell = document.createElement( 'td' );						 
 						nCell.className = "group";																				
 						// alert(matriz_totales[row][j]);
-						nCell.innerHTML = matriz_totales[row][j];																
+						nCell.innerHTML = matriz_totales[row][j];																						
 						nGroup.appendChild( nCell );						 
-					}
-					++row;
+					}					
                     nTrs[i].parentNode.insertBefore( nGroup, nTrs[i] );
 					// Se crea atributo que asocie la fila de agregacion con sus filas hijas
-					var att=document.createAttribute("data-tt-id");
-					att.value=sGroup;
 					// Se añade fila de agregacion para tabla principal
-					nTrs[i].previousSibling.setAttributeNode(att);			
+					nTrs[i].previousSibling.setAttribute("data-tt-id",sGroup);																
                     
 					// /* Cell to insert into the frozen columns */
 					
                     nGroup = document.createElement( 'tr' );
 					nCell = document.createElement( 'td' );
 					nCell.className = "group tag";
+					nCell.setAttribute('index',row);
 					nCell.innerHTML = sGroup;
 					nGroup.appendChild( nCell );
                     // Se añade fila de agregacion para tabla fija
-					$(nGroup).insertBefore( $('tbody tr:eq('+(i+iCorrector)+')', left.body)[0] );
-					
+					$(nGroup).insertBefore( $('tbody tr:eq('+(i+iCorrector)+')', left.body)[0] );					
+					++row;
 					iCorrector++;
 					sLastGroup = sGroup;
 				}
@@ -317,9 +316,9 @@ function fixedColumn1()
 			$(nGroup).insertBefore( $('tbody tr:eq('+(0)+')', right.body)[0] );						
 			// Se crea atributo que asocie la fila de agregacion con sus filas hijas
 			var att=document.createAttribute("data-tt-id");
-			att.value="TOTALES";
+			att.value="TOTALES";			
 			// Se añade fila de agregacion para tabla principal
-			nTrs[0].previousSibling.setAttributeNode(att);				
+			nTrs[0].previousSibling.setAttributeNode(att);						
 			
 			// /* Cell to insert into the frozen columns */
 			
@@ -329,10 +328,10 @@ function fixedColumn1()
 			nCell.innerHTML = "TOTAL GENERAL";
 			nGroup.appendChild( nCell );
 			// Se añade fila de agregacion para tabla fija
-			$(nGroup).insertBefore( $('tbody tr:eq(0)', left.body)[0] );
-			matriz_totales=[];			
+			$(nGroup).insertBefore( $('tbody tr:eq(0)', left.body)[0] );					
 		}
 	});
+	graficar(matriz_totales.length-1,true);
 }
 
 function fixedColumn2()
@@ -409,13 +408,84 @@ function colorTotales(){
 	}
 }
 
+function graficar(fila, total)
+{	
+	if(total)	
+	{
+		var data=matriz_totales[fila];
+		data= data.slice(0,data.length-1);
+	}
+	else
+	{
+		var data=oTable.fnGetData( fila );
+		data= data.slice(2,data.length-1);			
+	}			
+	
+	i_quiebre = new Highcharts.Chart({
+			chart: {    
+				renderTo: 'i_quiebre',
+							type: 'spline',
+							//marginRight: 130,
+							//marginBottom: 25,                                
+				plotBackgroundColor: null,
+				plotBorderWidth: null,
+				plotShadow: false,
+				// width: 900,
+				// height: 350
+			},
+			plotOptions: {
+						line: {
+							gapSize: 4
+						}
+					},			
+			title: {
+				text: 'Evolución {{estudios[0].getEstudioVariables[0].getNombrevariable}}'
+			},
+			tooltip: {
+				pointFormat: ' <span style="color:{series.color}">{series.name}</span>: <b>{point.y}%</b><br/>',
+				percentageDecimals: 1,
+				enabled: true
+			},
+			xAxis: {
+				categories: mediciones,
+				
+				labels: {
+					rotation: 0
+				}			
+			},		
+			yAxis: {
+				// max: 100,
+				// min: 0,
+				//categories: [0,100],
+				title: {
+						text: 'Promedio Quiebre (%)'
+				}
+			},		
+			series: [{
+						name: '% Quiebre',
+						data: data
+					}],
+			legend: {
+				   layout: 'vertical',
+				   align: 'center',
+				   x: 350,
+				   verticalAlign: 'top',
+				   y: 0,
+				   floating: true
+				},				
+			credits: {
+				enabled: false
+			}
+		});	
+	return true;
+}
+		
 $(document).ready(function () {
 
 	var callbacks = $.Callbacks();
 
 	callbacks.add( preInitTabla() );
-	callbacks.add( construirTabla() );
-	// callbacks.add( fixedColumn() );	
+	callbacks.add( construirTabla() );	
 		
 	$('#tabla_resumen_wrapper tr th').click(function() {
 		var label= $(this).text().trim();
@@ -465,6 +535,54 @@ $(document).ready(function () {
 		.fail(function() { alert("Se produjo un error al cargar las comunas"); })
 		.always(function() { /*alert("finished");*/ quitarloader();});
 	});
+	
+	//GRAFICAR FILAS
+	$(document).on('click', 'td.tag', function(e) {				
+		
+		var label= $(this).text();
+		var index=$(this).attr('index');
+		
+		if($(this).hasClass('group'))
+		{ // Si el elemento clickado es de clase grupo, el datasource esta en matriz_totales					
+			var data=matriz_totales[index];
+			data= data.slice(0,data.length-1);
+			for(i in data){
+				if(data[i] == '-') data[i]=null;
+			}
+		}
+		else
+		{ // Si no, el datasource esta en la tabla			
+			var data=oTable.fnGetData( index );
+			data= data.slice(2,data.length-1);					
+			for(i in data){
+				if(data[i] == '-') data[i]=null;
+			}			
+		}						
+						
+		if (e.ctrlKey)
+		{//AGREGAR OTRA LINEA		
+			$(this).addClass("ui-state-active");								
+			i_quiebre.addSeries({
+				name: label,
+				data: data
+			});
+		}
+		else
+		{//REEMPLAZAR TODO MENOS LINEA GENERAL			
+			$(".ui-state-active").removeClass("ui-state-active");
+			$(this).addClass("ui-state-active");
+			
+			//SE REMUEVEN TODOS y SE AGREGA
+			if (i_quiebre.series.length > 1){
+				var len = i_quiebre.series.length;
+				for(var i=1;i<len;i++) i_quiebre.series[1].remove();
+			}
+			i_quiebre.addSeries({
+				name: label,
+				data: data
+			});			
+		}
+	});		
 });
 
 	//LOGICA DEL SUBMIT DEL FORMULARIO, SE DEBERIA OCUPAR AJAX

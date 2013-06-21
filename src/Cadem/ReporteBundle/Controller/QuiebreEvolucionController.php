@@ -358,6 +358,7 @@ class QuiebreEvolucionController extends Controller
 				'form_comuna' 	=> $form_comuna->createView(),
 			),
 			'head' => $head,
+			'mediciones' => json_encode($mediciones2),
 			'max_width' => $max_width,
 			'logofilename' => $logofilename,
 			'logostyle' => $logostyle,	
@@ -434,7 +435,7 @@ class QuiebreEvolucionController extends Controller
 					$cont_totales_producto++;					
 					// $cont_meds=0;								
 					$nivel1=$evolucion_quiebre[$cont_regs]['PRODUCTO'];				
-					array_push($body,(object)$fila);
+					array_push($body,$fila);
 					$fila=array_fill(0,$num_meds+3,'-');					
 				}
 				if($cont_regs==$num_regs)		
@@ -442,7 +443,7 @@ class QuiebreEvolucionController extends Controller
 					$columna_quiebre=array_search($evolucion_quiebre[$cont_regs-1]['NOMBRE'],$mediciones);
 					$fila[$columna_quiebre+2]=round($evolucion_quiebre[$cont_regs-1]['quiebre'],1);				
 					$fila[$num_meds+2]=round($totales_producto[$cont_totales_producto]['QUIEBRE']*100,1);					
-					array_push($body,(object)$fila);									
+					array_push($body,$fila);									
 					$cont_regs++;
 				}		
 			}			
@@ -475,7 +476,7 @@ class QuiebreEvolucionController extends Controller
 					$columna_quiebre=array_search($totales_segmento[$cont_regs-1]['MEDICION'],$mediciones);
 					$fila[$columna_quiebre]=round($totales_segmento[$cont_regs-1]['QUIEBRE']*100,1);	
 					$fila[$num_meds]=round($totales_horizontales_segmento[$cont_totales_horizontales_segmento]['QUIEBRE']*100,1);
-					array_push($matriz_totales,(object)$fila);		
+					array_push($matriz_totales,$fila);		
 					$cont_regs++;					
 				}				
 			}	
