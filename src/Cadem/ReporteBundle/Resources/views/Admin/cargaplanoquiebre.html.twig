@@ -1,0 +1,86 @@
+{% extends '::admin.html.twig' %}
+
+{% block body %}
+		  <div class="hero-unit">
+        <h2>Carga de Planograma-Quiebre</h2>
+        <p>A continuación podrá cargar un archivo CSV, que contenga el planograma para quiebre que desea cargar.</p>
+        <p>El formato del CSV debe ser: FOLIO;EAN;FECHA;QUIEBRE;CANTIDAD. Ya que hay varios formatos de CSV, se recomienda ocupar Excel 2010 y guardar como Delimitado por comas (CSV). Se debe tener en cuenta que el SKU no debe ser guardado como número.</p>
+        <p>Para iniciar rápidamente se deja un <a href="{{ asset('bundles/cademreporte/plano_quiebre_ejemplo_v1.csv') }}">CSV de ejemplo</a>.</p>
+        <br>
+
+
+        <form id="f1" action="{{ path('admin_fileupload') }}" method="POST" enctype="multipart/form-data" encoding="multipart/form-data">
+
+          {{ form_widget(form_medicion) }}
+          <label class="required">CSV</label>
+          <div id="fileupload1" class="fileupload fileupload-new" data-provides="fileupload">
+            <div class="input-append">
+              <div class="uneditable-input span3"><i class="icon-file fileupload-exists"></i> <span class="fileupload-preview"></span></div><span class="btn btn-file"><span class="fileupload-new">Seleccionar</span><span class="fileupload-exists">Cambiar</span><input type="file" name="file1" id="file1"/></span><a href="#" class="btn btn-danger fileupload-exists" data-dismiss="fileupload">Remover</a><input class="btn btn-success fileupload-exists" type="submit" value="Subir">
+            </div>
+          </div>
+
+
+          
+        </form>
+        
+
+
+
+
+      </div>
+          
+{% endblock %}
+
+
+{% block javascripts %}
+<script src="http://malsup.github.com/jquery.form.js"></script>
+<script>
+$(document).ready(function () {
+
+
+  $('#f1').ajaxForm({
+    success: function(data) {
+        // console.log(data);
+        if(data.status == false){
+          alert('SE PRODUJO UN ERROR AL SUBIR EL ARCHIVO');
+          return;
+        }
+        //AHORA SE DEBE VALIDAR EL ARCHIVO SUBIDO
+        $.get("{{ path('admin_filevalid') }}", {name: data.name, tipo_carga: data.tipo_carga, id_cliente: data.id_cliente, id_medicion: data.id_medicion}, function(data2) {
+          if(typeof data2.status == 'undefined' || data2.status == false){
+            alert('SE PRODUJO UN ERROR EN LA VALIDACION DEL ARCHIVO: ' + data2.mensaje);
+            return;
+          }
+          $.get("{{ path('admin_fileprocess') }}", {name: data2.name, tipo_carga: data2.tipo_carga, id_cliente: data2.id_cliente, id_medicion: data2.id_medicion}, function(data3) {
+            if(data3.status == false){
+              alert('SE PRODUJO UN ERROR EN LA CARGA DEL ARCHIVO: ' + data3.mensaje);
+              return;
+            }
+            else alert('PROCESO DE CARGA EXITOSO ('+data3.time_taken+ 'MS). REGISTROS GUARDADOS: ' + data3.row_affected);
+          } );
+          alert('VALIDADO EXITOSO ('+data2.time_taken+ 'MS). COMENZO CARGA A LA BD.');
+        })
+        .fail(function() { alert("ERROR AL VALIDAR"); });
+    },
+    error: function() {
+        alert('SE PRODUJO UN ERROR AL SUBIR EL ARCHIVO');
+    },
+    dataType:'json',
+    data: {tipo_carga: 'planoquiebre'}
+  });
+
+  $('#file1').change(function(){
+    if($(this).val() != ''){
+      var filename = $(this).val().split('\\').pop();
+      var ext = /(?:\.([^.]+))?$/.exec(filename)[1];
+      if(ext != "csv" && ext != "CSV"){
+        alert('POR FAVOR, VERIFIQUE QUE EL ARCHIVO '+filename+' ES UN CSV');
+        $('#fileupload1').fileupload('clear');
+      }
+    }
+    
+  });
+
+});
+ </script>
+{% endblock %}
