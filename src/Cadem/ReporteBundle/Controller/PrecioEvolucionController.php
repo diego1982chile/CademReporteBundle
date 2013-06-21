@@ -202,7 +202,7 @@ class PrecioEvolucionController extends Controller
 		usort($mediciones, array($this,"sortFunction"));
 		// CONSTRUIR EL ENCABEZADO DE LA TABLA
 		
-		$head=array('CATEGORIA',' DESCRIPCIÓN',' POLÍTICA');	
+		$head=array('CATEGORIA',' DESCRIPCIÓN');	
 		
 		// Oonstruir inicialización de columnas		
 		$aoColumnDefs=array();
@@ -219,13 +219,7 @@ class PrecioEvolucionController extends Controller
 		$fila['sWidth']="280px";
 		array_push($aoColumnDefs,$fila);		
 
-		$fila=array();
-		$fila['aTargets']=array(2);	
-		$fila['sClass']="tag2 medicion";			
-		$fila['sWidth']="20px";
-		array_push($aoColumnDefs,$fila);	
-
-		$cont=3;		
+		$cont=2;		
 		
 		foreach($mediciones as $medicion)
 		{
@@ -330,7 +324,7 @@ class PrecioEvolucionController extends Controller
 		$total = $em->getConnection()->executeQuery($sql)->fetchAll();									
 
 		// Calcula el ancho máximo de la tabla	
-		$extension=count($head)*11-100;
+		$extension=count($head)*10-100;
 	
 		if($extension<0)
 			$extension=0;
@@ -366,6 +360,7 @@ class PrecioEvolucionController extends Controller
 				'form_comuna' 	=> $form_comuna->createView(),
 			),
 			'head' => $head,
+			'mediciones' => json_encode($mediciones2),
 			'max_width' => $max_width,
 			'logofilename' => $logofilename,
 			'logostyle' => $logostyle,
@@ -419,7 +414,7 @@ class PrecioEvolucionController extends Controller
 			// Para llevar los cambios del 1er nivel de agregacion
 			$nivel1=$evolucion_quiebre[$cont_regs]['PRODUCTO'];			
 			// Lleno la fila con vacios, le agrego 3 posiciones, correspondientes a los niveles de agregación y al total															
-			$fila=array_fill(0,$num_meds+4,'-');																				
+			$fila=array_fill(0,$num_meds+3,'-');																				
 			$cont_totales_producto=0;			
 		
 			while($cont_regs<$num_regs)
@@ -430,28 +425,27 @@ class PrecioEvolucionController extends Controller
 				if($nivel1==$evolucion_quiebre[$cont_regs]['PRODUCTO'])
 				{					
 					$fila[0]=$evolucion_quiebre[$cont_regs]['SEGMENTO'];	
-					$fila[1]=trim($evolucion_quiebre[$cont_regs]['PRODUCTO']);																
-					$fila[2]=mt_rand(5000, 20000);
-					$fila[$columna_quiebre+3]=mt_rand(5000, 20000);
+					$fila[1]=trim($evolucion_quiebre[$cont_regs]['PRODUCTO']);																					
+					$fila[$columna_quiebre+2]=mt_rand(5000, 20000);
 					$cont_regs++;
 					// $cont_meds++;
 				}	
 				else
 				{			
 					// Si el primer nivel de agregacion cambió, lo actualizo, agrego la fila al body y reseteo el contador de mediciones								
-					$fila[$num_meds+3]=round($totales_producto[$cont_totales_producto]['QUIEBRE']*100,1);					
+					$fila[$num_meds+2]=round($totales_producto[$cont_totales_producto]['QUIEBRE']*100,1);					
 					$cont_totales_producto++;					
 					// $cont_meds=0;								
 					$nivel1=$evolucion_quiebre[$cont_regs]['PRODUCTO'];				
-					array_push($body,(object)$fila);
-					$fila=array_fill(0,$num_meds+4,'-');					
+					array_push($body,$fila);
+					$fila=array_fill(0,$num_meds+3,'-');					
 				}
-				if($cont_regs==$num_regs-1)		
+				if($cont_regs==$num_regs)		
 				{	
-					$columna_quiebre=array_search($evolucion_quiebre[$cont_regs]['NOMBRE'],$mediciones);
-					$fila[$columna_quiebre+3]=mt_rand(5000, 20000);					
-					$fila[$num_meds+3]=round($totales_producto[$cont_totales_producto]['QUIEBRE']*100,1);					
-					array_push($body,(object)$fila);									
+					$columna_quiebre=array_search($evolucion_quiebre[$cont_regs-1]['NOMBRE'],$mediciones);
+					$fila[$columna_quiebre+2]=mt_rand(5000, 20000);					
+					$fila[$num_meds+2]=round($totales_producto[$cont_totales_producto]['QUIEBRE']*100,1);					
+					array_push($body,$fila);									
 					$cont_regs++;
 				}		
 			}			
@@ -479,12 +473,12 @@ class PrecioEvolucionController extends Controller
 					$fila=array_fill(0,$num_meds+1,"-");
 					$nivel2=$totales_segmento[$cont_regs]['SEGMENTO'];					
 				}
-				if($cont_regs==$num_regs-1)		
+				if($cont_regs==$num_regs)		
 				{	
-					$columna_quiebre=array_search($totales_segmento[$cont_regs]['MEDICION'],$mediciones);
-					$fila[$columna_quiebre]=round($totales_segmento[$cont_regs]['QUIEBRE']*100,1);	
+					$columna_quiebre=array_search($totales_segmento[$cont_regs-1]['MEDICION'],$mediciones);
+					$fila[$columna_quiebre]=round($totales_segmento[$cont_regs-1]['QUIEBRE']*100,1);	
 					$fila[$num_meds]=round($totales_horizontales_segmento[$cont_totales_horizontales_segmento]['QUIEBRE']*100,1);
-					array_push($matriz_totales,(object)$fila);		
+					array_push($matriz_totales,$fila);		
 					$cont_regs++;					
 				}				
 			}	
@@ -624,6 +618,7 @@ class PrecioEvolucionController extends Controller
 		}	
 		$fila=array();
 		$fila['aTargets']=array($cont);	
+		$fila['bVisible']=false;
 		// $fila['sClass']="medicion";
 		array_push($aoColumnDefs,$fila);				
 		

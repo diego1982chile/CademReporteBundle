@@ -111,6 +111,11 @@ div.DataTables_sort_wrapper {
 	padding-right: 4px !important;
 	padding-left: 4px !important;
 }
+
+.highcharts-axis-labels text{
+	font-size: 9px !important; 
+}
+
 {% endblock %}
 
 {% block stylesheets %}
@@ -199,7 +204,7 @@ function construirTabla()
 										var col=1;
 										break;										
 								}								
-								$(nRow).children(':eq(0)').attr('index',iDisplayIndex);
+								$(nRow).children(':eq('+col+')').attr('index',iDisplayIndex);
 								if(aData[0].length>14)
 									$(nRow).children(':eq(0)').text(aData[0].substring(0,14).replace(/ /g,'_')+'...');
 								else
@@ -331,7 +336,7 @@ function fixedColumn1()
 			$(nGroup).insertBefore( $('tbody tr:eq(0)', left.body)[0] );					
 		}
 	});
-	graficar(matriz_totales.length-1,true);
+	construirGrafico();
 }
 
 function fixedColumn2()
@@ -369,14 +374,15 @@ function fixedColumn2()
 			$('tbody tr td', left.body).each( function ( i ) {
 				that.fnSetRowHeight( this.parentNode, heights[ i ] );
 			} );
-		}
+		}		
 	});
 	
 	new FixedColumns( oTable, {
 		"sHeightMatch": "none",	
-		"iLeftColumns": 3,		
+		"iLeftColumns": 2,		
 	});
-			
+		
+	construirGrafico();		
 }
 
 function colorTotales(){
@@ -390,8 +396,7 @@ function colorTotales(){
 			$('.DTFC_Cloned tbody tr td:first-of-type:not(.group)').css({
 				'background-color':'rgb(238, 236, 255)',
 				'color': 'black',
-				});
-			// $('.DTFC_Cloned tbody tr:not(:first) td:first-of-type').css('cursor','pointer');
+				});			
 			break;
 		case 2:					
 			$('.DTFC_Cloned tbody tr td:first-of-type:not(.group)').css({
@@ -400,25 +405,30 @@ function colorTotales(){
 				'border': '1px solid #B2B2B2'
 			});
 			
-			$('.DTFC_Cloned tbody tr td:nth-last-of-type(2):not(.group)').css({
-				'background-color':'rgb(255, 235, 158)',
-				'color': 'black',				
-			});			
+			// $('.DTFC_Cloned tbody tr td:nth-last-of-type(1):not(.group)').css({
+				// 'background-color':'rgb(255, 235, 158)',
+				// 'color': 'black',				
+			// });			
 			break;
+		$('.DTFC_Cloned tbody tr:not(:first) td:nth-last-of-type(0)').css('cursor','pointer');
 	}
 }
 
-function graficar(fila, total)
+function construirGrafico()
 {	
-	if(total)	
+	switch(variable)	
 	{
-		var data=matriz_totales[fila];
-		data= data.slice(0,data.length-1);
-	}
-	else
-	{
-		var data=oTable.fnGetData( fila );
-		data= data.slice(2,data.length-1);			
+		case 1:
+			var data=matriz_totales[matriz_totales.length-1];
+			data= data.slice(0,data.length-1);
+			var series= [{
+						name: '% Quiebre',
+						data: data
+						}]
+			break;
+		case 2:
+			var series=[];			
+			break;
 	}			
 	
 	i_quiebre = new Highcharts.Chart({
@@ -442,7 +452,7 @@ function graficar(fila, total)
 				text: 'Evolución {{estudios[0].getEstudioVariables[0].getNombrevariable}}'
 			},
 			tooltip: {
-				pointFormat: ' <span style="color:{series.color}">{series.name}</span>: <b>{point.y}%</b><br/>',
+				pointFormat: ' <span style="color:{series.color}">{series.name}</span>: <b>${point.y}</b><br/>',
 				percentageDecimals: 1,
 				enabled: true
 			},
@@ -450,7 +460,10 @@ function graficar(fila, total)
 				categories: mediciones,
 				
 				labels: {
-					rotation: 0
+					rotation: 0,
+					style: {
+						fontWeight: "1"
+					}
 				}			
 			},		
 			yAxis: {
@@ -458,24 +471,21 @@ function graficar(fila, total)
 				// min: 0,
 				//categories: [0,100],
 				title: {
-						text: 'Promedio Quiebre (%)'
+						text: 'Promedio {{tag_variable}}'
 				}
 			},		
-			series: [{
-						name: '% Quiebre',
-						data: data
-					}],
+			series: series,
 			legend: {
 				   layout: 'vertical',
 				   align: 'center',
 				   x: 350,
 				   verticalAlign: 'top',
-				   y: 0,
-				   floating: true
+				   y: 0,				   				   
 				},				
 			credits: {
 				enabled: false
-			}
+			},
+
 		});	
 	return true;
 }
@@ -539,8 +549,8 @@ $(document).ready(function () {
 	//GRAFICAR FILAS
 	$(document).on('click', 'td.tag', function(e) {				
 		
-		var label= $(this).text();
-		var index=$(this).attr('index');
+		var label= $(this).parent().attr('title');
+		var index=$(this).attr('index');				
 		
 		if($(this).hasClass('group'))
 		{ // Si el elemento clickado es de clase grupo, el datasource esta en matriz_totales					
@@ -552,7 +562,7 @@ $(document).ready(function () {
 		}
 		else
 		{ // Si no, el datasource esta en la tabla			
-			var data=oTable.fnGetData( index );
+			var data=oTable.fnGetData( index );			
 			data= data.slice(2,data.length-1);					
 			for(i in data){
 				if(data[i] == '-') data[i]=null;
