@@ -356,7 +356,7 @@ class PrecioDetalleController extends Controller
 		$session->set("total",$total);	
 
 		// Calcula el ancho máximo de la tabla	
-		$extension=count($head)*15-100;
+		$extension=count($head)*14-100;
 	
 		if($extension<0)
 			$extension=0;
@@ -383,7 +383,8 @@ class PrecioDetalleController extends Controller
 			'header_action' => 'precio_detalle_header',
 			'body_action' => 'precio_detalle_body',
 			'aoColumnDefs' => json_encode($aoColumnDefs),
-			'columnas_reservadas' => 3			
+			'columnas_reservadas' => 3,
+			'tag_variable' => 'PRECIO'			
 			)
 		);
 		$time_taken = microtime(true) - $start;
@@ -720,7 +721,8 @@ class PrecioDetalleController extends Controller
 			// $head[$sala['COD_SALA']]=$sala['NOM_SALA'];											
 		}		
 		$fila=array();
-		$fila['aTargets']=array($cont);		
+		$fila['aTargets']=array($cont);	
+		$fila['bVisible']=false;	
 		// $fila['sWidth']="2%";
 		array_push($aoColumnDefs,$fila);		
 		foreach(array_reverse($prefixes) as $prefix)		
@@ -736,7 +738,7 @@ class PrecioDetalleController extends Controller
 		$session->set("totales_verticales_segmento",$totales_verticales_segmento);	
 		$session->set("total",$total);		
 		// Calcula el ancho máximo de la tabla	
-		$extension=count($head)*(15+log(count($head),50))-100;
+		$extension=count($head)*(14+log(count($head),50))-100;
 	
 		if($extension<0)
 			$extension=0;

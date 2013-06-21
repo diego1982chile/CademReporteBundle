@@ -21,7 +21,7 @@
 {% block body %}
     <div class="span9">
 		<div class="container-fluid well" style="padding-top:0">
-			<h4>Detalle {{estudios[0].getEstudioVariables[0].getNombrevariable}}</h4>
+			<h4>Detalle {{tag_variable}}</h4>
 			<div class="hero-unit" style="padding:15px;margin-bottom:20px">												
 				<div id="container" class="row-fluid">
 					<table id="tabla_resumen" class="tabla_resumen table table-bordered display">                      
@@ -85,11 +85,6 @@
 							</th>							
 							<th width='10%'>
 								<a target="_blank" href="{{ url_excel }}"><label>Bajar Excel</label></a>
-							</th>
-						</tr>
-						<tr>
-							<th>
-								% Incumplimiento general
 							</th>
 						</tr>
 					</thead>
@@ -312,7 +307,7 @@ function construirTabla()
 				  "sProcessing": "<b>Procesando...</b>"
 				}				
 		});
-		 $('div.fg-toolbar:first').append("<h5 style='float:left;margin:0em'>Tabla Resumen {{estudios[0].getEstudioVariables[0].getNombrevariable}}: (%)</h5>");		
+		 $('div.fg-toolbar:first').append("<h5 style='float:left;margin:0em'>Tabla Detalle {{tag_variable}}: (%)</h5>");		
 		});	
 }
 
