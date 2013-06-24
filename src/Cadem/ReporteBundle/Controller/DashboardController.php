@@ -14,16 +14,16 @@ class DashboardController extends Controller
     {
 		$user = $this->getUser();
 		$em = $this->getDoctrine()->getManager();
+		$id_cliente = $user->getClienteID();
 		
 		//CLIENTE, ESTUDIO
 		$query = $em->createQuery(
 			'SELECT c,e,ev,v FROM CademReporteBundle:Cliente c
 			JOIN c.estudios e
-			JOIN c.usuarios u
 			JOIN e.estudiovariables ev
 			JOIN ev.variable v
-			WHERE u.id = :id AND c.activo = 1 AND e.activo = 1')
-			->setParameter('id', $user->getId());
+			WHERE c.id = :id AND c.activo = 1 AND e.activo = 1')
+			->setParameter('id', $id_cliente);
 		$clientes = $query->getResult();
 		$cliente = $clientes[0];
 		$estudios = $cliente->getEstudios();
@@ -52,15 +52,31 @@ class DashboardController extends Controller
 		if($id_ultima_medicion !== -1){
 		
 			//QUIEBRE ULTIMA MEDICION
-			$query = $em->createQuery(
-				'SELECT (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q) FROM CademReporteBundle:Quiebre q
-				JOIN q.planograma p
-				JOIN p.salacliente sc
-				WHERE sc.clienteid = :idcliente AND p.medicionid = :idmedicion')
-				->setParameter('idcliente', $cliente->getId())
-				->setParameter('idmedicion', $id_ultima_medicion);
-			$quiebre = $query->getSingleScalarResult();
-			$porc_quiebre = round($quiebre,1);
+			$sql = "SELECT (SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 END)*100.0)/COUNT(q.ID) as porc_quiebre FROM QUIEBRE q
+					INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID
+					INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
+                    WHERE sc.CLIENTE_ID = ? AND p.MEDICION_ID = ?";
+            $param = array($id_cliente, $id_ultima_medicion);
+            $tipo_param = array(\PDO::PARAM_INT, \PDO::PARAM_INT);
+            $query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
+
+            if(isset($query[0])){
+            	$porc_quiebre = $query[0]['porc_quiebre'];
+            	$porc_quiebre = round($porc_quiebre,1);
+            }
+            else $porc_quiebre = 0;
+            
+
+
+			// $query = $em->createQuery(
+			// 	'SELECT (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q) FROM CademReporteBundle:Quiebre q
+			// 	JOIN q.planogramaq p
+			// 	JOIN p.salacliente sc
+			// 	WHERE sc.clienteid = :idcliente AND p.medicionid = :idmedicion')
+			// 	->setParameter('idcliente', $cliente->getId())
+			// 	->setParameter('idmedicion', $id_ultima_medicion);
+			// $quiebre = $query->getSingleScalarResult();
+			// $porc_quiebre = round($quiebre,1);
 		}
 		else $porc_quiebre = 0;
 		
@@ -68,7 +84,7 @@ class DashboardController extends Controller
 		$query = $em->createQuery(
 			'SELECT n FROM CademReporteBundle:Noticia n
 			WHERE n.clienteid = :idcliente and n.activo = 1')
-			->setParameter('idcliente', $cliente->getId());
+			->setParameter('idcliente', $id_cliente);
 		$noticias = $query->getArrayResult();
 		
 		
@@ -104,10 +120,9 @@ class DashboardController extends Controller
 		
 		//DATOS DEL EJE X EN EVOLUTIVO
 		$sql = "SELECT TOP(12) m.NOMBRE, m.FECHAINICIO, m.FECHAFIN FROM MEDICION m
-			INNER JOIN PLANOGRAMA p on p.MEDICION_ID = m.ID
-			INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
+			INNER JOIN PLANOGRAMAQ p on p.MEDICION_ID = m.ID
+			INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID AND sc.CLIENTE_ID = ?
 			
-			WHERE sc.CLIENTE_ID = ?
 			GROUP BY m.NOMBRE, m.FECHAINICIO, m.FECHAFIN
 			ORDER BY m.FECHAINICIO DESC";
 		$param = array($id_cliente);
@@ -124,12 +139,11 @@ class DashboardController extends Controller
 		
 		//DATOS DEL EJE Y EN EVOLUTIVO
 		$sql = "SELECT TOP(12) (SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 END)*1.0)/COUNT(q.ID) as QUIEBRE FROM QUIEBRE q
-			INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID
+			INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID
 			INNER JOIN MEDICION m on m.ID = p.MEDICION_ID
-			INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
+			INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID AND sc.CLIENTE_ID = ?
 			INNER JOIN SALA s on s.ID = sc.SALA_ID
 			
-			WHERE sc.CLIENTE_ID = ?
 			GROUP BY m.FECHAINICIO
 			ORDER BY m.FECHAINICIO DESC";
 		$param = array($id_cliente);
