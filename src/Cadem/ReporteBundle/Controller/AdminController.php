@@ -121,13 +121,49 @@ class AdminController extends Controller
         return $response;
     }
 
+    public function cargaplanoquiebreAction()
+    {
+        $em = $this->getDoctrine()->getManager();
+        $sql = "SELECT c.ID as idc, m.ID as idm, c.NOMBREFANTASIA as nombre, m.NOMBRE as medicion FROM CLIENTE c
+                INNER JOIN ESTUDIO e on e.CLIENTE_ID = c.ID
+                INNER JOIN MEDICION m on m.ESTUDIO_ID = e.ID
+                ORDER BY c.NOMBREFANTASIA, m.NOMBRE";
+        $query = $em->getConnection()->executeQuery($sql)->fetchAll();
+        $choices_medicion = array();
+        foreach($query as $r)
+        {
+            $choices_medicion[$r['idc'].'-'.$r['idm']] = strtoupper($r['nombre'].'-'.$r['medicion']);
+        }
+
+        $form_medicion = $this->get('form.factory')->createNamedBuilder('f_medicion', 'form')
+            ->add('Cliente_Medicion', 'choice', array(
+                'choices'   => $choices_medicion,
+                'required'  => true,
+                'multiple'  => false
+            ))
+            ->getForm();
+
+
+        //RESPONSE
+        $response = $this->render('CademReporteBundle:Admin:cargaplanoquiebre.html.twig',
+        array('form_medicion' => $form_medicion->createView())
+        );
+
+        //CACHE
+        $response->setPrivate();
+        $response->setMaxAge(1);
+
+
+        return $response;
+    }
+
     public function fileuploadAction(Request $request)
     {
         $uf = $request->files->get('file1');
     	$tipo_carga = $request->request->get('tipo_carga');
     	if (null === $uf || !isset($tipo_carga)) return new JsonResponse(array('status' => false));//ERROR
         $datos_itemcliente = array();
-        if($tipo_carga === 'itemcliente' || $tipo_carga === 'salacliente'){
+        if($tipo_carga === 'itemcliente' || $tipo_carga === 'salacliente' || $tipo_carga === 'planoquiebre'){
             $clientemedicion = $request->request->get('f_medicion');
             list($id_cliente, $id_medicion) = explode("-", $clientemedicion['Cliente_Medicion']);
             $datos_itemcliente['id_cliente'] = intval($id_cliente);
@@ -147,7 +183,7 @@ class AdminController extends Controller
         $data = $request->query->all();
         $tipo_carga = $data['tipo_carga'];
     	$name = $data['name'];
-        if($tipo_carga === 'itemcliente' || $tipo_carga === 'salacliente'){
+        if($tipo_carga === 'itemcliente' || $tipo_carga === 'salacliente' || $tipo_carga === 'planoquiebre'){
             $id_cliente = intval($data['id_cliente']);
             $id_medicion = intval($data['id_medicion']);
         }
@@ -169,10 +205,6 @@ class AdminController extends Controller
 
             switch ($tipo_carga) {
                 case 'item'://DATOS DE ITEM
-
-
-                    $fabricante = array();
-                    $marca = array();
                     
                     //FORMATO ES: TIPOCODIGO;FABRICANTE;MARCA;NOMBRE;CODIGO
                     //SI LA PRIMERA FILA TIENE LOS ENCABEZADOS SE BORRA
@@ -266,7 +298,7 @@ class AdminController extends Controller
                     }
 
                     //SE VALIDA QUE EXISTA TIPOCODIGO
-                    if(count($tipo_codigo) > 0){
+                    if(isset($tipo_codigo)){
                         $tipo_codigo = array_unique($tipo_codigo);
                         sort($tipo_codigo);
 
@@ -279,7 +311,7 @@ class AdminController extends Controller
                         usort($query, array($this,"cmp"));
 
                         foreach ($tipo_codigo as $k => $v) {
-                            if($v !== $query[$k]['nombre']){
+                            if(!isset($query[$k]['nombre']) || $v !== $query[$k]['nombre']){
                                 return new JsonResponse(array(
                                     'status' => false,
                                     'mensaje' => 'EL TIPO CODIGO "'.$v.'" NO EXISTE EN LA BD O NO CONCUERDA.'
@@ -291,7 +323,7 @@ class AdminController extends Controller
                     
 
                     //SE VALIDA QUE EXISTA FABRICANTE
-                    if(count($fabricante) > 0){
+                    if(isset($fabricante)){
                          $fabricante = array_unique($fabricante);
                         sort($fabricante);
 
@@ -304,7 +336,7 @@ class AdminController extends Controller
                         usort($query, array($this,"cmp"));
 
                         foreach ($fabricante as $k => $v) {
-                            if($v !== $query[$k]['nombre']){
+                            if(!isset($query[$k]['nombre']) || $v !== $query[$k]['nombre']){
                                 return new JsonResponse(array(
                                     'status' => false,
                                     'mensaje' => 'EL FABRICANTE "'.$v.'" NO EXISTE EN LA BD O NO CONCUERDA.'
@@ -316,7 +348,7 @@ class AdminController extends Controller
                        
 
                     //SE VALIDA QUE EXITA MARCA
-                    if(count($marca) > 0){
+                    if(isset($marca)){
                         $marca = array_unique($marca);
                         sort($marca);
 
@@ -329,10 +361,8 @@ class AdminController extends Controller
 
                         usort($query, array($this,"cmp"));
 
-                        return new Response(print_r($query));
-
                         foreach ($marca as $k => $v) {
-                            if($v !== $query[$k]['nombre']){
+                            if(!isset($query[$k]['nombre']) || $v !== $query[$k]['nombre']){
                                 return new JsonResponse(array(
                                     'status' => false,
                                     'mensaje' => 'LA MARCA "'.$v.'" NO EXISTE EN LA BD O NO CONCUERDA.'
@@ -433,7 +463,7 @@ class AdminController extends Controller
                     }
 
                     //SE VALIDA QUE EXISTA COMUNA
-                    if(count($comuna) > 0){
+                    if(isset($comuna)){
                         $comuna = array_unique($comuna);
                         sort($comuna);
 
@@ -446,7 +476,7 @@ class AdminController extends Controller
                         usort($query, array($this,"cmp"));
 
                         foreach ($comuna as $k => $v) {
-                            if($v !== $query[$k]['nombre']){
+                            if(!isset($query[$k]['nombre']) || $v !== $query[$k]['nombre']){
                                 return new JsonResponse(array(
                                     'status' => false,
                                     'mensaje' => 'LA COMUNA "'.$v.'" NO EXISTE EN LA BD.'
@@ -458,7 +488,7 @@ class AdminController extends Controller
                     
 
                     //SE VALIDA QUE EXISTA CANAL
-                    if(count($canal) > 0){
+                    if(isset($canal)){
                          $canal = array_unique($canal);
                         sort($canal);
 
@@ -471,7 +501,7 @@ class AdminController extends Controller
                         usort($query, array($this,"cmp"));
 
                         foreach ($canal as $k => $v) {
-                            if($v !== $query[$k]['nombre']){
+                            if(!isset($query[$k]['nombre']) || $v !== $query[$k]['nombre']){
                                 return new JsonResponse(array(
                                     'status' => false,
                                     'mensaje' => 'EL CANAL "'.$v.'" NO EXISTE EN LA BD.'
@@ -483,7 +513,7 @@ class AdminController extends Controller
                        
 
                     //SE VALIDA QUE EXISTA CADENA
-                    if(count($cadena) > 0){
+                    if(isset($cadena)){
                         $cadena = array_unique($cadena);
                         sort($cadena);
 
@@ -496,7 +526,7 @@ class AdminController extends Controller
                         usort($query, array($this,"cmp"));
 
                         foreach ($cadena as $k => $v) {
-                            if($v !== $query[$k]['nombre']){
+                            if(!isset($query[$k]['nombre']) || $v !== $query[$k]['nombre']){
                                 return new JsonResponse(array(
                                     'status' => false,
                                     'mensaje' => 'LA CADENA "'.$v.'" NO EXISTE EN LA BD.'
@@ -508,7 +538,7 @@ class AdminController extends Controller
 
 
                     //SE VALIDA QUE EXISTA FORMATO
-                    if(count($formato) > 0){
+                    if(isset($formato)){
                         $formato = array_unique($formato);
                         sort($formato);
 
@@ -521,7 +551,7 @@ class AdminController extends Controller
                         usort($query, array($this,"cmp"));
 
                         foreach ($formato as $k => $v) {
-                            if($v !== $query[$k]['nombre']){
+                            if(!isset($query[$k]['nombre']) || $v !== $query[$k]['nombre']){
                                 return new JsonResponse(array(
                                     'status' => false,
                                     'mensaje' => 'LA CADENA "'.$v.'" NO EXISTE EN LA BD.'
@@ -579,8 +609,8 @@ class AdminController extends Controller
                     //SE VALIDA QUE EL ITEM NO ESTE EN LA BD
                     $chunk = 0;
                     foreach($m as $value){
-                        if(strlen($value[13]) !== 0) $item[floor($chunk/2000)][] = $value[13];
-                        if(strlen($value[10]) !== 0) $item_ean[floor($chunk/2000)][] = $value[10];
+                        $item[floor($chunk/2000)][] = $value[13];
+                        $item_ean[floor($chunk/2000)][] = $value[10];
                         $chunk++;
                     }
 
@@ -688,7 +718,7 @@ class AdminController extends Controller
                         usort($query, array($this,"cmp"));
 
                         foreach ($nni_ni1 as $k => $v) {
-                            if($v !== $query[$k]['nombre']){
+                            if(!isset($query[$k]['nombre']) || $v !== $query[$k]['nombre']){
                                 return new JsonResponse(array(
                                     'status' => false,
                                     'mensaje' => 'LA CLASE "'.$v.'" DEL NIVEL1 NO EXISTE EN LA BD.'
@@ -715,7 +745,7 @@ class AdminController extends Controller
                         usort($query, array($this,"cmp"));
 
                         foreach ($nni_ni2 as $k => $v) {
-                            if($v !== $query[$k]['nombre']){
+                            if(!isset($query[$k]['nombre']) || $v !== $query[$k]['nombre']){
                                 return new JsonResponse(array(
                                     'status' => false,
                                     'mensaje' => 'LA CLASE "'.$v.'" DEL NIVEL2 NO EXISTE EN LA BD.'
@@ -741,7 +771,7 @@ class AdminController extends Controller
                         usort($query, array($this,"cmp"));
 
                         foreach ($nni_ni3 as $k => $v) {
-                            if($v !== $query[$k]['nombre']){
+                            if(!isset($query[$k]['nombre']) || $v !== $query[$k]['nombre']){
                                 return new JsonResponse(array(
                                     'status' => false,
                                     'mensaje' => 'LA CLASE "'.$v.'" DEL NIVEL3 NO EXISTE EN LA BD.'
@@ -767,7 +797,7 @@ class AdminController extends Controller
                         usort($query, array($this,"cmp"));
 
                         foreach ($nni_ni4 as $k => $v) {
-                            if($v !== $query[$k]['nombre']){
+                            if(!isset($query[$k]['nombre']) || $v !== $query[$k]['nombre']){
                                 return new JsonResponse(array(
                                     'status' => false,
                                     'mensaje' => 'LA CLASE "'.$v.'" DEL NIVEL4 NO EXISTE EN LA BD.'
@@ -794,7 +824,7 @@ class AdminController extends Controller
                         usort($query, array($this,"cmp"));
 
                         foreach ($nni_ni5 as $k => $v) {
-                            if($v !== $query[$k]['nombre']){
+                            if(!isset($query[$k]['nombre']) || $v !== $query[$k]['nombre']){
                                 return new JsonResponse(array(
                                     'status' => false,
                                     'mensaje' => 'LA CLASE "'.$v.'" DEL NIVEL5 NO EXISTE EN LA BD.'
@@ -820,7 +850,7 @@ class AdminController extends Controller
                             usort($query, array($this,"cmp"));
 
                             foreach ($chunk as $k => $v) {
-                                if($v !== $query[$k]['nombre']){
+                                if(!isset($query[$k]['nombre']) || $v !== $query[$k]['nombre']){
                                     return new JsonResponse(array(
                                         'status' => false,
                                         'mensaje' => 'EL ITEM "'.$v.'" NO EXISTE EN LA BD.'
@@ -832,7 +862,7 @@ class AdminController extends Controller
                     }
 
                     //SE VALIDA QUE EXISTA EL ITEMPADRE
-                    if(isset($item_padre) && count($item_padre) > 0){
+                    if(isset($item_padre)){
                         $item_padre = array_unique($item_padre);
                         sort($item_padre);
 
@@ -845,7 +875,7 @@ class AdminController extends Controller
                         usort($query, array($this,"cmp"));
 
                         foreach ($item_padre as $k => $v) {
-                            if($v !== $query[$k]['nombre']){
+                            if(!isset($query[$k]['nombre']) || $v !== $query[$k]['nombre']){
                                 return new JsonResponse(array(
                                     'status' => false,
                                     'mensaje' => 'EL ITEM PADRE "'.$v.'" NO EXISTE EN LA BD.'
@@ -857,7 +887,7 @@ class AdminController extends Controller
 
 
                     //SE VALIDA QUE EXISTA EL TIPO DE CODIGO
-                    if(count($tipo_codigo) > 0){
+                    if(isset($tipo_codigo)){
                         $tipo_codigo = array_unique($tipo_codigo);
                         sort($tipo_codigo);
 
@@ -870,7 +900,7 @@ class AdminController extends Controller
                         usort($query, array($this,"cmp"));
 
                         foreach ($tipo_codigo as $k => $v) {
-                            if($v !== $query[$k]['nombre']){
+                            if(!isset($query[$k]['nombre']) || $v !== $query[$k]['nombre']){
                                 return new JsonResponse(array(
                                     'status' => false,
                                     'mensaje' => 'EL TIPOCODIGO "'.$v.'" NO EXISTE EN LA BD.'
@@ -946,7 +976,7 @@ class AdminController extends Controller
                     //SE VALIDA QUE EL CODIGOSALA NO ESTE EN LA BD
                     $chunk = 0;
                     foreach($m as $value){
-                        if(strlen($value[1]) !== 0) $codigo_sala[floor($chunk/2000)][] = $value[1];
+                        $codigo_sala[floor($chunk/2000)][] = $value[1];
                         $chunk++;
                     }
 
@@ -1018,7 +1048,7 @@ class AdminController extends Controller
 
                     
                     //SE VALIDA QUE EXISTA EL FOLIO_CADEM
-                    if(count($folio) > 0){
+                    if(isset($folio)){
                         $folio = array_unique($folio);
                         sort($folio);
 
@@ -1031,7 +1061,7 @@ class AdminController extends Controller
                         usort($query, array($this,"cmp"));
 
                         foreach ($folio as $k => $v) {
-                            if($v !== $query[$k]['nombre']){
+                            if(!isset($query[$k]['nombre']) || $v !== $query[$k]['nombre']){
                                 return new JsonResponse(array(
                                     'status' => false,
                                     'mensaje' => 'LA SALA "'.$v.'" NO EXISTE EN LA BD.'
@@ -1043,7 +1073,7 @@ class AdminController extends Controller
 
 
                     //SE VALIDA QUE EXISTA EL RESPONSABLE
-                    if(count($empleado) > 0){
+                    if(isset($empleado)){
                         $empleado = array_unique($empleado);
                         sort($empleado);
 
@@ -1056,7 +1086,7 @@ class AdminController extends Controller
                         usort($query, array($this,"cmp"));
 
                         foreach ($empleado as $k => $v) {
-                            if($v !== $query[$k]['nombre']){
+                            if(!isset($query[$k]['nombre']) || $v !== $query[$k]['nombre']){
                                 return new JsonResponse(array(
                                     'status' => false,
                                     'mensaje' => 'EL EMPLEADO "'.$v.'" NO EXISTE EN LA BD.'
@@ -1092,6 +1122,183 @@ class AdminController extends Controller
 
 
 
+
+
+
+                case 'planoquiebre'://DATOS DE PLANOGRAMA QUIEBRE
+
+
+                    //FORMATO ES:
+                    // FOLIO;EAN;FECHA;QUIEBRE;CANTIDAD
+
+                    
+                    //SI LA PRIMERA FILA TIENE LOS ENCABEZADOS SE BORRA
+                    if($m[0][0] === 'FOLIO' || $m[0][1] === 'EAN' || $m[0][2] === 'FECHA') unset($m[0]);
+                    
+
+                    //SE VALIDA QUE EL CODIGOSALA NO ESTE EN LA BD
+                    $chunk = 0;
+                    foreach($m as $k => $value){
+                        // $folio_sala[] = $value[0];
+                        // $item[] = $value[1];
+                        $folioean[floor($chunk/2000)][] = $value[0].'-'.$value[1];
+                        if(strlen($value[4]) === 0) $m[$k][4] = "NULL"; //SI NO HAY CANTIDAD SE PASA A NULL PARA EL INSERT
+                        $chunk++;
+                    }
+
+                    $folioean_encontrados = array();
+                    $start_select = microtime(true);
+                    foreach($folioean as $k => $chunk){
+                        $sql = "SELECT s.FOLIOCADEM+'-'+i.CODIGO as folioean FROM PLANOGRAMAQ p
+                                INNER JOIN SALACLIENTE sc on p.SALACLIENTE_ID = sc.ID
+                                INNER JOIN SALA s on s.ID = sc.SALA_ID
+                                INNER JOIN ITEMCLIENTE ic on p.ITEMCLIENTE_ID = ic.ID
+                                INNER JOIN ITEM i on i.ID = ic.ITEM_ID
+                                WHERE s.FOLIOCADEM+'-'+i.CODIGO IN ( ? ) and sc.CLIENTE_ID = ? and sc.MEDICION_ID = ? and ic.CLIENTE_ID = ? and ic.MEDICION_ID = ?
+                                ";
+                        $param = array($chunk, $id_cliente, $id_medicion, $id_cliente, $id_medicion);
+                        $tipo_param = array(\Doctrine\DBAL\Connection::PARAM_STR_ARRAY, \PDO::PARAM_INT, \PDO::PARAM_INT, \PDO::PARAM_INT, \PDO::PARAM_INT);
+                        $query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
+                        foreach ($query as $v) $folioean_encontrados[] = $v['folioean'];
+                        set_time_limit(10);
+                        $time_taken = microtime(true) - $start_select;
+                        if($time_taken >= 600){
+                            return new JsonResponse(array(
+                                'status' => false,
+                                'mensaje' => 'TIEMPO EXCEDIDO ('.round($time_taken,1).' SEG) EN CONSULTAR. EL TIEMPO MAX ES DE 600 SEG. LO QUE DEBERIA ALCANZAR PARA PROCESAR APROX 45 MIL FILAS. SI SU ARCHIVO TIENE MAS, POR FAVOR SAQUE LAS SUFICIENTES FILAS.'
+                            ));
+                        }
+                    }
+                    
+                    $start_valid = microtime(true);
+                    foreach ($m as $k => $fila) {
+                        if(count($fila) !== 5){//SIEMPRE DEBEN HABER 5 COLUMNAS
+                            return new JsonResponse(array(
+                                'status' => false,
+                                'mensaje' => 'NO HAY 5 COLUMNAS CERCA DE LA LINEA '.$k
+                            ));
+                        }
+                        if(strlen($fila[0]) === 0){//LA "FOLIO" NO PUEDE SER VACIA
+                            return new JsonResponse(array(
+                                'status' => false,
+                                'mensaje' => 'EL "FOLIO" NO PUEDE ESTAR VACIA, CERCA DE LA LINEA '.$k
+                            ));
+                        }
+                        if(strlen($fila[1]) === 0){//EL "EAN" NO PUEDE SER VACIO
+                            return new JsonResponse(array(
+                                'status' => false,
+                                'mensaje' => 'EL "EAN" NO PUEDE ESTAR VACIA, CERCA DE LA LINEA '.$k
+                            ));
+                        }
+                        if(strlen($fila[3]) === 0){//EL "QUIEBRE" NO PUEDE SER VACIO
+                            return new JsonResponse(array(
+                                'status' => false,
+                                'mensaje' => 'EL "QUIEBRE" NO PUEDE ESTAR VACIA, CERCA DE LA LINEA '.$k
+                            ));
+                        }
+                        if(in_array($fila[0].'-'.$fila[1], $folioean_encontrados)){//SE BUSCAN Y DESCARTA LOS CODIGOSALA ENCONTRADOS Y SE REGISTRA
+                            unset($m[$k]);
+                            $item_descartados++;
+                        }
+                        else{
+                            if($fila[0] !== '') $folio[] = $fila[0];
+                            if($fila[1] !== '') $item[] = $fila[1];
+                        }
+                        set_time_limit(10);
+                        $time_taken = microtime(true) - $start_valid;
+                        if($time_taken >= 600){
+                            return new JsonResponse(array(
+                                'status' => false,
+                                'mensaje' => 'TIEMPO EXCEDIDO ('.round($time_taken,1).' SEG) EN VALIDAR. EL TIEMPO MAX ES DE 600 SEG. LO QUE DEBERIA ALCANZAR PARA PROCESAR APROX 45 MIL FILAS. SI SU ARCHIVO TIENE MAS, POR FAVOR SAQUE LAS SUFICIENTES FILAS.'
+                            ));
+                        }
+                    }
+
+                    if(count($m) === 0){//NO SE INGRESAN DATOS
+                        return new JsonResponse(array(
+                            'status' => false,
+                            'mensaje' => 'VERIFIQUE QUE EL CSV TIENE DATOS Y QUE LOS SKU NO EXISTEN EN LA BD'
+                        ));
+                    }
+
+                    
+                    //SE VALIDA QUE EXISTA EL FOLIO_CADEM
+                    if(isset($folio)){
+                        $folio = array_unique($folio);
+                        sort($folio);
+
+                        $sql = "SELECT s.FOLIOCADEM as nombre, sc.ID as id FROM SALA s
+                                INNER JOIN SALACLIENTE sc on s.ID = sc.SALA_ID
+                                WHERE s.FOLIOCADEM IN ( ? ) and sc.CLIENTE_ID = ? and sc.MEDICION_ID = ? ";
+                        $param = array($folio, $id_cliente, $id_medicion);
+                        $tipo_param = array(\Doctrine\DBAL\Connection::PARAM_STR_ARRAY, \PDO::PARAM_INT, \PDO::PARAM_INT);
+                        $query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
+
+                        usort($query, array($this,"cmp"));
+
+                        foreach ($folio as $k => $v) {
+                            if(!isset($query[$k]['nombre']) || $v !== $query[$k]['nombre']){
+                                return new JsonResponse(array(
+                                    'status' => false,
+                                    'mensaje' => 'LA SALA "'.$v.'" NO EXISTE EN LA BD.'
+                                ));
+                            }
+                            $folio_[$v] = $query[$k]['id'];
+                        }
+                    }
+
+
+                    //SE VALIDA QUE EXISTA EL ITEM
+                    if(isset($item)){
+                        $item = array_unique($item);
+                        sort($item);
+
+                        $sql = "SELECT i.CODIGO as nombre, ic.ID as id FROM ITEM i
+                                INNER JOIN ITEMCLIENTE ic on i.ID = ic.ITEM_ID
+                                WHERE i.CODIGO IN ( ? ) and ic.CLIENTE_ID = ? and ic.MEDICION_ID = ? ";
+                        $param = array($item, $id_cliente, $id_medicion);
+                        $tipo_param = array(\Doctrine\DBAL\Connection::PARAM_STR_ARRAY, \PDO::PARAM_INT, \PDO::PARAM_INT);
+                        $query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
+
+                        usort($query, array($this,"cmp"));
+
+                        foreach ($item as $k => $v) {
+                            if(!isset($query[$k]['nombre']) || $v !== $query[$k]['nombre']){
+                                return new JsonResponse(array(
+                                    'status' => false,
+                                    'mensaje' => 'EL ITEM "'.$v.'" NO EXISTE EN LA BD.'
+                                ));
+                            }
+                            $item_[$v] = $query[$k]['id'];
+                        }
+                    }
+                       
+
+                    
+
+
+                    //FORMATO ES:
+                    // FOLIO;EAN;FECHA;QUIEBRE;CANTIDAD;ID_SALACLIENTE;ID_ITEMCLIENTE
+
+                    //ARCHIVO A ESCRIBIR CON LOS IDs FINALES
+                    $fp = fopen($this->uploadDIR.$name.'_proc.csv', 'w');
+
+                    foreach ($m as $fields) {
+                        $id_sala = (isset($folio_[$fields[0]]))?$folio_[$fields[0]]:"NULL";
+                        $id_item = (isset($item_[$fields[1]]))?$item_[$fields[1]]:"NULL";
+
+
+                        $fila = array_merge($fields, array($id_sala, $id_item));
+                        fputcsv($fp, $fila,";");
+                    }
+                    fclose($fp);
+
+                    break;
+
+
+
+
+
             }
                     
                 
@@ -1101,7 +1308,7 @@ class AdminController extends Controller
 
             //DATOS ADICIONALES
             $dat = array();
-            if($tipo_carga === 'itemcliente' || $tipo_carga === 'salacliente'){
+            if($tipo_carga === 'itemcliente' || $tipo_carga === 'salacliente' || $tipo_carga === 'planoquiebre'){
                 $dat['id_cliente'] = $id_cliente;
                 $dat['id_medicion'] = $id_medicion;
             }
@@ -1129,7 +1336,7 @@ class AdminController extends Controller
         $data = $request->query->all();
         $name = $data['name'];
         $tipo_carga = $data['tipo_carga'];
-        if($tipo_carga === 'itemcliente' || $tipo_carga === 'salacliente'){
+        if($tipo_carga === 'itemcliente' || $tipo_carga === 'salacliente' || $tipo_carga === 'planoquiebre'){
             $id_cliente = intval($data['id_cliente']);
             $id_medicion = intval($data['id_medicion']);
         }
@@ -1490,6 +1697,118 @@ class AdminController extends Controller
 
                     break;
 
+
+
+
+                case 'planoquiebre'://DATOS DE PLANOGRAMA QUIEBRE
+
+                    //FORMATO ES:
+                    // FOLIO;EAN;FECHA;QUIEBRE;CANTIDAD;ID_SALACLIENTE;ID_ITEMCLIENTE
+
+                    //SE CARGA EN LA BD, USANDO TRANSACCIONES
+                    
+                    $conn->beginTransaction();
+                    
+
+                    //OBTENEMOS EL ULTIMO ID INGRESADO
+                    $sql = "SELECT TOP(1) i.ID as id FROM PLANOGRAMAQ i
+                            ORDER BY i.ID DESC";
+                    $query = $em->getConnection()->executeQuery($sql)->fetchAll();
+                    $id = (isset($query[0]))?intval($query[0]['id']):0;
+
+                    //OBTENEMOS EL ULTIMO ID INGRESADO
+                    $sql = "SELECT TOP(1) i.ID as id FROM QUIEBRE i
+                            ORDER BY i.ID DESC";
+                    $query = $em->getConnection()->executeQuery($sql)->fetchAll();
+                    $id_q = (isset($query[0]))?intval($query[0]['id']):0;
+
+                    try{
+                        $start_insert = microtime(true);
+                        foreach ($m as $key => $fila) {
+                            $id++;
+                            $sql = "INSERT INTO PLANOGRAMAQ
+                                   ([ID]
+                                   ,[SALACLIENTE_ID]
+                                   ,[MEDICION_ID]
+                                   ,[ITEMCLIENTE_ID]
+                                   ,[ACTIVO])
+                             VALUES
+                                   (?
+                                   ,?
+                                   ,?
+                                   ,?
+                                   ,1 )";
+                            $param = array(
+                                $id,
+                                $fila[5],
+                                $id_medicion,
+                                $fila[6],
+                                );
+                            $tipo_param = array(
+                                \PDO::PARAM_INT,
+                                \PDO::PARAM_INT,
+                                \PDO::PARAM_INT,
+                                \PDO::PARAM_INT,
+                                );
+                            $row_affected += $conn->executeUpdate($sql,$param,$tipo_param);
+
+
+                            //INSERTAMOS QUIEBRE
+                            $id_q++;
+
+                            $sql = "INSERT INTO QUIEBRE
+                                   ([ID]
+                                   ,[PLANOGRAMAQ_ID]
+                                   ,[HAYQUIEBRE]
+                                   ,[CANTIDAD]
+                                   ,[FECHAHORACAPTURA]
+                                   ,[ACTIVO])
+                             VALUES
+                                   (?
+                                   ,?
+                                   ,?
+                                   ,?
+                                   ,?
+                                   ,1 )";
+                            $param = array(
+                                $id_q,
+                                $id,
+                                $fila[3],
+                                $fila[4],
+                                $fila[2],
+                                );
+                            $tipo_param = array(
+                                \PDO::PARAM_INT,
+                                \PDO::PARAM_INT,
+                                \PDO::PARAM_BOOL,
+                                ($fila[4] === "NULL")?\PDO::PARAM_NULL:\PDO::PARAM_INT,
+                                \PDO::PARAM_STR,
+                                );
+
+                            $row_affected += $conn->executeUpdate($sql,$param,$tipo_param);
+
+
+                            set_time_limit(10);
+                            $time_taken = microtime(true) - $start_insert;
+                            if($time_taken >= 600){
+                                $conn->rollback();
+                                return new JsonResponse(array(
+                                    'status' => false,
+                                    'mensaje' => 'TIEMPO EXCEDIDO ('.round($time_taken,1).' SEG) EN INSERT. EL TIEMPO MAX ES DE 600 SEG. LO QUE DEBERIA ALCANZAR PARA PROCESAR APROX 45 MIL FILAS. SI SU ARCHIVO TIENE MAS, POR FAVOR SAQUE LAS SUFICIENTES FILAS.'
+                                ));
+                            }
+                        }
+
+                        $conn->commit();
+                    } catch(Exception $e) {
+                        $conn->rollback();
+                        return new JsonResponse(array(
+                            'status' => false, 
+                            'mensaje' => 'ERROR EN EL INSERT DE DATOS. NO SE INGRESO NADA'
+                        ));
+                    }
+
+                    break;
 
 
 

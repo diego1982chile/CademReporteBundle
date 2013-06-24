@@ -174,8 +174,8 @@ BrowserDetect.init();
               return;
             }
             else alert('PROCESO DE CARGA EXITOSO. REGISTROS GUARDADOS: ' + data3.row_affected);
-          } );
-          alert('VALIDADO EXITOSO ('+data2.time_taken+ MS'). COMENZO CARGA A LA BD.');
+          });
+          alert('VALIDADO EXITOSO ('+data2.time_taken+ ' MS). COMENZO CARGA A LA BD.');
         })
         .fail(function() { alert("ERROR AL VALIDAR"); });
     },

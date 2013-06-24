@@ -17,6 +17,9 @@ admin_carga_itemcliente:
 admin_carga_salacliente:
     pattern:  /admin/carga/salacliente
     defaults: { _controller: CademReporteBundle:Admin:cargasalacliente }
+admin_carga_planoquiebre:
+    pattern:  /admin/carga/planogramaquiebre
+    defaults: { _controller: CademReporteBundle:Admin:cargaplanoquiebre }
 admin_fileupload:
     pattern:  /admin/fileupload
     defaults: { _controller: CademReporteBundle:Admin:fileupload }
