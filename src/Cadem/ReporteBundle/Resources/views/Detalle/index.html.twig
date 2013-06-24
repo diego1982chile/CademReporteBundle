@@ -103,7 +103,7 @@
 								<div id="slider-range-min"></div>
 							</th>
 							<th width='5%' class='ui-widget-content'>
-								<label id='pctje_incumplimiento' style="font-size:1.5em; color:#2e6e9e; font-weight: bold; width:2.5em; margin-top:.5em;color:red">
+								<label id='pctje_incumplimiento' style="font-size:1.5em; color:#2e6e9e; font-weight: bold; width:2.5em; margin-top:.5em;color:red" title='PORCENTAJE FUERA DE RANGO'>
 								</label>								
 							</th>
 							<th width='10%' class='ui-widget-content'>
@@ -406,8 +406,7 @@ function fixedColumn1()
 			nCell.innerHTML = "TOTAL GENERAL";
 			nGroup.appendChild( nCell );
 			// Se añade fila de agregacion para tabla fija
-			$(nGroup).insertBefore( $('tbody tr:eq(0)', left.body)[0] );
-			matriz_totales=[];				
+			$(nGroup).insertBefore( $('tbody tr:eq(0)', left.body)[0] );			
 		}
 	});
 }
@@ -455,7 +454,7 @@ function fixedColumn2()
 		"iLeftColumns": 3,
 	});
 	
-	$('#aplicar_indice').trigger('mousedown');
+	calcular_incumplimiento();
 }
 
 function colorTotales(){
@@ -483,12 +482,41 @@ function colorTotales(){
 				'border': '1px solid #B2B2B2'
 			});
 			
-			$('.DTFC_Cloned tbody tr td:nth-last-of-type(2):not(.group)').css({
-				'background-color':'rgb(255, 235, 158)',
-				'color': 'black',				
-			});				
+			// $('.DTFC_Cloned tbody tr td:nth-last-of-type(2):not(.group)').css({
+				// 'background-color':'rgb(255, 235, 158)',
+				// 'color': 'black',				
+			// });				
 			break;
 	}		
+}
+
+function calcular_incumplimiento()
+{
+	var indice=parseInt($( "#slider-range-min" ).slider( "value" ));
+	var total=0;
+	var cont=0;
+	$('#tabla_resumen tbody tr').each(function(){
+		var politica=parseInt(parseInt($(this).children(':eq(2)').text()));							
+		$(this).children().each(function(i){
+			if(i>2)
+			{
+				var precio= parseInt($(this).text());					
+				if(precio.toString()!='NaN')
+				{
+					if(Math.abs(precio-politica)>indice*politica/100)
+					{
+						$(this).addClass('fueraRango');
+						cont++;
+					}
+					else
+						$(this).removeClass();
+					
+					total++;
+				}					
+			}
+		});			
+	});		
+	$('#pctje_incumplimiento').text((100*cont/total).toFixed(1)+'%');
 }
 
 $(document).ready(function () {		
@@ -507,35 +535,11 @@ $(document).ready(function () {
         $( "#amount" ).val( ui.value + '%');	
       },
 	  change: function( event, ui ) {
-		var indice=parseInt($( "#slider-range-min" ).slider( "value" ));
-		var total=0;
-		var cont=0;
-		$('#tabla_resumen tbody tr').each(function(){
-			var politica=parseInt(parseInt($(this).children(':eq(2)').text()));							
-			$(this).children().each(function(i){
-				if(i>2)
-				{
-					var precio= parseInt($(this).text());					
-					if(precio.toString()!='NaN')
-					{
-						if(Math.abs(precio-politica)>indice*politica/100)
-						{
-							$(this).addClass('fueraRango');
-							cont++;
-						}
-						else
-							$(this).removeClass();
-						
-						total++;
-					}					
-				}
-			});			
-		});		
-		$('#pctje_incumplimiento').text((100*cont/total).toFixed(1)+'%');
+		calcular_incumplimiento();
 	  }
     });
     $( "#amount" ).val( $( "#slider-range-min" ).slider( "value" ) + '%');		
-	$('#aplicar_indice').button();
+	
 	/*
 	$(window).bind('resize', function () {
 		oTable.fnAdjustColumnSizing();

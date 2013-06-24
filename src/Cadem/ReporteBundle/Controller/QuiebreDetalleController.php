@@ -484,10 +484,10 @@ class QuiebreDetalleController extends Controller
 					array_push($body,$fila);
 					$fila=array_fill(0,$num_salas+3,"<div style='background:grey;height:1.9em'></div>");	
 				}
-				if($cont_regs==$num_regs-1)		
+				if($cont_regs==$num_regs)		
 				{						
-					$columna_quiebre=array_search($detalle_quiebre[$cont_regs]['COD_SALA'],$salas);											
-					switch($detalle_quiebre[$cont_regs]['quiebre'])
+					$columna_quiebre=array_search($detalle_quiebre[$cont_regs-1]['COD_SALA'],$salas);											
+					switch($detalle_quiebre[$cont_regs-1]['quiebre'])
 					{
 						case '0':
 							$fila[$columna_quiebre+2]="<div style='background:$color_positivo;height:1.9em'></div>";	

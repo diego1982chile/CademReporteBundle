@@ -438,7 +438,7 @@ class PrecioDetalleController extends Controller
 		{
 			$nivel1=$detalle_quiebre[$cont_regs]['COD_PRODUCTO'];		
 			// Lleno la fila con vacios, le agrego 1 posiciones, correspondientes al total					
-			$fila=array_fill(0,$num_salas+4," ");								
+			$fila=array_fill(0,$num_salas+3," ");								
 			$nivel2=$detalle_quiebre[$cont_regs]['SEGMENTO'];																								
 			$cont_totales_producto=0;				
 		
