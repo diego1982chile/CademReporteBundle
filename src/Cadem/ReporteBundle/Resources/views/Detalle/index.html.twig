@@ -43,7 +43,7 @@
 								{% for key,value in head %}
 								{% if loop.index>columnas_reservadas and loop.index!=head|length %}
 								<th title='{{ value }}'>
-									{{value|replace({' ':'_'})[0:16]}}...											
+									{{value[0:16]}}...											
 								</th>
 								{% endif %}		
 								{% endfor %}
@@ -222,7 +222,26 @@ var columnas_reservadas = parseInt({{columnas_reservadas}});
 
 function preInitTabla()
 {
-	// Calcula el ancho máximo de la tabla		
+	// Calcula el ancho máximo de la tabla	
+	var anchoPantalla= screen.width;	
+	// Corregir el maxwidth en base a la resolucion de la pantalla
+	switch(anchoPantalla)
+	{
+		case 1366:						
+			break;
+		case 1360:
+			maxWidth=maxWidth*1.1;
+			break;
+		case 1280:
+			maxWidth=maxWidth*1.15;
+			break;
+		case 1024:
+			maxWidth=maxWidth*1.3;
+			break;
+		case 800:
+			maxWidth=maxWidth*1.25;
+			break;
+	}
 	$('#tabla_resumen').css('max-width',maxWidth+'%');
 	maxHeight=400;		
 }
@@ -298,17 +317,17 @@ function construirTabla()
 						case 2:							
 							fixedColumn2();
 							break;							
-					}					
-					// $(window).resize(function(){								
-						// oTable.fnAdjustColumnSizing();
-					// });				  
+					}								  
 				},	
 			"oLanguage": {
 				  "sProcessing": "<b>Procesando...</b>"
-				}				
+				},
+			 "fnDrawCallback": function() {
+					quitarloader();
+				}
 		});
 		 $('div.fg-toolbar:first').append("<h5 style='float:left;margin:0em'>Tabla Detalle {{tag_variable}}: (%)</h5>");		
-		});	
+	});	
 }
 
 function fixedColumn1()
@@ -538,7 +557,12 @@ $(document).ready(function () {
 		calcular_incumplimiento();
 	  }
     });
-    $( "#amount" ).val( $( "#slider-range-min" ).slider( "value" ) + '%');		
+    $( "#amount" ).val( $( "#slider-range-min" ).slider( "value" ) + '%');	
+
+	$(window).bind('resize', function () {
+		$('.DTFC_Cloned').find('.DataTables_sort_icon').append('<img class="loader" alt="" style="float:left;margin-left:20px" src="/bundles/cademreporte/images/loader-minitrans.gif">');	
+		oTable.fnAdjustColumnSizing();
+	});	
 	
 	/*
 	$(window).bind('resize', function () {
