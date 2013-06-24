@@ -427,7 +427,13 @@ function construirGrafico()
 						}]
 			break;
 		case 2:
-			var series=[];			
+			var data=oTable.fnGetData(0);
+			var tag=data[1];
+			data= data.slice(2,data.length-1);
+			var series=[{
+						name: '% PRECIO '+tag,
+						data: data
+						}];			
 			break;
 	}			
 	
@@ -580,12 +586,21 @@ $(document).ready(function () {
 		else
 		{//REEMPLAZAR TODO MENOS LINEA GENERAL			
 			$(".ui-state-active").removeClass("ui-state-active");
-			$(this).addClass("ui-state-active");
+			$(this).addClass("ui-state-active");						
 			
 			//SE REMUEVEN TODOS y SE AGREGA
-			if (i_quiebre.series.length > 1){
+			if (i_quiebre.series.length > 0){				
+				switch(parseInt(variable))
+				{
+					case 1:
+						ini=1;
+						break;
+					case 2:
+						ini=0;
+						break;
+				}				
 				var len = i_quiebre.series.length;
-				for(var i=1;i<len;i++) i_quiebre.series[1].remove();
+				for(var i=ini;i<len;i++) i_quiebre.series[i].remove();
 			}
 			i_quiebre.addSeries({
 				name: label,
