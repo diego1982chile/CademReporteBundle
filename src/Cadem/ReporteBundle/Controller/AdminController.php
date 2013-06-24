@@ -157,13 +157,49 @@ class AdminController extends Controller
         return $response;
     }
 
+    public function cargaplanoprecioAction()
+    {
+        $em = $this->getDoctrine()->getManager();
+        $sql = "SELECT c.ID as idc, m.ID as idm, c.NOMBREFANTASIA as nombre, m.NOMBRE as medicion FROM CLIENTE c
+                INNER JOIN ESTUDIO e on e.CLIENTE_ID = c.ID
+                INNER JOIN MEDICION m on m.ESTUDIO_ID = e.ID
+                ORDER BY c.NOMBREFANTASIA, m.NOMBRE";
+        $query = $em->getConnection()->executeQuery($sql)->fetchAll();
+        $choices_medicion = array();
+        foreach($query as $r)
+        {
+            $choices_medicion[$r['idc'].'-'.$r['idm']] = strtoupper($r['nombre'].'-'.$r['medicion']);
+        }
+
+        $form_medicion = $this->get('form.factory')->createNamedBuilder('f_medicion', 'form')
+            ->add('Cliente_Medicion', 'choice', array(
+                'choices'   => $choices_medicion,
+                'required'  => true,
+                'multiple'  => false
+            ))
+            ->getForm();
+
+
+        //RESPONSE
+        $response = $this->render('CademReporteBundle:Admin:cargaplanoprecio.html.twig',
+        array('form_medicion' => $form_medicion->createView())
+        );
+
+        //CACHE
+        $response->setPrivate();
+        $response->setMaxAge(1);
+
+
+        return $response;
+    }
+
     public function fileuploadAction(Request $request)
     {
         $uf = $request->files->get('file1');
     	$tipo_carga = $request->request->get('tipo_carga');
     	if (null === $uf || !isset($tipo_carga)) return new JsonResponse(array('status' => false));//ERROR
         $datos_itemcliente = array();
-        if($tipo_carga === 'itemcliente' || $tipo_carga === 'salacliente' || $tipo_carga === 'planoquiebre'){
+        if(in_array($tipo_carga, array('itemcliente', 'salacliente', 'planoquiebre', 'planoprecio'))){
             $clientemedicion = $request->request->get('f_medicion');
             list($id_cliente, $id_medicion) = explode("-", $clientemedicion['Cliente_Medicion']);
             $datos_itemcliente['id_cliente'] = intval($id_cliente);
@@ -183,7 +219,7 @@ class AdminController extends Controller
         $data = $request->query->all();
         $tipo_carga = $data['tipo_carga'];
     	$name = $data['name'];
-        if($tipo_carga === 'itemcliente' || $tipo_carga === 'salacliente' || $tipo_carga === 'planoquiebre'){
+        if(in_array($tipo_carga, array('itemcliente', 'salacliente', 'planoquiebre', 'planoprecio'))){
             $id_cliente = intval($data['id_cliente']);
             $id_medicion = intval($data['id_medicion']);
         }
@@ -1299,6 +1335,198 @@ class AdminController extends Controller
 
 
 
+                case 'planoprecio'://DATOS DE PLANOGRAMA PRECIO
+
+
+                    //FORMATO ES:
+                    // FOLIO;EAN;PRECIO;POLITICAPRECIO
+
+                    
+                    //SI LA PRIMERA FILA TIENE LOS ENCABEZADOS SE BORRA
+                    if($m[0][0] === 'FOLIO' || $m[0][1] === 'EAN' || $m[0][2] === 'PRECIO') unset($m[0]);
+                    
+
+                    //SE VALIDA QUE EL FOLIO-EAN NO ESTE EN LA BD
+                    $chunk = 0;
+                    foreach($m as $k => $value){
+                        $folioean[floor($chunk/2000)][] = $value[0].'-'.$value[1];
+                        if(strlen($value[3]) === 0) $m[$k][3] = "NULL"; //SI NO HAY POLITICAPRECIO SE PASA A NULL PARA EL INSERT
+                        $chunk++;
+                    }
+
+                    $folioean_encontrados = array();
+                    $start_select = microtime(true);
+                    foreach($folioean as $k => $chunk){
+                        $sql = "SELECT s.FOLIOCADEM+'-'+i.CODIGO as folioean FROM PLANOGRAMAP p
+                                INNER JOIN SALACLIENTE sc on p.SALACLIENTE_ID = sc.ID
+                                INNER JOIN SALA s on s.ID = sc.SALA_ID
+                                INNER JOIN ITEMCLIENTE ic on p.ITEMCLIENTE_ID = ic.ID
+                                INNER JOIN ITEM i on i.ID = ic.ITEM_ID
+                                WHERE s.FOLIOCADEM+'-'+i.CODIGO IN ( ? ) and sc.CLIENTE_ID = ? and sc.MEDICION_ID = ? and ic.CLIENTE_ID = ? and ic.MEDICION_ID = ?
+                                ";
+                        $param = array($chunk, $id_cliente, $id_medicion, $id_cliente, $id_medicion);
+                        $tipo_param = array(\Doctrine\DBAL\Connection::PARAM_STR_ARRAY, \PDO::PARAM_INT, \PDO::PARAM_INT, \PDO::PARAM_INT, \PDO::PARAM_INT);
+                        $query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
+                        foreach ($query as $v) $folioean_encontrados[] = $v['folioean'];
+                        set_time_limit(10);
+                        $time_taken = microtime(true) - $start_select;
+                        if($time_taken >= 600){
+                            return new JsonResponse(array(
+                                'status' => false,
+                                'mensaje' => 'TIEMPO EXCEDIDO ('.round($time_taken,1).' SEG) EN CONSULTAR. EL TIEMPO MAX ES DE 600 SEG. LO QUE DEBERIA ALCANZAR PARA PROCESAR APROX 45 MIL FILAS. SI SU ARCHIVO TIENE MAS, POR FAVOR SAQUE LAS SUFICIENTES FILAS.'
+                            ));
+                        }
+                    }
+                    
+                    $start_valid = microtime(true);
+                    foreach ($m as $k => $fila) {
+                        if(count($fila) !== 4){//SIEMPRE DEBEN HABER 5 COLUMNAS
+                            return new JsonResponse(array(
+                                'status' => false,
+                                'mensaje' => 'NO HAY 4 COLUMNAS CERCA DE LA LINEA '.$k
+                            ));
+                        }
+                        if(strlen($fila[0]) === 0){//EL "FOLIO" NO PUEDE SER VACIA
+                            return new JsonResponse(array(
+                                'status' => false,
+                                'mensaje' => 'EL "FOLIO" NO PUEDE ESTAR VACIA, CERCA DE LA LINEA '.$k
+                            ));
+                        }
+                        if(strlen($fila[1]) === 0){//EL "EAN" NO PUEDE SER VACIO
+                            return new JsonResponse(array(
+                                'status' => false,
+                                'mensaje' => 'EL "EAN" NO PUEDE ESTAR VACIA, CERCA DE LA LINEA '.$k
+                            ));
+                        }
+                        if(strlen($fila[2]) === 0){//EL "PRECIO" NO PUEDE SER VACIO
+                            return new JsonResponse(array(
+                                'status' => false,
+                                'mensaje' => 'EL "PRECIO" NO PUEDE ESTAR VACIA, CERCA DE LA LINEA '.$k
+                            ));
+                        }
+                        if($fila[2] != (string) intval($fila[2]) || intval($fila[2]) < 0){//EL "PRECIO" DEBE SER ENTERO MAYOR O IGUAL A CERO
+                            return new JsonResponse(array(
+                                'status' => false,
+                                'mensaje' => 'EL "PRECIO" DEBE SER ENTERO MAYOR O IGUAL A CERO, CERCA DE LA LINEA '.$k
+                            ));
+                        }
+                        if($fila[3] !== "NULL" && ($fila[2] != (string) intval($fila[2]) || intval($fila[2]) < 0) ){//EL "POLITICAPRECIO" DEBE SER ENTERO MAYOR O IGUAL A CERO
+                            return new JsonResponse(array(
+                                'status' => false,
+                                'mensaje' => 'LA "POLITICAPRECIO" DEBE SER ENTERO MAYOR O IGUAL A CERO, CERCA DE LA LINEA '.$k
+                            ));
+                        }
+
+                        if(in_array($fila[0].'-'.$fila[1], $folioean_encontrados)){//SE BUSCAN Y DESCARTA LOS CODIGOSALA ENCONTRADOS Y SE REGISTRA
+                            unset($m[$k]);
+                            $item_descartados++;
+                        }
+                        else{
+                            if($fila[0] !== '') $folio[] = $fila[0];
+                            if($fila[1] !== '') $item[] = $fila[1];
+                        }
+                        set_time_limit(10);
+                        $time_taken = microtime(true) - $start_valid;
+                        if($time_taken >= 600){
+                            return new JsonResponse(array(
+                                'status' => false,
+                                'mensaje' => 'TIEMPO EXCEDIDO ('.round($time_taken,1).' SEG) EN VALIDAR. EL TIEMPO MAX ES DE 600 SEG. LO QUE DEBERIA ALCANZAR PARA PROCESAR APROX 45 MIL FILAS. SI SU ARCHIVO TIENE MAS, POR FAVOR SAQUE LAS SUFICIENTES FILAS.'
+                            ));
+                        }
+                    }
+
+                    if(count($m) === 0){//NO SE INGRESAN DATOS
+                        return new JsonResponse(array(
+                            'status' => false,
+                            'mensaje' => 'VERIFIQUE QUE EL CSV TIENE DATOS Y QUE LOS SKU NO EXISTEN EN LA BD'
+                        ));
+                    }
+
+                    
+                    //SE VALIDA QUE EXISTA EL FOLIO_CADEM
+                    if(isset($folio)){
+                        $folio = array_unique($folio);
+                        sort($folio);
+
+                        $sql = "SELECT s.FOLIOCADEM as nombre, sc.ID as id FROM SALA s
+                                INNER JOIN SALACLIENTE sc on s.ID = sc.SALA_ID
+                                WHERE s.FOLIOCADEM IN ( ? ) and sc.CLIENTE_ID = ? and sc.MEDICION_ID = ? ";
+                        $param = array($folio, $id_cliente, $id_medicion);
+                        $tipo_param = array(\Doctrine\DBAL\Connection::PARAM_STR_ARRAY, \PDO::PARAM_INT, \PDO::PARAM_INT);
+                        $query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
+
+                        usort($query, array($this,"cmp"));
+
+                        foreach ($folio as $k => $v) {
+                            if(!isset($query[$k]['nombre']) || $v !== $query[$k]['nombre']){
+                                return new JsonResponse(array(
+                                    'status' => false,
+                                    'mensaje' => 'LA SALA "'.$v.'" NO EXISTE EN LA BD.'
+                                ));
+                            }
+                            $folio_[$v] = $query[$k]['id'];
+                        }
+                    }
+
+
+                    //SE VALIDA QUE EXISTA EL ITEM
+                    if(isset($item)){
+                        $item = array_unique($item);
+                        sort($item);
+
+                        $sql = "SELECT i.CODIGO as nombre, ic.ID as id FROM ITEM i
+                                INNER JOIN ITEMCLIENTE ic on i.ID = ic.ITEM_ID
+                                WHERE i.CODIGO IN ( ? ) and ic.CLIENTE_ID = ? and ic.MEDICION_ID = ? ";
+                        $param = array($item, $id_cliente, $id_medicion);
+                        $tipo_param = array(\Doctrine\DBAL\Connection::PARAM_STR_ARRAY, \PDO::PARAM_INT, \PDO::PARAM_INT);
+                        $query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
+
+                        usort($query, array($this,"cmp"));
+
+                        foreach ($item as $k => $v) {
+                            if(!isset($query[$k]['nombre']) || $v !== $query[$k]['nombre']){
+                                return new JsonResponse(array(
+                                    'status' => false,
+                                    'mensaje' => 'EL ITEM "'.$v.'" NO EXISTE EN LA BD.'
+                                ));
+                            }
+                            $item_[$v] = $query[$k]['id'];
+                        }
+                    }
+                       
+
+                    
+
+
+                    //FORMATO ES:
+                    // FOLIO;EAN;PRECIO;POLITICAPRECIO;ID_SALACLIENTE;ID_ITEMCLIENTE
+
+                    //ARCHIVO A ESCRIBIR CON LOS IDs FINALES
+                    $fp = fopen($this->uploadDIR.$name.'_proc.csv', 'w');
+
+                    foreach ($m as $fields) {
+                        $id_sala = (isset($folio_[$fields[0]]))?$folio_[$fields[0]]:"NULL";
+                        $id_item = (isset($item_[$fields[1]]))?$item_[$fields[1]]:"NULL";
+
+
+                        $fila = array_merge($fields, array($id_sala, $id_item));
+                        fputcsv($fp, $fila,";");
+                    }
+                    fclose($fp);
+
+                    break;
+
+
+
+
+
+
+
+
+
+
+
+
             }
                     
                 
@@ -1308,7 +1536,7 @@ class AdminController extends Controller
 
             //DATOS ADICIONALES
             $dat = array();
-            if($tipo_carga === 'itemcliente' || $tipo_carga === 'salacliente' || $tipo_carga === 'planoquiebre'){
+            if(in_array($tipo_carga, array('itemcliente', 'salacliente', 'planoquiebre', 'planoprecio'))){
                 $dat['id_cliente'] = $id_cliente;
                 $dat['id_medicion'] = $id_medicion;
             }
@@ -1336,7 +1564,7 @@ class AdminController extends Controller
         $data = $request->query->all();
         $name = $data['name'];
         $tipo_carga = $data['tipo_carga'];
-        if($tipo_carga === 'itemcliente' || $tipo_carga === 'salacliente' || $tipo_carga === 'planoquiebre'){
+        if(in_array($tipo_carga, array('itemcliente', 'salacliente', 'planoquiebre', 'planoprecio'))){
             $id_cliente = intval($data['id_cliente']);
             $id_medicion = intval($data['id_medicion']);
         }
@@ -1809,6 +2037,124 @@ class AdminController extends Controller
                     }
 
                     break;
+
+
+
+
+
+
+
+                case 'planoprecio'://DATOS DE PLANOGRAMA PRECIO
+
+                    //FORMATO ES:
+                    // FOLIO;EAN;PRECIO;POLITICAPRECIO;ID_SALACLIENTE;ID_ITEMCLIENTE
+
+                    //SE CARGA EN LA BD, USANDO TRANSACCIONES
+                    
+                    $conn->beginTransaction();
+                    
+
+                    //OBTENEMOS EL ULTIMO ID INGRESADO
+                    $sql = "SELECT TOP(1) i.ID as id FROM PLANOGRAMAP i
+                            ORDER BY i.ID DESC";
+                    $query = $em->getConnection()->executeQuery($sql)->fetchAll();
+                    $id = (isset($query[0]))?intval($query[0]['id']):0;
+
+                    //OBTENEMOS EL ULTIMO ID INGRESADO
+                    $sql = "SELECT TOP(1) i.ID as id FROM PRECIO i
+                            ORDER BY i.ID DESC";
+                    $query = $em->getConnection()->executeQuery($sql)->fetchAll();
+                    $id_p = (isset($query[0]))?intval($query[0]['id']):0;
+
+                    try{
+                        $start_insert = microtime(true);
+                        foreach ($m as $key => $fila) {
+                            $id++;
+                            $sql = "INSERT INTO PLANOGRAMAP
+                                   ([ID]
+                                   ,[SALACLIENTE_ID]
+                                   ,[MEDICION_ID]
+                                   ,[ITEMCLIENTE_ID]
+                                   ,[POLITICAPRECIO]
+                                   ,[ACTIVO])
+                             VALUES
+                                   (?
+                                   ,?
+                                   ,?
+                                   ,?
+                                   ,?
+                                   ,1 )";
+                            $param = array(
+                                $id,
+                                $fila[4],
+                                $id_medicion,
+                                $fila[5],
+                                $fila[3],
+                                );
+                            $tipo_param = array(
+                                \PDO::PARAM_INT,
+                                \PDO::PARAM_INT,
+                                \PDO::PARAM_INT,
+                                \PDO::PARAM_INT,
+                                ($fila[3] === "NULL")?\PDO::PARAM_NULL:\PDO::PARAM_INT,
+                                );
+                            $row_affected += $conn->executeUpdate($sql,$param,$tipo_param);
+
+
+                            //INSERTAMOS PRECIO
+                            $id_p++;
+
+                            $sql = "INSERT INTO PRECIO
+                                   ([ID]
+                                   ,[PLANOGRAMAP_ID]
+                                   ,[PRECIO]
+                                   ,[ACTIVO])
+                             VALUES
+                                   (?
+                                   ,?
+                                   ,?
+                                   ,1 )";
+                            $param = array(
+                                $id_p,
+                                $id,
+                                $fila[2],
+                                );
+                            $tipo_param = array(
+                                \PDO::PARAM_INT,
+                                \PDO::PARAM_INT,
+                                \PDO::PARAM_INT,
+                                );
+
+                            $row_affected += $conn->executeUpdate($sql,$param,$tipo_param);
+
+
+                            set_time_limit(10);
+                            $time_taken = microtime(true) - $start_insert;
+                            if($time_taken >= 600){
+                                $conn->rollback();
+                                return new JsonResponse(array(
+                                    'status' => false,
+                                    'mensaje' => 'TIEMPO EXCEDIDO ('.round($time_taken,1).' SEG) EN INSERT. EL TIEMPO MAX ES DE 600 SEG. LO QUE DEBERIA ALCANZAR PARA PROCESAR APROX 45 MIL FILAS. SI SU ARCHIVO TIENE MAS, POR FAVOR SAQUE LAS SUFICIENTES FILAS.'
+                                ));
+                            }
+                        }
+
+                        $conn->commit();
+                    } catch(Exception $e) {
+                        $conn->rollback();
+                        return new JsonResponse(array(
+                            'status' => false, 
+                            'mensaje' => 'ERROR EN EL INSERT DE DATOS. NO SE INGRESO NADA'
+                        ));
+                    }
+
+                    break;
+
+
+
+
+
+
 
 
 
