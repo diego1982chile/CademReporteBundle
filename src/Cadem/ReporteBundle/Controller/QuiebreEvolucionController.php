@@ -158,35 +158,29 @@ class QuiebreEvolucionController extends Controller
 		
 		//CONSULTA
 		
-		$sql = "SELECT (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre, i.NOMBRE as PRODUCTO,  ni.NOMBRE as SEGMENTO, m.NOMBRE, m.FECHAINICIO FROM QUIEBRE q
-				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID
-				INNER JOIN (SELECT TOP(12) m2.ID as ID, m2.NOMBRE as NOMBRE, m2.FECHAINICIO as FECHAINICIO FROM MEDICION m2 INNER JOIN ESTUDIO e on m2.ESTUDIO_ID=e.ID and e.CLIENTE_ID={$user->getClienteID()} ORDER BY m2.FECHAINICIO DESC) as m on m.ID = p.MEDICION_ID
-				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
-				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
-				INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
-				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
-				INNER JOIN ITEM i on i.ID = ic.ITEM_ID
-				GROUP BY  ni.NOMBRE,i.NOMBRE,m.NOMBRE,m.FECHAINICIO
-				ORDER BY ni.NOMBRE,i.NOMBRE";
+		$sql = "SELECT TOP(12) m2.ID as ID, m2.NOMBRE as NOMBRE, m2.FECHAINICIO as FECHAINICIO FROM MEDICION m2 INNER JOIN ESTUDIO e on m2.ESTUDIO_ID=e.ID and e.CLIENTE_ID=12 ORDER BY m2.FECHAINICIO DESC";				
 		
 		// print_r($sql);
 		
-		$sha1 = sha1($sql);
+		// $sha1 = sha1($sql);
 
-		if(!$session->has($sha1)){
-			$evolucion_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();
-			$session->set($sha1,$evolucion_quiebre);
-		}
-		else $evolucion_quiebre = $session->get($sha1);				
+		// if(!$session->has($sha1)){
+			// $evolucion_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();
+			// $session->set($sha1,$evolucion_quiebre);
+		// }
+		// else $evolucion_quiebre = $session->get($sha1);				
+		
+		$data_mediciones = $em->getConnection()->executeQuery($sql)->fetchAll();
 		
 		$niveles=2;
 				
 		$head=array();
 		$mediciones=array();
 		$mediciones2=array();
+		$mediciones_id=array();
 		
 		// Generamos el head de la tabla, y las mediciones
-		foreach($evolucion_quiebre as $registro)
+		foreach($data_mediciones as $registro)
 		{
 			$fila=array();
 			// print_r($resumen_quiebre);
@@ -195,12 +189,17 @@ class QuiebreEvolucionController extends Controller
 				array_push($head,$registro['NOMBRE']);
 				$fila['nombre']=$registro['NOMBRE'];
 				$fila['fecha']=$registro['FECHAINICIO'];
+				$mediciones_id=$registro['ID'];
 				array_push($mediciones,$fila);
 			}		
-		}						
+		}										
 				
 		usort($mediciones, array($this,"sortFunction"));
 		// CONSTRUIR EL ENCABEZADO DE LA TABLA
+		
+		print_r($mediciones);
+		print_r($mediciones_id);
+		return false;
 		
 		$head=array('SKU/MEDICIÓN','CATEGORIA');	
 		
@@ -241,7 +240,7 @@ class QuiebreEvolucionController extends Controller
 		// Obtener totales horizontales por producto
 			
 		$sql =	"SELECT i.NOMBRE, ni.NOMBRE, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
-		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID
+		INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID
 		INNER JOIN (SELECT TOP(12) m2.ID as ID, m2.NOMBRE as NOMBRE, m2.FECHAINICIO as FECHAINICIO FROM MEDICION m2 INNER JOIN ESTUDIO e on m2.ESTUDIO_ID=e.ID and e.CLIENTE_ID={$user->getClienteID()} ORDER BY m2.FECHAINICIO DESC) as m on m.ID = p.MEDICION_ID		
 		INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
 		INNER JOIN ITEM i on i.ID = ic.ITEM_ID
