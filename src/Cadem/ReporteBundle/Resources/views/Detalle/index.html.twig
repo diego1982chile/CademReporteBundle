@@ -686,7 +686,7 @@ $(document).ready(function () {
 				if(key>=columnas_reservadas && key!=cols)
 				{					
 					var tableHeading = document.createElement( 'th' );						
-					tableHeading.innerHTML = value['nom_sala'].substring(0,16).replace(/ /g,'_')+'...';
+					tableHeading.innerHTML = value['nom_sala'].substring(0,16)+'...';
 					tableHeading.setAttribute('title',value['nom_sala']);		
 					tableHead.appendChild( tableHeading );									
 				}																		
