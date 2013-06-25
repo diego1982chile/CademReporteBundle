@@ -165,7 +165,7 @@ $(document).ready(function () {
 		
 			series: [{
 				name: 'Quiebre',
-				data: [{{porc_quiebre|number_format(1)}}],
+				data: [{{attribute(indicadores,ev.getVariable.getNombre)|number_format(1)}}],
 				tooltip: {
 					valueSuffix: ' %'
 				},
@@ -181,17 +181,133 @@ $(document).ready(function () {
 		});
 		
 		{% endif %}
+
+
+		{% if ev.getVariable.getNombre == "PRECIO"  %}
+		
+		{{"i_"~ev.getVariable.getNombre}} = new Highcharts.Chart({
+			chart: {
+				type: 'gauge',
+				plotBackgroundColor: null,
+				plotBackgroundImage: null,
+				plotBorderWidth: 0,
+				plotShadow: false,
+				renderTo: '{{"i_"~ev.getVariable.getNombre}}'
+			},
+			
+			title: {
+				text: '{{ev.getNombrevariable}}'
+			},
+			
+			pane: {
+				startAngle: -150,
+				endAngle: 150,
+				background: [{
+					backgroundColor: {
+						linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
+						stops: [
+							[0, '#FFF'],
+							[1, '#333']
+						]
+					},
+					borderWidth: 0,
+					outerRadius: '109%'
+				}, {
+					backgroundColor: {
+						linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
+						stops: [
+							[0, '#333'],
+							[1, '#FFF']
+						]
+					},
+					borderWidth: 1,
+					outerRadius: '107%'
+				}, {
+					// default background
+				}, {
+					backgroundColor: '#DDD',
+					borderWidth: 0,
+					outerRadius: '105%',
+					innerRadius: '103%'
+				}]
+			},
+			   
+			// the value axis
+			yAxis: {
+				min: 0,
+				max: 100,
+				
+				minorTickInterval: 'auto',
+				minorTickWidth: 1,
+				minorTickLength: 10,
+				minorTickPosition: 'inside',
+				minorTickColor: '#666',
+		
+				tickPixelInterval: 30,
+				tickWidth: 2,
+				tickPosition: 'inside',
+				tickLength: 10,
+				tickColor: '#666',
+				labels: {
+					step: 2,
+					rotation: 'auto'
+				},
+				title: {
+					text: '%',
+					y: 15
+				},
+				plotBands: [{
+					from: 0,
+					to: 30,
+					innerRadius: '95%',
+					color: '#55BF3B' // green
+				}, {
+					from: 30,
+					to: 70,
+					innerRadius: '95%',
+					color: '#DDDF0D' // yellow
+				}, {
+					from: 70,
+					to: 100,
+					innerRadius: '95%',
+					color: '#DF5353' // red
+				}]        
+			},
+		
+			series: [{
+				name: 'Quiebre',
+				data: [{{attribute(indicadores,ev.getVariable.getNombre)|number_format(1)}}],
+				tooltip: {
+					valueSuffix: ' %'
+				},
+				dataLabels: {
+					formatter: function () {
+						return  this.y.toString().replace(".",",");	
+					}
+				}
+			}],
+			credits: {
+					enabled: false
+				}
+		});
+		
+		{% endif %}
+
+
+
+
+
 		
 	{% endfor %}//TERMINA FOR
 
-	$('form#filtros').submit(function() {
-		$.get( "{{ path('dashboard_indicadores') }}", $(this).serialize(), function(data) {
+	// $('form#filtros').submit(function() {
+	// 	$.get( "{{ path('dashboard_indicadores') }}", $(this).serialize(), function(data) {
 				
 				
-			},
-		'json');
-		return false;
-	});
+	// 		},
+	// 	'json');
+	// 	return false;
+	// });
 	
 	$.get( "{{ path('dashboard_indicadores') }}", $('form#filtros').serialize(), function(data) {
 	
@@ -207,7 +323,7 @@ $(document).ready(function () {
 					renderTo: '{{"evo_"~ev.getVariable.getNombre}}'
 				},
 				title: {
-					text: 'Evolutivo {{ev.getNombrevariable}}'
+					text: 'Evolutivo'
 				},
 				xAxis: {
 					categories: data.evolutivo.mediciones
@@ -221,13 +337,20 @@ $(document).ready(function () {
 				},
 				yAxis: [{
 					title: {
-						text: 'Promedio {{ev.getNombrevariable}} (%)',
+						text: 'Promedio {{ev.getVariable.getNombre}}',
 						style: {
 							color: '#4572A7'
 						}
 					}
-					// min: 0,
-					// max: 100
+				},
+				{
+					title: {
+						text: 'Incumplimiento Precio',
+						style: {
+							color: 'red'
+						}
+					},
+					opposite: true
 				}],
 				tooltip: {
 					// shared: true,
@@ -245,7 +368,7 @@ $(document).ready(function () {
 					floating: true,
 					backgroundColor: '#FFFFFF'
 				},
-				series: [data.evolutivo.serie_quiebre],
+				series: [data.evolutivo.serie_quiebre, data.evolutivo.serie_precio],
 				credits: {
 					enabled: false
 				}

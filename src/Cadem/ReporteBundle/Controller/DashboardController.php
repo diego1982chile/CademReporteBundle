@@ -65,18 +65,6 @@ class DashboardController extends Controller
             	$porc_quiebre = round($porc_quiebre,1);
             }
             else $porc_quiebre = 0;
-            
-
-
-			// $query = $em->createQuery(
-			// 	'SELECT (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q) FROM CademReporteBundle:Quiebre q
-			// 	JOIN q.planogramaq p
-			// 	JOIN p.salacliente sc
-			// 	WHERE sc.clienteid = :idcliente AND p.medicionid = :idmedicion')
-			// 	->setParameter('idcliente', $cliente->getId())
-			// 	->setParameter('idmedicion', $id_ultima_medicion);
-			// $quiebre = $query->getSingleScalarResult();
-			// $porc_quiebre = round($quiebre,1);
 		}
 		else $porc_quiebre = 0;
 		
@@ -86,6 +74,9 @@ class DashboardController extends Controller
 			WHERE n.clienteid = :idcliente and n.activo = 1')
 			->setParameter('idcliente', $id_cliente);
 		$noticias = $query->getArrayResult();
+
+		//INDICADORES
+		$indicadores = array('QUIEBRE' => $porc_quiebre, 'PRECIO' => 10);
 		
 		
 		//RESPONSE
@@ -96,7 +87,7 @@ class DashboardController extends Controller
 			),
 			'logofilename' => $logofilename,
 			'logostyle' => $logostyle,
-			'porc_quiebre' => $porc_quiebre,
+			'indicadores' => $indicadores,
 			'estudios' => $estudios,
 			'noticias' => $noticias
 		));
@@ -164,6 +155,15 @@ class DashboardController extends Controller
 					'color' => '#4572A7',
 					'type' => 'spline',
 					'data' => $porc_quiebre,
+					'tooltip' => array(
+						'valueSuffix' => ' %'
+					)
+				),
+				'serie_precio' => array(
+					'name' => '% Incumplimiento Precio',
+					'color' => 'red',
+					'type' => 'spline',
+					'data' => array_reverse($porc_quiebre),
 					'tooltip' => array(
 						'valueSuffix' => ' %'
 					)
