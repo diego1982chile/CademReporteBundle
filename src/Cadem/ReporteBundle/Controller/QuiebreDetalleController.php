@@ -195,7 +195,7 @@ class QuiebreDetalleController extends Controller
 		//CONSULTA
 				
 		$sql = "SELECT (case when q.hayquiebre = 1 then 1 else 0 END) as quiebre, ic.CODIGOITEM1 as COD_PRODUCTO,i.NOMBRE as NOM_PRODUCTO,ni.NOMBRE as SEGMENTO, ISNULL(sc.CODIGOSALA, UPPER(cad.NOMBRE+' '+com.NOMBRE+' '+s.CALLE+' '+s.NUMEROCALLE)) as ID_SALA, ISNULL(sc.CODIGOSALA,'-') as COD_SALA, UPPER(cad.NOMBRE+' '+com.NOMBRE+' '+s.CALLE+' '+s.NUMEROCALLE) as NOM_SALA FROM QUIEBRE q
-		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID and p.MEDICION_ID = {$id_ultima_medicion}
+		INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID and p.MEDICION_ID = {$id_ultima_medicion}
 		INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
 		INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in ({$comunas})
 		INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
@@ -216,7 +216,7 @@ class QuiebreDetalleController extends Controller
 		// Obtener totales horizontales por producto
 			
 		$sql =	"SELECT  i.NOMBRE, ni.NOMBRE, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
-				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$id_ultima_medicion}
+				INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID AND p.MEDICION_ID = {$id_ultima_medicion}
 				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
 				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in ({$comunas})
 				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
@@ -230,7 +230,7 @@ class QuiebreDetalleController extends Controller
 		// Obtener totales verticales por segmento
 						
 		$sql =	"SELECT ni.NOMBRE as SEGMENTO, ISNULL(sc.CODIGOSALA, UPPER(cad.NOMBRE+' '+com.NOMBRE+' '+s.CALLE+' '+s.NUMEROCALLE)) as ID_SALA, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
-				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$id_ultima_medicion}
+				INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID AND p.MEDICION_ID = {$id_ultima_medicion}
 				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
 				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )		
 				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
@@ -245,7 +245,7 @@ class QuiebreDetalleController extends Controller
 		// Obtener totales horizontales por totales segmento (ultima columna de totales verticales por categoria)
 		
 		$sql =	"SELECT ni.NOMBRE as SEGMENTO, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
-				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$id_ultima_medicion}
+				INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID AND p.MEDICION_ID = {$id_ultima_medicion}
 				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
 				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in ({$comunas})
 				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
@@ -258,7 +258,7 @@ class QuiebreDetalleController extends Controller
 		// Obtener totales verticales por totales categoria
 		
 		$sql = "SELECT ISNULL(sc.CODIGOSALA, UPPER(cad.NOMBRE+' '+com.NOMBRE+' '+s.CALLE+' '+s.NUMEROCALLE)) as ID_SALA, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
-				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$id_ultima_medicion}
+				INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID AND p.MEDICION_ID = {$id_ultima_medicion}
 				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
 				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )
 				INNER JOIN COMUNA com on s.COMUNA_ID=com.ID
@@ -270,7 +270,7 @@ class QuiebreDetalleController extends Controller
 		// Obtener total horizontal por totales verticales por totales categoria
 		
 		$sql = "SELECT SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
-				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$id_ultima_medicion}
+				INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID AND p.MEDICION_ID = {$id_ultima_medicion}
 				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
 				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in ({$comunas})";			
 
@@ -593,7 +593,7 @@ class QuiebreDetalleController extends Controller
 		//23 SEG
 		$start = microtime(true);
 		$sql = "SELECT (case when q.hayquiebre = 1 then 1 else 0 END) as quiebre, ic.CODIGOITEM1 as COD_PRODUCTO,i.NOMBRE as NOM_PRODUCTO,ni.NOMBRE as SEGMENTO, ISNULL(sc.CODIGOSALA, UPPER(cad.NOMBRE+' '+com.NOMBRE+' '+s.CALLE+' '+s.NUMEROCALLE)) as ID_SALA, ISNULL(sc.CODIGOSALA,'-') as COD_SALA, UPPER(cad.NOMBRE+' '+com.NOMBRE+' '+s.CALLE+' '+s.NUMEROCALLE) as NOM_SALA FROM QUIEBRE q
-				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID and p.MEDICION_ID = {$medicion}
+				INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID and p.MEDICION_ID = {$medicion}
 				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
 				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in ({$comunas}) and s.CADENA_ID in ({$cadenas})
 				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
@@ -617,7 +617,7 @@ class QuiebreDetalleController extends Controller
 		// Obtener totales horizontales por producto
 		
 		$sql =	"SELECT  i.NOMBRE, ni.NOMBRE, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
-				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$medicion}
+				INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID AND p.MEDICION_ID = {$medicion}
 				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
 				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )	 and s.CADENA_ID in ({$cadenas})			
 				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
@@ -632,7 +632,7 @@ class QuiebreDetalleController extends Controller
 		
 		//720 MS
 		$sql =	"SELECT ni.NOMBRE as SEGMENTO, ISNULL(sc.CODIGOSALA, UPPER(cad.NOMBRE+' '+com.NOMBRE+' '+s.CALLE+' '+s.NUMEROCALLE)) as ID_SALA, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
-				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$medicion}
+				INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID AND p.MEDICION_ID = {$medicion}
 				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
 				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} ) and s.CADENA_ID in ({$cadenas})			
 				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
@@ -650,7 +650,7 @@ class QuiebreDetalleController extends Controller
 		
 		//100 MS
 		$sql =	"SELECT ni.NOMBRE as SEGMENTO, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
-				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$medicion}
+				INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID AND p.MEDICION_ID = {$medicion}
 				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
 				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} ) and s.CADENA_ID in ({$cadenas})
 				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
@@ -664,7 +664,7 @@ class QuiebreDetalleController extends Controller
 		
 		//100 MS
 		$sql = "SELECT ISNULL(sc.CODIGOSALA, UPPER(cad.NOMBRE+' '+com.NOMBRE+' '+s.CALLE+' '+s.NUMEROCALLE)) as ID_SALA, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
-				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$medicion}
+				INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID AND p.MEDICION_ID = {$medicion}
 				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
 				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )	and s.CADENA_ID in ({$cadenas})
 				INNER JOIN COMUNA com on s.COMUNA_ID=com.ID
@@ -677,7 +677,7 @@ class QuiebreDetalleController extends Controller
 				
 		//90 MS
 		$sql = "SELECT SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
-				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$medicion}
+				INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID AND p.MEDICION_ID = {$medicion}
 				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
 				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} ) and s.CADENA_ID in ({$cadenas})";			
 
