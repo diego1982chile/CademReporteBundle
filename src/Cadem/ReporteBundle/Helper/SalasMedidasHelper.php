@@ -3,6 +3,7 @@ namespace Cadem\ReporteBundle\Helper;
 
 use Doctrine\ORM\EntityManager;
 use Symfony\Component\Security\Core\SecurityContext;
+use Cadem\ReporteBundle\Helper\MedicionHelper;
 // use Symfony\Component\HttpFoundation\Session\Session;
 
 class SalasMedidasHelper {
@@ -10,13 +11,15 @@ class SalasMedidasHelper {
     protected $em;
 	protected $security;
 	protected $user;
+	protected $medicion;
 	// protected $session; //SE USARA PARA GUARDAR LAS MEDICION ENTRE VISTAS
 	private $salasmedidas = null;
 	private $totalsalas = null;
 
-    public function __construct(EntityManager $entityManager, SecurityContext $security) {
+    public function __construct(EntityManager $entityManager, SecurityContext $security, MedicionHelper $medicion) {
         $this->em = $entityManager;
 		$this->security = $security;
+		$this->medicion = $medicion;
 		// $this->session = $session;
 		if($security->getToken() != null) $this->user = $security->getToken()->getUser();
 		else $this->user = null;
@@ -25,41 +28,36 @@ class SalasMedidasHelper {
     private function getSalasmedidas_() {
 		$em = $this->em;
 		$user = $this->user;
-		$id_user = $user->getId();
+		$id_cliente = $user->getClienteID();
 		
-		//CLIENTE
-		$query = $em->createQuery(
-			'SELECT c FROM CademReporteBundle:Cliente c
-			JOIN c.usuarios u
-			WHERE u.id = :id AND c.activo = 1')
-			->setParameter('id', $id_user);
-		$clientes = $query->getResult();
-		$cliente = $clientes[0];
-		$id_cliente = $cliente->getId();
-		
-		//ULTIMA MEDICION
-		$query = $em->createQuery(
-			'SELECT m.id FROM CademReporteBundle:Medicion m
-			JOIN m.estudio e
-			WHERE e.clienteid = :idcliente
-			ORDER BY m.fechainicio DESC')
-			->setParameter('idcliente', $id_cliente);
-		$medicion_q = $query->getArrayResult();
-		if(count($medicion_q) > 0){
-			$id_ultima_medicion = $medicion_q[0]['id'];
+		$id_ultima_medicion = $this->medicion->getIdUltimaMedicion();
+		if($id_ultima_medicion !== -1){
 			//SALAS MEDIDAS
-			$query = $em->createQuery(
-				'SELECT COUNT(p) FROM CademReporteBundle:Planograma p
-				JOIN p.quiebres q
-				WHERE p.medicionid = :idmedicion
-				GROUP BY p.salaclienteid')
-				->setParameter('idmedicion', $id_ultima_medicion);
+			$sql = "SELECT COUNT(p.ID) FROM PLANOGRAMAQ p
+					INNER JOIN QUIEBRE q on p.ID = q.PLANOGRAMAQ_ID
+					INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
+                    WHERE sc.CLIENTE_ID = ? AND p.MEDICION_ID = ?
+                    GROUP BY sc.SALA_ID";
+            $param = array($id_cliente, $id_ultima_medicion);
+            $tipo_param = array(\PDO::PARAM_INT, \PDO::PARAM_INT);
+            $query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
+            if(isset($query[0])) $total = count($query);
+            else $total = -1;
+
+
+
+			// $query = $em->createQuery(
+			// 	'SELECT COUNT(p) FROM CademReporteBundle:Planograma p
+			// 	JOIN p.quiebres q
+			// 	WHERE p.medicionid = :idmedicion
+			// 	GROUP BY p.salaclienteid')
+			// 	->setParameter('idmedicion', $id_ultima_medicion);
 				
-			try {
-				$total = count($query->getArrayResult());
-			} catch (\Doctrine\ORM\NoResultException $e) {//SI NO HAY RESULTADOS PQ LA MEDICION NO TIENE QUIEBRES
-				$total = 0;
-			}
+			// try {
+			// 	$total = count($query->getArrayResult());
+			// } catch (\Doctrine\ORM\NoResultException $e) {//SI NO HAY RESULTADOS PQ LA MEDICION NO TIENE QUIEBRES
+			// 	$total = 0;
+			// }
 			
 			$this->salasmedidas = $total;
 		}
@@ -71,40 +69,32 @@ class SalasMedidasHelper {
 	private function getTotalsalas_() {
 		$em = $this->em;
 		$user = $this->user;
-		$id_user = $user->getId();
+		$id_cliente = $user->getClienteID();
 		
-		//CLIENTE
-		$query = $em->createQuery(
-			'SELECT c FROM CademReporteBundle:Cliente c
-			JOIN c.usuarios u
-			WHERE u.id = :id AND c.activo = 1')
-			->setParameter('id', $id_user);
-		$clientes = $query->getResult();
-		$cliente = $clientes[0];
-		$id_cliente = $cliente->getId();
-		
-		//ULTIMA MEDICION
-		$query = $em->createQuery(
-			'SELECT m.id FROM CademReporteBundle:Medicion m
-			JOIN m.estudio e
-			WHERE e.clienteid = :idcliente
-			ORDER BY m.fechainicio DESC')
-			->setParameter('idcliente', $id_cliente);
-		$medicion_q = $query->getArrayResult();
-		if(count($medicion_q) > 0){
-			$id_ultima_medicion = $medicion_q[0]['id'];
+		$id_ultima_medicion = $this->medicion->getIdUltimaMedicion();
+		if($id_ultima_medicion !== -1){
 			//TOTAL DE SALAS
-			$query = $em->createQuery(
-				'SELECT COUNT(p.salaclienteid) FROM CademReporteBundle:Planograma p
-				WHERE p.medicionid = :idmedicion
-				GROUP BY p.salaclienteid')
-				->setParameter('idmedicion', $id_ultima_medicion);
+			$sql = "SELECT COUNT(p.SALACLIENTE_ID) FROM PLANOGRAMAQ p
+					INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
+                    WHERE sc.CLIENTE_ID = ? AND p.MEDICION_ID = ?
+                    GROUP BY sc.SALA_ID";
+            $param = array($id_cliente, $id_ultima_medicion);
+            $tipo_param = array(\PDO::PARAM_INT, \PDO::PARAM_INT);
+            $query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
+            if(isset($query[0])) $total = count($query);
+            else $total = -1;
+
+			// $query = $em->createQuery(
+			// 	'SELECT COUNT(p.salaclienteid) FROM CademReporteBundle:Planograma p
+			// 	WHERE p.medicionid = :idmedicion
+			// 	GROUP BY p.salaclienteid')
+			// 	->setParameter('idmedicion', $id_ultima_medicion);
 			
-			try {
-				$total = count($query->getArrayResult());
-			} catch (\Doctrine\ORM\NoResultException $e) {//SI NO HAY RESULTADOS PQ LA MEDICION NO TIENE QUIEBRES
-				$total = 0;
-			}
+			// try {
+			// 	$total = count($query->getArrayResult());
+			// } catch (\Doctrine\ORM\NoResultException $e) {//SI NO HAY RESULTADOS PQ LA MEDICION NO TIENE QUIEBRES
+			// 	$total = 0;
+			// }
 		}
 		else $this->totalsalas = -1;//NO HAY DATOS
 		
