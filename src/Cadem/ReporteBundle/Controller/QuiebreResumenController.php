@@ -167,8 +167,10 @@ class QuiebreResumenController extends Controller
 			INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID AND ic.CLIENTE_ID = {$id_cliente}
 			INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
 			INNER JOIN NIVELITEM ni2 on ni2.ID = ic.NIVELITEM_ID2			
-			GROUP BY ni2.NOMBRE, ni.NOMBRE, cad.NOMBRE";
-			
+			GROUP BY ni2.NOMBRE, ni.NOMBRE, cad.NOMBRE
+			ORDER BY categoria, segmento";
+		
+		// print_r($sql);		
 		
 		$resumen_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();
 		$niveles=2;
@@ -484,6 +486,8 @@ class QuiebreResumenController extends Controller
 		
 		$cont_totales_segmento=0;			
 		
+		// print_r($resumen_quiebre);
+		
 		if($num_regs>0)
 		{					
 			// Para llevar los cambios del 1er nivel de agregacion
@@ -615,7 +619,7 @@ class QuiebreResumenController extends Controller
 		$comunas = trim($comunas, ',');											
 
 		$sql = "SELECT (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre, ni.NOMBRE as SEGMENTO, ni2.NOMBRE as CATEGORIA, cad.NOMBRE as CADENA FROM QUIEBRE q
-			INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID
+			INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID
 			INNER JOIN MEDICION m on m.ID = p.MEDICION_ID and m.ID = {$medicion}
 			INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
 			INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )
@@ -625,7 +629,8 @@ class QuiebreResumenController extends Controller
 			INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID AND ic.CLIENTE_ID = c.ID
 			INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
 			INNER JOIN NIVELITEM ni2 on ni2.ID = ic.NIVELITEM_ID2				
-			GROUP BY ni2.NOMBRE, ni.NOMBRE, cad.NOMBRE";			
+			GROUP BY ni2.NOMBRE, ni.NOMBRE, cad.NOMBRE
+			ORDER BY categoria, segmento";			
 				
 		$resumen_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();						
 		
@@ -671,7 +676,7 @@ class QuiebreResumenController extends Controller
 		// Obtener totales horizontales por segmento
 			
 		$sql =	"SELECT ni.NOMBRE as segmento, ni2.NOMBRE as categoria, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as quiebre FROM QUIEBRE q
-		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$medicion}
+		INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID AND p.MEDICION_ID = {$medicion}
 		INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
 		INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
 		INNER JOIN NIVELITEM ni2 on ni2.ID = ic.NIVELITEM_ID2
@@ -686,7 +691,7 @@ class QuiebreResumenController extends Controller
 		// Obtener totales verticales por categoria
 					
 		$sql =	"SELECT ni.NOMBRE as CATEGORIA, c.NOMBRE as CADENA, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
-		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$medicion}
+		INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID AND p.MEDICION_ID = {$medicion}
 		INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
 		INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )
 		INNER JOIN CADENA c on c.ID = s.CADENA_ID
@@ -701,7 +706,7 @@ class QuiebreResumenController extends Controller
 		// Obtener totales horizontales por totales segmento (ultima columna de totales verticales por categoria)
 		
 		$sql =	"SELECT ni.NOMBRE as CATEGORIA, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
-				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$medicion}
+				INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID AND p.MEDICION_ID = {$medicion}
 				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
 				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )
 				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
@@ -714,7 +719,7 @@ class QuiebreResumenController extends Controller
 		// Obtener totales verticales por totales categoria
 		
 		$sql = "SELECT  c.NOMBRE as CADENA, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
-		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$medicion}
+		INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID AND p.MEDICION_ID = {$medicion}
 		INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
 		INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )
 		INNER JOIN CADENA c on c.ID = s.CADENA_ID
@@ -726,7 +731,7 @@ class QuiebreResumenController extends Controller
 		// Obtener total horizontal por totales verticales por totales categoria
 		
 		$sql = "SELECT SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
-		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$medicion}
+		INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID AND p.MEDICION_ID = {$medicion}
 		INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
 		INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )";			
 
