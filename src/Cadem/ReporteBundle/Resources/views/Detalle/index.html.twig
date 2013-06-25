@@ -132,15 +132,16 @@ div.dataTables_scroll {
 	clear: both !important; 
 	}	
 
-{% if variable=='1' %}
+{% if variable==1 %}
 table tbody tr{ 
-	height: 1.1em !important;
+	height: 1.23em !important;	
 } 
 {% endif %}
 
 td{
 	text-align: center !important;
-	font-size: .55em !important;
+	font-size: .5em !important;
+	height: 1em !important;
 	padding: 0em !important;
 }
 
@@ -242,7 +243,7 @@ function preInitTabla()
 			maxWidth=maxWidth*1.25;
 			break;
 	}
-	$('#tabla_resumen').css('max-width',maxWidth+'%');
+	$('#tabla_resumen').css('max-width',maxWidth+'%');	
 	maxHeight=400;		
 }
 
@@ -471,8 +472,7 @@ function fixedColumn2()
 	new FixedColumns( oTable, {
 		"sHeightMatch": "none",	
 		"iLeftColumns": 3,
-	});
-	
+	});	
 	calcular_incumplimiento();
 }
 
@@ -543,8 +543,8 @@ $(document).ready(function () {
 	var callbacks = $.Callbacks();	
 	callbacks.add( preInitTabla() );
 	callbacks.add( construirTabla() );
-	// callbacks.add( fixedColumn() );	
-		
+	// callbacks.add( fixedColumn() );				
+	
 	$( "#slider-range-min" ).slider({
       range: "min",
       value: 25,
