@@ -161,9 +161,9 @@ class QuiebreRankingController extends Controller
 	
 		$estudio_variable=$estudios[0]->getEstudiovariables();	
 		
-		$variable=$estudio_variable[0]->getVariable()->getId();				
+		$variable=$estudio_variable[0]->getVariable()->getId();
 				
-		$session->set("variable",$variable);		
+		$session->set("variable",$variable);
 		
 		switch($variable)
 		{
@@ -181,20 +181,20 @@ class QuiebreRankingController extends Controller
 (SELECT s.id, s.calle, s.numerocalle, sc.codigosala, cad.nombre as cadena, (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre FROM SALA s
 			INNER JOIN SALACLIENTE sc on s.ID = sc.SALA_ID
 			INNER JOIN CADENA cad on cad.ID = s.CADENA_ID
-			INNER JOIN PLANOGRAMA p on p.SALACLIENTE_ID = sc.ID
+			INNER JOIN PLANOGRAMAQ p on p.SALACLIENTE_ID = sc.ID
 			INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
 			INNER JOIN MEDICION m on m.ID = p.MEDICION_ID
-			INNER JOIN QUIEBRE q on q.PLANOGRAMA_ID = p.ID
+			INNER JOIN QUIEBRE q on q.PLANOGRAMAQ_ID = p.ID
 			WHERE c.id = @id_cliente AND m.id = :id_medicion_actual
 			GROUP BY sc.id, s.id, s.calle, s.numerocalle, sc.codigosala, cad.nombre
 			) AS A LEFT JOIN
 			
 (SELECT s.id as id2, (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre_anterior FROM SALA s
 			INNER JOIN SALACLIENTE sc on s.ID = sc.SALA_ID
-			INNER JOIN PLANOGRAMA p on p.SALACLIENTE_ID = sc.ID
+			INNER JOIN PLANOGRAMAQ p on p.SALACLIENTE_ID = sc.ID
 			INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
 			INNER JOIN MEDICION m on m.ID = p.MEDICION_ID
-			INNER JOIN QUIEBRE q on q.PLANOGRAMA_ID = p.ID
+			INNER JOIN QUIEBRE q on q.PLANOGRAMAQ_ID = p.ID
 			WHERE c.id = @id_cliente AND m.id = :id_medicion_anterior
 			GROUP BY sc.id, s.id, s.calle, s.numerocalle, sc.codigosala
 			) AS B on A.ID = B.id2
@@ -206,10 +206,10 @@ class QuiebreRankingController extends Controller
 		$sql = "DECLARE @id_cliente integer = :id_cliente;
 		SELECT TOP(20)*, ROUND(quiebre-quiebre_anterior, 1) as diferencia FROM 
 (SELECT ic.id, ic.codigoitem1, i.nombre,(SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre FROM SALACLIENTE sc
-			INNER JOIN PLANOGRAMA p on p.SALACLIENTE_ID = sc.ID
+			INNER JOIN PLANOGRAMAQ p on p.SALACLIENTE_ID = sc.ID
 			INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
 			INNER JOIN MEDICION m on m.ID = p.MEDICION_ID
-			INNER JOIN QUIEBRE q on q.PLANOGRAMA_ID = p.ID
+			INNER JOIN QUIEBRE q on q.PLANOGRAMAQ_ID = p.ID
 			INNER JOIN ITEMCLIENTE ic on p.ITEMCLIENTE_ID = ic.ID
 			INNER JOIN ITEM i on i.ID = ic.ITEM_ID
 			WHERE c.ID = @id_cliente AND m.ID = :id_medicion_actual
@@ -217,10 +217,10 @@ class QuiebreRankingController extends Controller
 			) AS A LEFT JOIN						
 			
 (SELECT ic.id as id2, (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre_anterior FROM SALACLIENTE sc
-			INNER JOIN PLANOGRAMA p on p.SALACLIENTE_ID = sc.ID
+			INNER JOIN PLANOGRAMAQ p on p.SALACLIENTE_ID = sc.ID
 			INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
 			INNER JOIN MEDICION m on m.ID = p.MEDICION_ID
-			INNER JOIN QUIEBRE q on q.PLANOGRAMA_ID = p.ID
+			INNER JOIN QUIEBRE q on q.PLANOGRAMAQ_ID = p.ID
 			INNER JOIN ITEMCLIENTE ic on p.ITEMCLIENTE_ID = ic.ID
 			WHERE c.ID = @id_cliente AND m.ID = :id_medicion_anterior
 			GROUP BY ic.id
@@ -234,10 +234,10 @@ class QuiebreRankingController extends Controller
 		$sql = "DECLARE @id_cliente integer = :id_cliente;
 		SELECT *, ROUND(quiebre-quiebre_anterior, 1) as diferencia FROM 
 (SELECT e.id, e.nombre, car.nombre as cargo, (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre FROM SALACLIENTE sc
-			INNER JOIN PLANOGRAMA p on p.SALACLIENTE_ID = sc.ID
+			INNER JOIN PLANOGRAMAQ p on p.SALACLIENTE_ID = sc.ID
 			INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
 			INNER JOIN MEDICION m on m.ID = p.MEDICION_ID
-			INNER JOIN QUIEBRE q on q.PLANOGRAMA_ID = p.ID
+			INNER JOIN QUIEBRE q on q.PLANOGRAMAQ_ID = p.ID
 			INNER JOIN EMPLEADO e on e.ID = sc.EMPLEADO_ID
 			INNER JOIN CARGO car on car.ID = e.CARGO_ID
 			WHERE c.ID = @id_cliente AND m.ID = :id_medicion_actual
@@ -245,10 +245,10 @@ class QuiebreRankingController extends Controller
 			) AS A LEFT JOIN
 			
 (SELECT e.id as id2, (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre_anterior FROM SALACLIENTE sc
-			INNER JOIN PLANOGRAMA p on p.SALACLIENTE_ID = sc.ID
+			INNER JOIN PLANOGRAMAQ p on p.SALACLIENTE_ID = sc.ID
 			INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
 			INNER JOIN MEDICION m on m.ID = p.MEDICION_ID
-			INNER JOIN QUIEBRE q on q.PLANOGRAMA_ID = p.ID
+			INNER JOIN QUIEBRE q on q.PLANOGRAMAQ_ID = p.ID
 			INNER JOIN EMPLEADO e on e.ID = sc.EMPLEADO_ID
 			INNER JOIN CARGO car on car.ID = e.CARGO_ID
 			WHERE c.ID = @id_cliente AND m.ID = :id_medicion_anterior
@@ -340,20 +340,20 @@ class QuiebreRankingController extends Controller
 (SELECT s.id, s.calle, s.numerocalle, sc.codigosala, cad.nombre as cadena, (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre FROM SALA s
 			INNER JOIN SALACLIENTE sc on s.ID = sc.SALA_ID
 			INNER JOIN CADENA cad on cad.ID = s.CADENA_ID
-			INNER JOIN PLANOGRAMA p on p.SALACLIENTE_ID = sc.ID
+			INNER JOIN PLANOGRAMAQ p on p.SALACLIENTE_ID = sc.ID
 			INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
 			INNER JOIN MEDICION m on m.ID = p.MEDICION_ID
-			INNER JOIN QUIEBRE q on q.PLANOGRAMA_ID = p.ID
+			INNER JOIN QUIEBRE q on q.PLANOGRAMAQ_ID = p.ID
 			WHERE c.id = @id_cliente_ AND m.id = ? AND s.COMUNA_ID IN ( ? )
 			GROUP BY sc.id, s.id, s.calle, s.numerocalle, sc.codigosala, cad.nombre
 			) AS A LEFT JOIN
 			
 (SELECT s.id as id2, (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre_anterior FROM SALA s
 			INNER JOIN SALACLIENTE sc on s.ID = sc.SALA_ID
-			INNER JOIN PLANOGRAMA p on p.SALACLIENTE_ID = sc.ID
+			INNER JOIN PLANOGRAMAQ p on p.SALACLIENTE_ID = sc.ID
 			INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
 			INNER JOIN MEDICION m on m.ID = p.MEDICION_ID
-			INNER JOIN QUIEBRE q on q.PLANOGRAMA_ID = p.ID
+			INNER JOIN QUIEBRE q on q.PLANOGRAMAQ_ID = p.ID
 			WHERE c.id = @id_cliente_ AND m.id = ?
 			GROUP BY sc.id, s.id, s.calle, s.numerocalle, sc.codigosala
 			) AS B on A.ID = B.id2
@@ -376,10 +376,10 @@ class QuiebreRankingController extends Controller
 		SELECT TOP(20)*, ROUND(quiebre-quiebre_anterior, 1) as diferencia FROM 
 (SELECT ic.id, ic.codigoitem1, i.nombre,(SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre FROM SALACLIENTE sc
 			INNER JOIN SALA s on s.ID = sc.SALA_ID
-			INNER JOIN PLANOGRAMA p on p.SALACLIENTE_ID = sc.ID
+			INNER JOIN PLANOGRAMAQ p on p.SALACLIENTE_ID = sc.ID
 			INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
 			INNER JOIN MEDICION m on m.ID = p.MEDICION_ID
-			INNER JOIN QUIEBRE q on q.PLANOGRAMA_ID = p.ID
+			INNER JOIN QUIEBRE q on q.PLANOGRAMAQ_ID = p.ID
 			INNER JOIN ITEMCLIENTE ic on p.ITEMCLIENTE_ID = ic.ID
 			INNER JOIN ITEM i on i.ID = ic.ITEM_ID
 			WHERE c.ID = @id_cliente AND m.ID = ? AND s.COMUNA_ID IN ( ? )
@@ -387,10 +387,10 @@ class QuiebreRankingController extends Controller
 			) AS A LEFT JOIN
 			
 (SELECT ic.id as id2, (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre_anterior FROM SALACLIENTE sc
-			INNER JOIN PLANOGRAMA p on p.SALACLIENTE_ID = sc.ID
+			INNER JOIN PLANOGRAMAQ p on p.SALACLIENTE_ID = sc.ID
 			INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
 			INNER JOIN MEDICION m on m.ID = p.MEDICION_ID
-			INNER JOIN QUIEBRE q on q.PLANOGRAMA_ID = p.ID
+			INNER JOIN QUIEBRE q on q.PLANOGRAMAQ_ID = p.ID
 			INNER JOIN ITEMCLIENTE ic on p.ITEMCLIENTE_ID = ic.ID
 			WHERE c.ID = @id_cliente AND m.ID = ?
 			GROUP BY ic.id
@@ -414,10 +414,10 @@ class QuiebreRankingController extends Controller
 		SELECT *, ROUND(quiebre-quiebre_anterior, 1) as diferencia FROM 
 (SELECT e.id, e.nombre, car.nombre as cargo, (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre FROM SALACLIENTE sc
 			INNER JOIN SALA s on s.ID = sc.SALA_ID
-			INNER JOIN PLANOGRAMA p on p.SALACLIENTE_ID = sc.ID
+			INNER JOIN PLANOGRAMAQ p on p.SALACLIENTE_ID = sc.ID
 			INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
 			INNER JOIN MEDICION m on m.ID = p.MEDICION_ID
-			INNER JOIN QUIEBRE q on q.PLANOGRAMA_ID = p.ID
+			INNER JOIN QUIEBRE q on q.PLANOGRAMAQ_ID = p.ID
 			INNER JOIN EMPLEADO e on e.ID = sc.EMPLEADO_ID
 			INNER JOIN CARGO car on car.ID = e.CARGO_ID
 			WHERE c.ID = @id_cliente AND m.ID = ? AND s.COMUNA_ID IN ( ? )
@@ -425,10 +425,10 @@ class QuiebreRankingController extends Controller
 			) AS A LEFT JOIN
 			
 (SELECT e.id as id2, (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre_anterior FROM SALACLIENTE sc
-			INNER JOIN PLANOGRAMA p on p.SALACLIENTE_ID = sc.ID
+			INNER JOIN PLANOGRAMAQ p on p.SALACLIENTE_ID = sc.ID
 			INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
 			INNER JOIN MEDICION m on m.ID = p.MEDICION_ID
-			INNER JOIN QUIEBRE q on q.PLANOGRAMA_ID = p.ID
+			INNER JOIN QUIEBRE q on q.PLANOGRAMAQ_ID = p.ID
 			INNER JOIN EMPLEADO e on e.ID = sc.EMPLEADO_ID
 			WHERE c.ID = @id_cliente AND m.ID = ?
 			GROUP BY e.ID
