@@ -159,19 +159,16 @@ class QuiebreResumenController extends Controller
 		//CONSULTA
 		
 		$sql = "SELECT (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre, ni.NOMBRE as SEGMENTO, ni2.NOMBRE as CATEGORIA, cad.NOMBRE as CADENA FROM QUIEBRE q
-			INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID
+			INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID
 			INNER JOIN MEDICION m on m.ID = p.MEDICION_ID and m.ID = {$id_ultima_medicion}
 			INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
 			INNER JOIN SALA s on s.ID = sc.SALA_ID
 			INNER JOIN CADENA cad on cad.ID = s.CADENA_ID
-			INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
-			INNER JOIN USUARIO u on u.cliente_id=c.id and u.id=".$user->getId()."
-			INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID AND ic.CLIENTE_ID = c.ID
+			INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID AND ic.CLIENTE_ID = {$id_cliente}
 			INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
 			INNER JOIN NIVELITEM ni2 on ni2.ID = ic.NIVELITEM_ID2			
 			GROUP BY ni2.NOMBRE, ni.NOMBRE, cad.NOMBRE";
 			
-		// print_r($sql);
 		
 		$resumen_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();
 		$niveles=2;
@@ -183,7 +180,6 @@ class QuiebreResumenController extends Controller
 		// Generamos el head de la tabla, y las cadenas
 		foreach($resumen_quiebre as $registro)
 		{
-			// print_r($resumen_quiebre);
 			if(!in_array($registro['CADENA'],$head))
 			{
 				array_push($head,$registro['CADENA']);
@@ -214,7 +210,7 @@ class QuiebreResumenController extends Controller
 		// Obtener totales horizontales por segmento
 			
 		$sql =	"SELECT ni.NOMBRE as segmento, ni2.NOMBRE as categoria, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as quiebre FROM QUIEBRE q
-		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$id_ultima_medicion}
+		INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID AND p.MEDICION_ID = {$id_ultima_medicion}
 		INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
 		INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
 		INNER JOIN NIVELITEM ni2 on ni2.ID = ic.NIVELITEM_ID2
@@ -224,12 +220,13 @@ class QuiebreResumenController extends Controller
 		GROUP BY ni.NOMBRE, ni2.NOMBRE
 		ORDER BY categoria, segmento";
 	
-		$totales_segmento = $em->getConnection()->executeQuery($sql)->fetchAll();		
+		$totales_segmento = $em->getConnection()->executeQuery($sql)->fetchAll();
+
 
 		// Obtener totales verticales por categoria
 					
 		$sql =	"SELECT ni.NOMBRE as CATEGORIA, c.NOMBRE as CADENA, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
-		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$id_ultima_medicion}
+		INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID AND p.MEDICION_ID = {$id_ultima_medicion}
 		INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
 		INNER JOIN SALA s on s.ID = sc.SALA_ID
 		INNER JOIN CADENA c on c.ID = s.CADENA_ID
@@ -244,7 +241,7 @@ class QuiebreResumenController extends Controller
 		// Obtener totales horizontales por totales segmento (ultima columna de totales verticales por categoria)
 		
 		$sql =	"SELECT ni.NOMBRE as CATEGORIA, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
-				INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$id_ultima_medicion}
+				INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID AND p.MEDICION_ID = {$id_ultima_medicion}
 				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
 				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID2
 				GROUP BY ni.NOMBRE
@@ -255,7 +252,7 @@ class QuiebreResumenController extends Controller
 		// Obtener totales verticales por totales categoria
 		
 		$sql = "SELECT  c.NOMBRE as CADENA, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
-		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$id_ultima_medicion}
+		INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID AND p.MEDICION_ID = {$id_ultima_medicion}
 		INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
 		INNER JOIN SALA s on s.ID = sc.SALA_ID
 		INNER JOIN CADENA c on c.ID = s.CADENA_ID
@@ -267,7 +264,7 @@ class QuiebreResumenController extends Controller
 		// Obtener total horizontal por totales verticales por totales categoria
 		
 		$sql = "SELECT SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
-		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID AND p.MEDICION_ID = {$id_ultima_medicion}";			
+		INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID AND p.MEDICION_ID = {$id_ultima_medicion}";			
 
 		$total = $em->getConnection()->executeQuery($sql)->fetchAll();											
 				
@@ -292,10 +289,9 @@ class QuiebreResumenController extends Controller
 		
 		//DATOS DEL EJE X EN EVOLUTIVO
 		$sql = "SELECT TOP(12) m.NOMBRE, m.FECHAINICIO, m.FECHAFIN FROM MEDICION m
-			INNER JOIN PLANOGRAMA p on p.MEDICION_ID = m.ID
-			INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
+			INNER JOIN PLANOGRAMAQ p on p.MEDICION_ID = m.ID
+			INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID AND sc.CLIENTE_ID = ?
 			
-			WHERE sc.CLIENTE_ID = ?
 			GROUP BY m.NOMBRE, m.FECHAINICIO, m.FECHAFIN
 			ORDER BY m.FECHAINICIO DESC";
 		$param = array($id_cliente);
@@ -312,12 +308,11 @@ class QuiebreResumenController extends Controller
 		
 		//DATOS DEL EJE Y EN EVOLUTIVO
 		$sql = "SELECT TOP(12) (SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 END)*1.0)/COUNT(q.ID) as QUIEBRE FROM QUIEBRE q
-			INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID
+			INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID
 			INNER JOIN MEDICION m on m.ID = p.MEDICION_ID
-			INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
+			INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID AND sc.CLIENTE_ID = ?
 			INNER JOIN SALA s on s.ID = sc.SALA_ID
 			
-			WHERE sc.CLIENTE_ID = ?
 			GROUP BY m.FECHAINICIO
 			ORDER BY m.FECHAINICIO DESC";
 		$param = array($id_cliente);
@@ -527,7 +522,6 @@ class QuiebreResumenController extends Controller
 				}
 			}
 
-			// print_r($body);
 								
 			// Calculo de totales
 			$fila=array_fill(0,$num_cads+1,"-");	
