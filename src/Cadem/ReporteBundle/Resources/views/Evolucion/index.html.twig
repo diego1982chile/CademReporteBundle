@@ -439,6 +439,9 @@ function colorTotales(){
 
 function construirGrafico()
 {	
+	for(i in mediciones)
+		mediciones[i]=mediciones[i].replace('SEM','');
+
 	switch(variable)	
 	{
 		case 1:

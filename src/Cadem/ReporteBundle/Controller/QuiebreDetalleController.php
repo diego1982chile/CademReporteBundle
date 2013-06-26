@@ -80,7 +80,7 @@ class QuiebreDetalleController extends Controller
 			JOIN c.salas s
 			JOIN s.salaclientes sc
 			JOIN sc.cliente cl
-			WHERE cl.id = :id and p.region_id=1')
+			WHERE cl.id = :id and p.region_id=15')
 			->setParameter('id', $cliente->getId());
 		$provincias = $query->getResult();
 		
@@ -97,7 +97,7 @@ class QuiebreDetalleController extends Controller
 			JOIN c.salas s
 			JOIN s.salaclientes sc
 			JOIN sc.cliente cl
-			WHERE cl.id = :id and p.region_id=1')
+			WHERE cl.id = :id and p.region_id=15')
 			->setParameter('id', $cliente->getId());
 		$comunas = $query->getResult();
 		
@@ -160,7 +160,7 @@ class QuiebreDetalleController extends Controller
 				'choices'   => $choices_regiones,
 				'required'  => true,
 				'multiple'  => true,
-				'data' => array(1)
+				'data' => array(15)
 			))
 			->getForm();
 			
@@ -764,7 +764,7 @@ class QuiebreDetalleController extends Controller
 		$session->set("totales_verticales_segmento",$totales_verticales_segmento);	
 		$session->set("total",$total);		
 		// Calcula el ancho máximo de la tabla	
-		$extension=count($head)*(12+log(count($head),50))-100;
+		$extension=count($head)*(12+log(count($head),10))-100;
 	
 		if($extension<0)
 			$extension=0;

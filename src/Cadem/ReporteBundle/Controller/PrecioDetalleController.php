@@ -80,7 +80,7 @@ class PrecioDetalleController extends Controller
 			JOIN c.salas s
 			JOIN s.salaclientes sc
 			JOIN sc.cliente cl
-			WHERE cl.id = :id and p.region_id=1')
+			WHERE cl.id = :id and p.region_id=15')
 			->setParameter('id', $cliente->getId());
 		$provincias = $query->getResult();
 		
@@ -97,7 +97,7 @@ class PrecioDetalleController extends Controller
 			JOIN c.salas s
 			JOIN s.salaclientes sc
 			JOIN sc.cliente cl
-			WHERE cl.id = :id and p.region_id=1')
+			WHERE cl.id = :id and p.region_id=15')
 			->setParameter('id', $cliente->getId());
 		$comunas = $query->getResult();
 		
@@ -160,7 +160,7 @@ class PrecioDetalleController extends Controller
 				'choices'   => $choices_regiones,
 				'required'  => true,
 				'multiple'  => true,
-				'data' => array(1)
+				'data' => array(15)
 			))
 			->getForm();
 			
