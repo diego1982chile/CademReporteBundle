@@ -191,8 +191,6 @@ class QuiebreEvolucionController extends Controller
 		usort($mediciones, array($this,"sortFunction"));
 		// CONSTRUIR EL ENCABEZADO DE LA TABLA
 		
-		// print_r($mediciones);		
-		
 		// Construir consulta mediante UNION con los ID de las últimas 12 mediciones, obtenidos previamente
 		$sql="";
 		
@@ -228,7 +226,7 @@ class QuiebreEvolucionController extends Controller
 		$fila=array();
 		$fila['aTargets']=array(0);
 		$fila['sClass']="tag";
-		$fila['sWidth']="280px";
+		$fila['sWidth']="260px";
 		array_push($aoColumnDefs,$fila);
 		
 		$fila=array();

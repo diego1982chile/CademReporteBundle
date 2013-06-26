@@ -232,7 +232,7 @@ class PrecioEvolucionController extends Controller
 		$fila=array();
 		$fila['aTargets']=array(1);
 		$fila['sClass']="tag";
-		$fila['sWidth']="280px";
+		$fila['sWidth']="260px";
 		array_push($aoColumnDefs,$fila);		
 
 		$cont=2;		

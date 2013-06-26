@@ -311,13 +311,13 @@ class PrecioDetalleController extends Controller
 		$fila=array();
 		$fila['aTargets']=array(0);
 		$fila['sClass']="tag2";
-		$fila['sWidth']="120px";
+		$fila['sWidth']="100px";
 		array_push($aoColumnDefs,$fila);
 		
 		$fila=array();
 		$fila['aTargets']=array(1);
 		$fila['sClass']="tag";
-		$fila['sWidth']="280px";
+		$fila['sWidth']="260px";
 		array_push($aoColumnDefs,$fila);		
 
 		$fila=array();
@@ -356,7 +356,7 @@ class PrecioDetalleController extends Controller
 		$session->set("total",$total);	
 
 		// Calcula el ancho máximo de la tabla	
-		$extension=count($head)*14-100;
+		$extension=count($head)*13-100;
 	
 		if($extension<0)
 			$extension=0;
