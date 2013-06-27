@@ -134,7 +134,7 @@ div.dataTables_scroll {
 
 {% if variable==1 %}
 table tbody tr{ 
-	height: 1.23xem !important;	
+	height: 1.23em !important;	
 } 
 {% endif %}
 
@@ -209,7 +209,6 @@ div.DataTables_sort_wrapper {
 {% block javascripts %}
 <script src="{{ asset('bundles/cademreporte/js/jquery.dataTables.min.js') }}"></script>
 <script src="{{ asset('bundles/cademreporte/js/dataTables.fixedColumns.js') }}"></script>
-
 <script>
 
 var oTable;
@@ -273,8 +272,7 @@ function construirTabla()
 				.done(function() { colorTotales(); })
 				.fail(function() {  })
 				.always(function() { quitarloader(); });
-			},	
-			// "bDeferRender": true,
+			},				
 			"sScrollY": maxHeight+'px',
 			"sScrollX": "100%",
 			"sScrollXInner": maxWidth+'%',
@@ -283,12 +281,12 @@ function construirTabla()
 			"bSort": false,
 			"bInfo": false,
 			"bPaginate": false,			
+			// "sDom": "frtiS",				
 			"bJQueryUI": true,
-			"bAutoWidth": false, 
+			"bAutoWidth": false, 			
 			// "bScrollInfinite": true,
 			"aoColumnDefs": aoColumnDefs,
-			"aaSortingFixed": [[ 1, 'asc' ]],
-			"sPaginationType": "full_numbers",		
+			"aaSortingFixed": [[ 1, 'asc' ]],			
 			"fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {	
 								switch(variable)
 								{
@@ -428,7 +426,7 @@ function fixedColumn1()
 			// Se añade fila de agregacion para tabla fija
 			$(nGroup).insertBefore( $('tbody tr:eq(0)', left.body)[0] );			
 		}
-	});
+	});	
 }
 
 function fixedColumn2()
@@ -543,7 +541,7 @@ $(document).ready(function () {
 	var callbacks = $.Callbacks();	
 	callbacks.add( preInitTabla() );
 	callbacks.add( construirTabla() );
-	// callbacks.add( fixedColumn() );				
+	// callbacks.add( fixedColumn() );					
 	
 	$( "#slider-range-min" ).slider({
       range: "min",
