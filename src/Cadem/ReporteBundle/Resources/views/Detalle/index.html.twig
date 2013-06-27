@@ -134,7 +134,7 @@ div.dataTables_scroll {
 
 {% if variable==1 %}
 table tbody tr{ 
-	height: 1.23em !important;	
+	height: 1.23xem !important;	
 } 
 {% endif %}
 
@@ -259,7 +259,7 @@ function construirTabla()
 				if (DatosAdicionales.length > 0) for(i in DatosAdicionales) aoData.push(DatosAdicionales[i]);
 				$.ajax( {
 					"dataType": 'json', 
-					"type": "GET", 
+					"type": "POST", 
 					"url": sSource, 
 					"data": aoData, 
 					"success": function(data){//QUE PASA SI FALLA?									

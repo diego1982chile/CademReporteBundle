@@ -392,7 +392,7 @@ class PrecioEvolucionController extends Controller
 			'header_action' => 'precio_evolucion_header',
 			'body_action' => 'precio_evolucion_body',	
 			'aoColumnDefs' => json_encode($aoColumnDefs),
-			'columnas_reservadas' => 3,
+			'columnas_reservadas' => 2,
 			'tag_variable' => 'PRECIO'				
 			)
 		);
