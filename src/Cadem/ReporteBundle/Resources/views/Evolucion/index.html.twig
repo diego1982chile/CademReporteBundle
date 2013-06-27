@@ -439,6 +439,11 @@ function colorTotales(){
 
 function construirGrafico()
 {	
+	for(i in mediciones){
+		mediciones[i]=mediciones[i].replace('SEM','');
+		mediciones[i]=mediciones[i].replace(/ /g,'');	
+	}
+
 	switch(variable)	
 	{
 		case 1:
