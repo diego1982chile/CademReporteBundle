@@ -531,7 +531,7 @@ class DetalleController extends Controller
 		// $session->close();
 		$time_taken = microtime(true) - $start;
 		$output = array(
-			"sEcho" => intval($_GET['sEcho']),
+			"sEcho" => intval($_POST['sEcho']),
 			"iTotalRecords" => count($detalle_quiebre),
 			"iTotalDisplayRecords" => count($body),
 			"aaData" => $body,
