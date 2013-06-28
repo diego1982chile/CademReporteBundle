@@ -110,7 +110,8 @@ class QuiebreDetalleController extends Controller
 		//MEDICION
 		$query = $em->createQuery(
 			'SELECT m.id, m.nombre FROM CademReporteBundle:Medicion m
-			JOIN m.estudio e
+			JOIN m.estudiovariable ev
+			JOIN ev.estudio e
 			JOIN e.cliente c
 			WHERE c.id = :id
 			ORDER BY m.fechainicio DESC')
