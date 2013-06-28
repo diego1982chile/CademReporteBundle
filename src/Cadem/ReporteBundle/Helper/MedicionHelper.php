@@ -29,7 +29,8 @@ class MedicionHelper {
 		//MEDICION
 		$query = $em->createQuery(
 			'SELECT m.nombre FROM CademReporteBundle:Medicion m
-			JOIN m.estudio e
+			JOIN m.estudiovariable ev
+			JOIN ev.estudio e
 			WHERE e.clienteid = :idcliente AND m.id = :idmedicion')
 			->setParameter('idcliente', $id_cliente)
 			->setParameter('idmedicion', $id_medicion);
@@ -52,7 +53,8 @@ class MedicionHelper {
 		//ULTIMA MEDICION
 		$query = $em->createQuery(
 			'SELECT m.id FROM CademReporteBundle:Medicion m
-			JOIN m.estudio e
+			JOIN m.estudiovariable ev
+			JOIN ev.estudio e
 			WHERE e.clienteid = :idcliente
 			ORDER BY m.fechainicio DESC')
 			->setParameter('idcliente', $id_cliente);
@@ -75,7 +77,8 @@ class MedicionHelper {
 		//SE BUSCA MEDICION ANTERIOR
 		$query = $em->createQuery(
 			'SELECT m.id FROM CademReporteBundle:Medicion m
-			JOIN m.estudio e
+			JOIN m.estudiovariable ev
+			JOIN ev.estudio e
 			JOIN e.cliente c
 			WHERE c.id = :idc
 			ORDER BY m.fechainicio DESC')
