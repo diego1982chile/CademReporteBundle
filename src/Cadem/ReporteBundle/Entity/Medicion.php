@@ -51,14 +51,14 @@ class Medicion
     private $activo;
 
     /**
-     * @var \Estudio
+     * @var \Estudiovariable
      *
-     * @ORM\ManyToOne(targetEntity="Estudio", inversedBy="mediciones")
+     * @ORM\ManyToOne(targetEntity="Estudiovariable", inversedBy="mediciones")
      * @ORM\JoinColumns({
-     *   @ORM\JoinColumn(name="ESTUDIO_ID", referencedColumnName="ID")
+     *   @ORM\JoinColumn(name="ESTUDIOVARIABLE_ID", referencedColumnName="ID")
      * })
      */
-    private $estudio;
+    private $estudiovariable;
 	
 	/**
      * @ORM\OneToMany(targetEntity="Planograma", mappedBy="medicion")
@@ -175,26 +175,26 @@ class Medicion
     }
 
     /**
-     * Set estudio
+     * Set estudiovariable
      *
-     * @param \Cadem\ReporteBundle\Entity\Estudio $estudio
+     * @param \Cadem\ReporteBundle\Entity\Estudiovariable $estudiovariable
      * @return Medicion
      */
-    public function setEstudio(\Cadem\ReporteBundle\Entity\Estudio $estudio = null)
+    public function setEstudiovariable(\Cadem\ReporteBundle\Entity\Estudiovariable $estudiovariable = null)
     {
-        $this->estudio = $estudio;
+        $this->estudiovariable = $estudiovariable;
     
         return $this;
     }
 
     /**
-     * Get estudio
+     * Get estudiovariable
      *
-     * @return \Cadem\ReporteBundle\Entity\Estudio 
+     * @return \Cadem\ReporteBundle\Entity\Estudiovariable 
      */
-    public function getEstudio()
+    public function getEstudiovariable()
     {
-        return $this->estudio;
+        return $this->estudiovariable;
     }
 
     /**

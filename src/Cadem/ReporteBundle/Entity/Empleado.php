@@ -88,10 +88,10 @@ class Empleado
     private $empleado;
 	
 	/**
-     * @ORM\OneToMany(targetEntity="Estudio", mappedBy="empleado")
+     * @ORM\OneToMany(targetEntity="Estudiovariable", mappedBy="empleado")
      */
 	 
-	protected $estudios;
+	protected $estudiovariables;
 	
 	/**
      * @ORM\OneToMany(targetEntity="Salacliente", mappedBy="empleado")
@@ -102,7 +102,7 @@ class Empleado
 	 
 	public function __construct()
     {
-        $this->estudios = new ArrayCollection();
+        $this->estudiovariables = new ArrayCollection();
         $this->salaclientes = new ArrayCollection();
     }
 
@@ -302,35 +302,35 @@ class Empleado
     }
 	
 	/**
-     * Add estudios
+     * Add estudiovariables
      *
-     * @param \Cadem\ReporteBundle\Entity\Estudio $estudios
+     * @param \Cadem\ReporteBundle\Entity\Estudiovariable $estudiovariables
      * @return Empleado
      */
-    public function addEstudio(\Cadem\ReporteBundle\Entity\Estudio $estudios)
+    public function addEstudiovariable(\Cadem\ReporteBundle\Entity\Estudiovariable $estudiovariables)
     {
-        $this->estudios[] = $estudios;
+        $this->estudiovariables[] = $estudiovariables;
     
         return $this;
     }
 
     /**
-     * Remove estudios
+     * Remove estudiovariables
      *
-     * @param \Cadem\ReporteBundle\Entity\Estudio $estudios
+     * @param \Cadem\ReporteBundle\Entity\Estudiovariable $estudiovariables
      */
-    public function removeEstudio(\Cadem\ReporteBundle\Entity\Estudio $estudios)
+    public function removeEstudio(\Cadem\ReporteBundle\Entity\Estudiovariable $estudiovariables)
     {
-        $this->estudios->removeElement($estudios);
+        $this->estudiovariables->removeElement($estudiovariables);
     }
 
     /**
-     * Get estudios
+     * Get estudiovariables
      *
      * @return \Doctrine\Common\Collections\Collection 
      */
     public function getEstudios()
     {
-        return $this->estudios;
+        return $this->estudiovariables;
     }
 }

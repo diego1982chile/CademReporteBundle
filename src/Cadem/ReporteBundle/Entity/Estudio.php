@@ -21,8 +21,8 @@ class Estudio
      * @ORM\GeneratedValue(strategy="NONE")
      */
     private $id;
-	
-	/**
+
+    /**
      * @var integer
      *
      * @ORM\Column(name="CLIENTE_ID", type="integer", nullable=true)
@@ -67,33 +67,16 @@ class Estudio
      */
     private $cliente;
 
-    /**
-     * @var \Empleado
-     *
-     * @ORM\ManyToOne(targetEntity="Empleado", inversedBy="estudios")
-     * @ORM\JoinColumns({
-     *   @ORM\JoinColumn(name="EMPLEADO_ID", referencedColumnName="ID")
-     * })
-     */
-    private $empleado;
-
 	/**
      * @ORM\OneToMany(targetEntity="Estudiovariable", mappedBy="estudio")
      */
 	 
 	protected $estudiovariables;
 	
-	/**
-     * @ORM\OneToMany(targetEntity="Medicion", mappedBy="estudio")
-     */
-	 
-	protected $mediciones;
-
 	
 	public function __construct()
     {
         $this->estudiovariables = new ArrayCollection();
-        $this->mediciones = new ArrayCollection();
     }
 
 
@@ -106,8 +89,8 @@ class Estudio
     {
         return $this->id;
     }
-	
-	/**
+
+    /**
      * Get clienteid
      *
      * @return integer 
@@ -116,18 +99,18 @@ class Estudio
     {
         return $this->clienteid;
     }
-	
-	/**
+    
+    /**
      * Set clienteid
      *
-	 * @param integer $clienteid
+     * @param integer $clienteid
      * @return Estudio
      */
     public function SetClienteId($clienteid)
     {
         $this->clienteid = $clienteid;
-		
-		return $this;
+        
+        return $this;
     }
 
     /**
@@ -246,29 +229,6 @@ class Estudio
     }
 
     /**
-     * Set empleado
-     *
-     * @param \Cadem\ReporteBundle\Entity\Empleado $empleado
-     * @return Estudio
-     */
-    public function setEmpleado(\Cadem\ReporteBundle\Entity\Empleado $empleado = null)
-    {
-        $this->empleado = $empleado;
-    
-        return $this;
-    }
-
-    /**
-     * Get empleado
-     *
-     * @return \Cadem\ReporteBundle\Entity\Empleado 
-     */
-    public function getEmpleado()
-    {
-        return $this->empleado;
-    }
-
-    /**
      * Set id
      *
      * @param integer $id
@@ -312,38 +272,5 @@ class Estudio
     public function getEstudiovariables()
     {
         return $this->estudiovariables;
-    }
-
-    /**
-     * Add mediciones
-     *
-     * @param \Cadem\ReporteBundle\Entity\Medicion $mediciones
-     * @return Estudio
-     */
-    public function addMedicione(\Cadem\ReporteBundle\Entity\Medicion $mediciones)
-    {
-        $this->mediciones[] = $mediciones;
-    
-        return $this;
-    }
-
-    /**
-     * Remove mediciones
-     *
-     * @param \Cadem\ReporteBundle\Entity\Medicion $mediciones
-     */
-    public function removeMedicione(\Cadem\ReporteBundle\Entity\Medicion $mediciones)
-    {
-        $this->mediciones->removeElement($mediciones);
-    }
-
-    /**
-     * Get mediciones
-     *
-     * @return \Doctrine\Common\Collections\Collection 
-     */
-    public function getMediciones()
-    {
-        return $this->mediciones;
     }
 }
