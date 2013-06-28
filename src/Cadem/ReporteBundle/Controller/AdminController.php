@@ -1906,6 +1906,7 @@ class AdminController extends Controller
                                 \PDO::PARAM_INT,
                                 \PDO::PARAM_INT,
                                 \PDO::PARAM_INT,
+                                \PDO::PARAM_INT,
                                 ($fila[1] === "NULL")?\PDO::PARAM_NULL:\PDO::PARAM_STR,
                                 );
                             $row_affected += $conn->executeUpdate($sql,$param,$tipo_param);
