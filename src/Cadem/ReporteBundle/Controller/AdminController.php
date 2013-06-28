@@ -54,7 +54,8 @@ class AdminController extends Controller
         $em = $this->getDoctrine()->getManager();
         $sql = "SELECT c.ID as idc, m.ID as idm, c.NOMBREFANTASIA as nombre, m.NOMBRE as medicion FROM CLIENTE c
                 INNER JOIN ESTUDIO e on e.CLIENTE_ID = c.ID
-                INNER JOIN MEDICION m on m.ESTUDIO_ID = e.ID
+                INNER JOIN ESTUDIOVARIABLE ev on ev.ESTUDIO_ID = e.ID
+                INNER JOIN MEDICION m on m.ESTUDIOVARIABLE_ID = ev.ID
                 ORDER BY c.NOMBREFANTASIA, m.NOMBRE";
         $query = $em->getConnection()->executeQuery($sql)->fetchAll();
         $choices_medicion = array();
@@ -90,7 +91,8 @@ class AdminController extends Controller
         $em = $this->getDoctrine()->getManager();
         $sql = "SELECT c.ID as idc, m.ID as idm, c.NOMBREFANTASIA as nombre, m.NOMBRE as medicion FROM CLIENTE c
                 INNER JOIN ESTUDIO e on e.CLIENTE_ID = c.ID
-                INNER JOIN MEDICION m on m.ESTUDIO_ID = e.ID
+                INNER JOIN ESTUDIOVARIABLE ev on ev.ESTUDIO_ID = e.ID
+                INNER JOIN MEDICION m on m.ESTUDIOVARIABLE_ID = ev.ID
                 ORDER BY c.NOMBREFANTASIA, m.NOMBRE";
         $query = $em->getConnection()->executeQuery($sql)->fetchAll();
         $choices_medicion = array();
@@ -126,7 +128,8 @@ class AdminController extends Controller
         $em = $this->getDoctrine()->getManager();
         $sql = "SELECT c.ID as idc, m.ID as idm, c.NOMBREFANTASIA as nombre, m.NOMBRE as medicion FROM CLIENTE c
                 INNER JOIN ESTUDIO e on e.CLIENTE_ID = c.ID
-                INNER JOIN MEDICION m on m.ESTUDIO_ID = e.ID
+                INNER JOIN ESTUDIOVARIABLE ev on ev.ESTUDIO_ID = e.ID
+                INNER JOIN MEDICION m on m.ESTUDIOVARIABLE_ID = ev.ID
                 ORDER BY c.NOMBREFANTASIA, m.NOMBRE";
         $query = $em->getConnection()->executeQuery($sql)->fetchAll();
         $choices_medicion = array();
@@ -162,7 +165,8 @@ class AdminController extends Controller
         $em = $this->getDoctrine()->getManager();
         $sql = "SELECT c.ID as idc, m.ID as idm, c.NOMBREFANTASIA as nombre, m.NOMBRE as medicion FROM CLIENTE c
                 INNER JOIN ESTUDIO e on e.CLIENTE_ID = c.ID
-                INNER JOIN MEDICION m on m.ESTUDIO_ID = e.ID
+                INNER JOIN ESTUDIOVARIABLE ev on ev.ESTUDIO_ID = e.ID
+                INNER JOIN MEDICION m on m.ESTUDIOVARIABLE_ID = ev.ID
                 ORDER BY c.NOMBREFANTASIA, m.NOMBRE";
         $query = $em->getConnection()->executeQuery($sql)->fetchAll();
         $choices_medicion = array();
@@ -1179,6 +1183,7 @@ class AdminController extends Controller
                         // $item[] = $value[1];
                         $folioean[floor($chunk/2000)][] = $value[0].'-'.$value[1];
                         if(strlen($value[4]) === 0) $m[$k][4] = "NULL"; //SI NO HAY CANTIDAD SE PASA A NULL PARA EL INSERT
+                        if(strlen($value[2]) === 0) $m[$k][2] = "NULL"; //SI NO HAY FECHA SE PASA A NULL PARA EL INSERT
                         $chunk++;
                     }
 
@@ -1339,7 +1344,7 @@ class AdminController extends Controller
 
 
                     //FORMATO ES:
-                    // FOLIO;EAN;PRECIO;POLITICAPRECIO
+                    // FOLIO;EAN;PRECIO;POLITICAPRECIO;FECHAHORACAPTURA
 
                     
                     //SI LA PRIMERA FILA TIENE LOS ENCABEZADOS SE BORRA
@@ -1351,6 +1356,7 @@ class AdminController extends Controller
                     foreach($m as $k => $value){
                         $folioean[floor($chunk/2000)][] = $value[0].'-'.$value[1];
                         if(strlen($value[3]) === 0) $m[$k][3] = "NULL"; //SI NO HAY POLITICAPRECIO SE PASA A NULL PARA EL INSERT
+                        if(strlen($value[4]) === 0) $m[$k][4] = "NULL"; //SI NO HAY FECHAHORACAPTURA SE PASA A NULL PARA EL INSERT
                         $chunk++;
                     }
 
@@ -2010,7 +2016,7 @@ class AdminController extends Controller
                                 \PDO::PARAM_INT,
                                 \PDO::PARAM_BOOL,
                                 ($fila[4] === "NULL")?\PDO::PARAM_NULL:\PDO::PARAM_INT,
-                                \PDO::PARAM_STR,
+                                ($fila[2] === "NULL")?\PDO::PARAM_NULL:\PDO::PARAM_STR,
                                 );
 
                             $row_affected += $conn->executeUpdate($sql,$param,$tipo_param);
@@ -2047,7 +2053,7 @@ class AdminController extends Controller
                 case 'planoprecio'://DATOS DE PLANOGRAMA PRECIO
 
                     //FORMATO ES:
-                    // FOLIO;EAN;PRECIO;POLITICAPRECIO;ID_SALACLIENTE;ID_ITEMCLIENTE
+                    // FOLIO;EAN;PRECIO;POLITICAPRECIO;FECHAHORACAPTURA;ID_SALACLIENTE;ID_ITEMCLIENTE
 
                     //SE CARGA EN LA BD, USANDO TRANSACCIONES
                     
@@ -2086,9 +2092,9 @@ class AdminController extends Controller
                                    ,1 )";
                             $param = array(
                                 $id,
-                                $fila[4],
-                                $id_medicion,
                                 $fila[5],
+                                $id_medicion,
+                                $fila[6],
                                 $fila[3],
                                 );
                             $tipo_param = array(
@@ -2108,6 +2114,7 @@ class AdminController extends Controller
                                    ([ID]
                                    ,[PLANOGRAMAP_ID]
                                    ,[PRECIO]
+                                   ,[FECHAHORACAPTURA]
                                    ,[ACTIVO])
                              VALUES
                                    (?
@@ -2118,11 +2125,13 @@ class AdminController extends Controller
                                 $id_p,
                                 $id,
                                 $fila[2],
+                                $fila[4],
                                 );
                             $tipo_param = array(
                                 \PDO::PARAM_INT,
                                 \PDO::PARAM_INT,
                                 \PDO::PARAM_INT,
+                                ($fila[4] === "NULL")?\PDO::PARAM_NULL:\PDO::PARAM_STR,
                                 );
 
                             $row_affected += $conn->executeUpdate($sql,$param,$tipo_param);
