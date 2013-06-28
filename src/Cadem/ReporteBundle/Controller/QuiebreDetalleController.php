@@ -80,7 +80,7 @@ class QuiebreDetalleController extends Controller
 			JOIN c.salas s
 			JOIN s.salaclientes sc
 			JOIN sc.cliente cl
-			WHERE cl.id = :id and p.region_id=1')
+			WHERE cl.id = :id and p.region_id=15')
 			->setParameter('id', $cliente->getId());
 		$provincias = $query->getResult();
 		
@@ -97,7 +97,7 @@ class QuiebreDetalleController extends Controller
 			JOIN c.salas s
 			JOIN s.salaclientes sc
 			JOIN sc.cliente cl
-			WHERE cl.id = :id and p.region_id=1')
+			WHERE cl.id = :id and p.region_id=15')
 			->setParameter('id', $cliente->getId());
 		$comunas = $query->getResult();
 		
@@ -160,7 +160,7 @@ class QuiebreDetalleController extends Controller
 				'choices'   => $choices_regiones,
 				'required'  => true,
 				'multiple'  => true,
-				'data' => array(1)
+				'data' => array(15)
 			))
 			->getForm();
 			
@@ -311,7 +311,7 @@ class QuiebreDetalleController extends Controller
 		$fila=array();
 		$fila['aTargets']=array(0);
 		$fila['sClass']="tag";
-		$fila['sWidth']="300px";
+		$fila['sWidth']="260px";
 		array_push($aoColumnDefs,$fila);
 		
 		$fila=array();
@@ -349,7 +349,7 @@ class QuiebreDetalleController extends Controller
 		$session->set("total",$total);	
 
 		// Calcula el ancho máximo de la tabla	
-		$extension=count($head)*14+sqrt(count($head))-100;
+		$extension=count($head)*12+sqrt(count($head))-100;
 	
 		if($extension<0)
 			$extension=0;
@@ -452,7 +452,7 @@ class QuiebreDetalleController extends Controller
 		{
 			$nivel1=$detalle_quiebre[$cont_regs]['COD_PRODUCTO'];		
 			// Lleno la fila con vacios, le agrego 1 posiciones, correspondientes al total					
-			$fila=array_fill(0,$num_salas+3,"<div style='background:grey;height:1.9em'></div>");								
+			$fila=array_fill(0,$num_salas+3,"<div style='background:grey;height:2.22em'></div>");								
 			$nivel2=$detalle_quiebre[$cont_regs]['SEGMENTO'];																								
 			$cont_totales_producto=0;				
 		
@@ -468,10 +468,10 @@ class QuiebreDetalleController extends Controller
 					switch($detalle_quiebre[$cont_regs]['quiebre'])
 					{
 						case '0':
-							$fila[$columna_quiebre+2]="<div style='background:$color_positivo;height:1.9em'></div>";	
+							$fila[$columna_quiebre+2]="<div style='background:$color_positivo;height:2.22em'></div>";	
 							break;
 						case '1':
-							$fila[$columna_quiebre+2]="<div style='background:$color_negativo;height:1.9em'></div>";	
+							$fila[$columna_quiebre+2]="<div style='background:$color_negativo;height:2.22em'></div>";	
 							break;
 					}																			
 					$cont_regs++;						
@@ -482,7 +482,7 @@ class QuiebreDetalleController extends Controller
 					$cont_totales_producto++;																			
 					$nivel1=$detalle_quiebre[$cont_regs]['COD_PRODUCTO'];
 					array_push($body,$fila);
-					$fila=array_fill(0,$num_salas+3,"<div style='background:grey;height:1.9em'></div>");	
+					$fila=array_fill(0,$num_salas+3,"<div style='background:grey;height:2.22em'></div>");	
 				}
 				if($cont_regs==$num_regs)		
 				{						
@@ -490,10 +490,10 @@ class QuiebreDetalleController extends Controller
 					switch($detalle_quiebre[$cont_regs-1]['quiebre'])
 					{
 						case '0':
-							$fila[$columna_quiebre+2]="<div style='background:$color_positivo;height:1.9em'></div>";	
+							$fila[$columna_quiebre+2]="<div style='background:$color_positivo;height:2.22em'></div>";	
 							break;
 						case '1':
-							$fila[$columna_quiebre+2]="<div style='background:$color_negativo;height:1.9em'></div>";	
+							$fila[$columna_quiebre+2]="<div style='background:$color_negativo;height:2.22em'></div>";	
 							break;
 					}					
 					$fila[$num_salas+2]=round($totales_producto[$cont_totales_producto]['QUIEBRE']*100,1);					
@@ -558,7 +558,7 @@ class QuiebreDetalleController extends Controller
 		// $session->close();
 		$time_taken = microtime(true) - $start;
 		$output = array(
-			"sEcho" => intval($_GET['sEcho']),
+			"sEcho" => intval($_POST['sEcho']),
 			"iTotalRecords" => count($detalle_quiebre),
 			"iTotalDisplayRecords" => count($body),
 			"aaData" => $body,
@@ -718,7 +718,7 @@ class QuiebreDetalleController extends Controller
 		
 		$fila=array();
 		$fila['aTargets']=array(0);
-		$fila['sWidth']="300px";
+		$fila['sWidth']="260px";
 		$fila['sClass']="tag";
 		array_push($aoColumnDefs,$fila);
 		
@@ -764,7 +764,7 @@ class QuiebreDetalleController extends Controller
 		$session->set("totales_verticales_segmento",$totales_verticales_segmento);	
 		$session->set("total",$total);		
 		// Calcula el ancho máximo de la tabla	
-		$extension=count($head)*(15+log(count($head),50))-100;
+		$extension=count($head)*(12+log(count($head),10))-100;
 	
 		if($extension<0)
 			$extension=0;

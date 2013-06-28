@@ -80,7 +80,7 @@ class PrecioDetalleController extends Controller
 			JOIN c.salas s
 			JOIN s.salaclientes sc
 			JOIN sc.cliente cl
-			WHERE cl.id = :id and p.region_id=1')
+			WHERE cl.id = :id and p.region_id=15')
 			->setParameter('id', $cliente->getId());
 		$provincias = $query->getResult();
 		
@@ -97,7 +97,7 @@ class PrecioDetalleController extends Controller
 			JOIN c.salas s
 			JOIN s.salaclientes sc
 			JOIN sc.cliente cl
-			WHERE cl.id = :id and p.region_id=1')
+			WHERE cl.id = :id and p.region_id=15')
 			->setParameter('id', $cliente->getId());
 		$comunas = $query->getResult();
 		
@@ -160,7 +160,7 @@ class PrecioDetalleController extends Controller
 				'choices'   => $choices_regiones,
 				'required'  => true,
 				'multiple'  => true,
-				'data' => array(1)
+				'data' => array(15)
 			))
 			->getForm();
 			
@@ -311,13 +311,13 @@ class PrecioDetalleController extends Controller
 		$fila=array();
 		$fila['aTargets']=array(0);
 		$fila['sClass']="tag2";
-		$fila['sWidth']="120px";
+		$fila['sWidth']="100px";
 		array_push($aoColumnDefs,$fila);
 		
 		$fila=array();
 		$fila['aTargets']=array(1);
 		$fila['sClass']="tag";
-		$fila['sWidth']="280px";
+		$fila['sWidth']="260px";
 		array_push($aoColumnDefs,$fila);		
 
 		$fila=array();
@@ -356,7 +356,7 @@ class PrecioDetalleController extends Controller
 		$session->set("total",$total);	
 
 		// Calcula el ancho máximo de la tabla	
-		$extension=count($head)*14-100;
+		$extension=count($head)*11-100;
 	
 		if($extension<0)
 			$extension=0;
@@ -530,7 +530,7 @@ class PrecioDetalleController extends Controller
 		// $session->close();
 		$time_taken = microtime(true) - $start;
 		$output = array(
-			"sEcho" => intval($_GET['sEcho']),
+			"sEcho" => intval($_POST['sEcho']),
 			"iTotalRecords" => count($detalle_quiebre),
 			"iTotalDisplayRecords" => count($body),
 			"aaData" => $body,
@@ -690,13 +690,13 @@ class PrecioDetalleController extends Controller
 		$fila=array();
 		$fila['aTargets']=array(0);
 		$fila['sClass']="tag2";
-		$fila['sWidth']="120px";
+		$fila['sWidth']="100px";
 		array_push($aoColumnDefs,$fila);
 		
 		$fila=array();
 		$fila['aTargets']=array(1);
 		$fila['sClass']="tag";
-		$fila['sWidth']="280px";
+		$fila['sWidth']="260px";
 		array_push($aoColumnDefs,$fila);		
 
 		$fila=array();
@@ -738,7 +738,7 @@ class PrecioDetalleController extends Controller
 		$session->set("totales_verticales_segmento",$totales_verticales_segmento);	
 		$session->set("total",$total);		
 		// Calcula el ancho máximo de la tabla	
-		$extension=count($head)*(14+log(count($head),50))-100;
+		$extension=count($head)*(13+log(count($head),10))-100;
 	
 		if($extension<0)
 			$extension=0;
