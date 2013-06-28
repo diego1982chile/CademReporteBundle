@@ -1054,19 +1054,19 @@ class AdminController extends Controller
                                 'mensaje' => 'EL "FOLIO_CADEM" NO PUEDE ESTAR VACIA, CERCA DE LA LINEA '.$k
                             ));
                         }
-                        if(strlen($fila[1]) === 0){//EL "CODIGOSALA" NO PUEDE SER VACIO
-                            return new JsonResponse(array(
-                                'status' => false,
-                                'mensaje' => 'EL "CODIGOSALA" NO PUEDE ESTAR VACIA, CERCA DE LA LINEA '.$k
-                            ));
-                        }
+                        // if(strlen($fila[1]) === 0){//EL "CODIGOSALA" NO PUEDE SER VACIO
+                        //     return new JsonResponse(array(
+                        //         'status' => false,
+                        //         'mensaje' => 'EL "CODIGOSALA" NO PUEDE ESTAR VACIA, CERCA DE LA LINEA '.$k
+                        //     ));
+                        // }
                         if(in_array($fila[1], $codigo_sala_encontrados)){//SE BUSCAN Y DESCARTA LOS CODIGOSALA ENCONTRADOS Y SE REGISTRA
                             unset($m[$k]);
                             $item_descartados++;
                         }
                         else{
                             if($fila[0] !== '') $folio[] = $fila[0];
-                            // if($fila[1] !== '') $codigo_sala[] = $fila[1];
+                            if($fila[1] === '') $m[$k][1] = "NULL";
                             if($fila[2] !== '') $empleado[] = $fila[2];
                         }
                         set_time_limit(10);
