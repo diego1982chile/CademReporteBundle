@@ -46,8 +46,7 @@ class QuiebreRankingController extends Controller
 			JOIN p.comunas c
 			JOIN c.salas s
 			JOIN s.salaclientes sc
-			JOIN sc.cliente cl
-			WHERE cl.id = :id')
+			WHERE sc.clienteid = :id')
 			->setParameter('id', $cliente->getId());
 		$regiones = $query->getResult();
 		
@@ -63,8 +62,7 @@ class QuiebreRankingController extends Controller
 			JOIN p.comunas c
 			JOIN c.salas s
 			JOIN s.salaclientes sc
-			JOIN sc.cliente cl
-			WHERE cl.id = :id')
+			WHERE sc.clienteid = :id')
 			->setParameter('id', $cliente->getId());
 		$provincias = $query->getResult();
 		
@@ -79,8 +77,7 @@ class QuiebreRankingController extends Controller
 			'SELECT DISTINCT c FROM CademReporteBundle:Comuna c
 			JOIN c.salas s
 			JOIN s.salaclientes sc
-			JOIN sc.cliente cl
-			WHERE cl.id = :id')
+			WHERE sc.clienteid = :id')
 			->setParameter('id', $cliente->getId());
 		$comunas = $query->getResult();
 		
@@ -94,9 +91,9 @@ class QuiebreRankingController extends Controller
 		//MEDICION
 		$query = $em->createQuery(
 			'SELECT m.id, m.nombre FROM CademReporteBundle:Medicion m
-			JOIN m.estudio e
-			JOIN e.cliente c
-			WHERE c.id = :id
+			JOIN m.estudiovariable ev			
+			JOIN ev.estudio e
+			WHERE e.clienteid = :id
 			ORDER BY m.fechainicio DESC')
 			->setParameter('id', $cliente->getId());
 		$mediciones_q = $query->getArrayResult();
