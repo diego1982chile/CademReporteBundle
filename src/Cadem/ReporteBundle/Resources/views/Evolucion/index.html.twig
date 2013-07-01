@@ -308,7 +308,7 @@ function fixedColumn1()
                     nTrs[i].parentNode.insertBefore( nGroup, nTrs[i] );
 					// Se crea atributo que asocie la fila de agregacion con sus filas hijas
 					// Se añade fila de agregacion para tabla principal
-					nTrs[i].previousSibling.setAttribute("data-tt-id",sGroup);																
+					nTrs[i].previousSibling.setAttribute("data-tt-id",sGroup);									
                     
 					// /* Cell to insert into the frozen columns */
 					
@@ -319,7 +319,7 @@ function fixedColumn1()
 					nCell.innerHTML = sGroup;
 					nGroup.appendChild( nCell );
                     // Se añade fila de agregacion para tabla fija
-					$(nGroup).insertBefore( $('tbody tr:eq('+(i+iCorrector)+')', left.body)[0] );					
+					$(nGroup).insertBefore( $('tbody tr:eq('+(i+iCorrector)+')', left.body)[0] );						
 					++row;
 					iCorrector++;
 					sLastGroup = sGroup;
@@ -358,7 +358,7 @@ function fixedColumn1()
 			// Se añade fila de agregacion para tabla fija
 			$(nGroup).insertBefore( $('tbody tr:eq(0)', left.body)[0] );					
 		}
-	});
+	});	
 	construirGrafico();
 }
 
@@ -409,31 +409,33 @@ function fixedColumn2()
 }
 
 function colorTotales(){
+	$('.tag').each(function(){
+		$(this).css('cursor','pointer');
+		$(this).parent().attr('title',$(this).text());
+	});
 	switch(parseInt(variable))
 	{
 		case 1:
 			var color_fondo = 'rgb(255, 235, 158)';
-			$('.DTFC_Cloned tbody tr:first td').css('background-color',color_fondo);
-			$('.table:not(.DTFC_Cloned) tbody tr:first td').css('background-color',color_fondo);
+			$('.DTFC_Cloned tbody tr:first td').css('background-color',color_fondo);			
+			$('.table:not(.DTFC_Cloned) tbody tr:first td').css('background-color',color_fondo);			
 			$('.table:not(.DTFC_Cloned) tbody tr td:last-of-type:not(.group)').css('background-color',color_fondo);
 			$('.DTFC_Cloned tbody tr td:first-of-type:not(.group)').css({
 				'background-color':'rgb(238, 236, 255)',
-				'color': 'black',
+				'color': 'black',				
 				});			
 			break;
 		case 2:					
 			$('.DTFC_Cloned tbody tr td:first-of-type:not(.group)').css({
 				'background-color':'rgb(232, 231, 245)',
 				'color': 'black',
-				'border': '1px solid #B2B2B2'
+				'border': '1px solid #B2B2B2',				
 			});
 			
-			// $('.DTFC_Cloned tbody tr td:nth-last-of-type(1):not(.group)').css({
-				// 'background-color':'rgb(255, 235, 158)',
-				// 'color': 'black',				
-			// });			
-			break;
-		$('.DTFC_Cloned tbody tr:not(:first) td:nth-last-of-type(0)').css('cursor','pointer');
+			$('.DTFC_Cloned tbody tr td:nth-last-of-type(1):not(.group)').css({				
+				'cursor': 'pointer'
+			});			
+			break;		
 	}
 }
 
