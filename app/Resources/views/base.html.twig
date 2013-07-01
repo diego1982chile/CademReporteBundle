@@ -92,13 +92,13 @@
 							{% set active_quiebre = '' %}
 							{% endif %}
 							{% set variables=service_variablescliente.getVariables %}
-							{% if 'quiebre' in variables %}
+							{% if 'QUIEBRE' in variables %}
 							{% set disponible='true' %}
 							{% else %}
 							{% set disponible='false' %}
-							{% endif %}
+							{% endif %}							
 							<li class="dropdown {{active_quiebre}}">								
-				                <a href="#" disponible={{disponible}} class="dropdown-toggle" data-toggle="dropdown">Quiebre <b class="caret"></b></a>
+				                <a href="#" disponible={{disponible}} class="dropdown-toggle variable" data-toggle="dropdown">Quiebre <b class="caret"></b></a>
 				                <ul class="dropdown-menu">
 				                  <li><a href="{{ path('quiebre_resumen_index')}}">Resumen</a></li>
 				                  <li><a href="{{ path('quiebre_ranking_index')}}">Ranking</a></li>
@@ -110,13 +110,13 @@
 				                  <li class="disabled"><a href="#">One more separated link</a></li>
 				                </ul>
 			                </li>
-							{% if 'precio' in variables %}
+							{% if 'PRECIO' in variables %}
 							{% set disponible='true' %}
 							{% else %}
 							{% set disponible='false' %}
 							{% endif %}
 							<li class="dropdown">
-				                <a href="#" disponible={{disponible}} class="dropdown-toggle" data-toggle="dropdown">Precio <b class="caret"></b></a>
+				                <a href="#" disponible={{disponible}} class="dropdown-toggle variable" data-toggle="dropdown">Precio <b class="caret"></b></a>
 				                <ul class="dropdown-menu">
 				                  <li><a href="{{ path('precio_evolucion_index')}}">Evolución</a></li>
 				                  <li><a href="{{ path('precio_detalle_index')}}">Detalle</a></li>
@@ -189,13 +189,19 @@
         <p style="margin:0"><img class="img-rounded" alt="" style="height: 60px;" src="{{ asset('bundles/cademreporte/images/logocadem.png') }}"><!-- © 2013 Cadem Smart. --> · <a href="#">Privacidad</a> · <a href="#">Términos</a></p>
       </footer>
 
-    </div><!--/.fluid-container-->
-	
-	
-	
-	
-        
+    </div><!--/.fluid-container-->				   
 
+	<div id="dialog-message" title="variable denegada">
+	  <p>
+		<span class="ui-icon ui-icon-alert" style="float: left; margin: 0 7px 50px 0;"></span>
+			Esta variable corresponde a un estudio no contratado.
+	  </p>
+	  <p>
+		Para mayor información lea los <b>términos</b>.
+	  </p>
+	</div> 	
+ 
+	
 		<script src="{{ asset('bundles/cademreporte/js/jquery-1.9.1.min.js') }}"></script>
 		<script src="{{ asset('bundles/cademreporte/js/jquery-ui.min.js') }}"></script>
 		<script src="{{ asset('bundles/cademreporte/js/bootstrap.min.js') }}"></script>
@@ -209,6 +215,25 @@
 			});
 			var progressLabel = progressbar.find(".progress-label" );
 			progressLabel.text( progressbar.progressbar( "value" ) + "%" );
+			
+			$( "#dialog-message" ).dialog({
+			  autoOpen: false,
+			  modal: true,
+			  width: 400,
+			  buttons: {
+				Ok: function() {
+				  $( this ).dialog( "close" );
+				}
+			  }	
+			});
+			
+			$('.variable').click(function(){
+				if($(this).attr('disponible')=='false')
+				{	
+					$( "#dialog-message" ).dialog( "open" );				
+					return false;
+				}
+			});
 		});
 		</script>
     </body>
