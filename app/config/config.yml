@@ -19,6 +19,8 @@ framework:
     trusted_proxies: ~
     session:         ~
     fragments:       ~
+    session:
+        lifetime: 3600
 
 # Twig Configuration
 twig:
