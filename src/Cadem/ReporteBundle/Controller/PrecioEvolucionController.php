@@ -158,7 +158,7 @@ class PrecioEvolucionController extends Controller
 		
 		//CONSULTA
 		
-		$sql = "SELECT TOP(12) m2.ID as ID, m2.NOMBRE as NOMBRE, m2.FECHAINICIO as FECHAINICIO FROM MEDICION m2 INNER JOIN ESTUDIO e on m2.ESTUDIO_ID=e.ID and e.CLIENTE_ID=12 ORDER BY m2.FECHAINICIO DESC";				
+		$sql = "SELECT TOP(12) m2.ID as ID, m2.NOMBRE as NOMBRE, m2.FECHAINICIO as FECHAINICIO FROM MEDICION m2 INNER JOIN ESTUDIOVARIABLE ev on m2.ESTUDIOVARIABLE_ID=ev.ID INNER JOIN ESTUDIO e on ev.ESTUDIO_ID=e.ID and e.CLIENTE_ID={$user->getClienteID()} ORDER BY m2.FECHAINICIO DESC";											
 		
 		$data_mediciones = $em->getConnection()->executeQuery($sql)->fetchAll();	
 		

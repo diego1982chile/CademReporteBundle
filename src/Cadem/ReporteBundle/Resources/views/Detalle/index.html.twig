@@ -541,6 +541,8 @@ $(document).ready(function () {
 	var callbacks = $.Callbacks();	
 	callbacks.add( preInitTabla() );
 	callbacks.add( construirTabla() );
+	alerta('Advertencia','Esta búsqueda retornó muchas salas, es posible que la carga y la respuesta tarden más de lo habitual. Se recomienda filtrar la búsqueda o utilizar "Chrome"');			
+	$('.alert').hide();
 	// callbacks.add( fixedColumn() );					
 	
 	$( "#slider-range-min" ).slider({
@@ -587,6 +589,7 @@ $(document).ready(function () {
 	
 	//LOGICA DEL SUBMIT DEL FORMULARIO, SE DEBERIA OCUPAR AJAX
 	$('form#filtros').submit(function() {
+		$('.alert').hide();
 		if($boton_presionado.attr("value") === "Limpiar Filtros"){
 			$('form#filtros select[multiple="multiple"] option').prop('selected',true);
 			$('#f_region_Region').change();
@@ -691,9 +694,9 @@ $(document).ready(function () {
 			});							
 			thead.appendChild( tableHead );
 			table.appendChild( thead );				
-			document.getElementById('container').appendChild(table);
+			document.getElementById('container').appendChild(table);		
 			if(data.head.length>30)
-				alerta('Advertencia','Esta búsqueda retornó muchas salas, es posible que la carga y la respuesta tarden más de lo habitual. Se recomienda filtrar la búsqueda o utilizar "Chrome"');			
+				$('.alert').show();
 			// Luego recalculamos el ancho maximo en base a la cardinalidad del head
 			preInitTabla();			
 			// Luego volvemos a construir la tabla con dataTables
