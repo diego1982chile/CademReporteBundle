@@ -26,6 +26,7 @@ twig:
     strict_variables: %kernel.debug%
     globals:
         service_salasmedidas: @cadem_reporte.helper.salasmedidas
+        service_variablescliente: @cadem_reporte.helper.cliente
 
 # Assetic Configuration
 assetic:
