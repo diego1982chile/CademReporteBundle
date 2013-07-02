@@ -63,7 +63,8 @@ class QuiebreDetalleController extends Controller
 			JOIN c.salas s
 			JOIN s.salaclientes sc
 			JOIN sc.cliente cl
-			WHERE cl.id = :id')
+			WHERE cl.id = :id
+			order by r.numero')
 			->setParameter('id', $cliente->getId());
 		$regiones = $query->getResult();
 		
@@ -80,15 +81,17 @@ class QuiebreDetalleController extends Controller
 			JOIN c.salas s
 			JOIN s.salaclientes sc
 			JOIN sc.cliente cl
-			WHERE cl.id = :id and p.region_id=15')
-			->setParameter('id', $cliente->getId());
+			WHERE cl.id = :id
+			order by p.region_id')
+			->setParameter('id', $cliente->getId())
+			->setMaxResults(1);
 		$provincias = $query->getResult();
 		
 		$choices_provincias = array();
 		foreach($provincias as $r)
 		{
 			$choices_provincias[$r->getId()] = strtoupper($r->getNombre());
-		}
+		}				
 		
 		//COMUNA
 		$query = $em->createQuery(
@@ -97,8 +100,9 @@ class QuiebreDetalleController extends Controller
 			JOIN c.salas s
 			JOIN s.salaclientes sc
 			JOIN sc.cliente cl
-			WHERE cl.id = :id and p.region_id=15')
-			->setParameter('id', $cliente->getId());
+			WHERE cl.id = :id and p.region_id= :id_region')
+			->setParameter('id', $cliente->getId())
+			->setParameter('id_region', $regiones[0]->getId());
 		$comunas = $query->getResult();
 		
 		$choices_comunas = array();
@@ -161,7 +165,7 @@ class QuiebreDetalleController extends Controller
 				'choices'   => $choices_regiones,
 				'required'  => true,
 				'multiple'  => true,
-				'data' => array(15)
+				'data' => array($regiones[0]->getId())
 			))
 			->getForm();
 			
@@ -190,8 +194,7 @@ class QuiebreDetalleController extends Controller
 		foreach(array_keys($choices_comunas) as $comuna)
 			$comunas.=$comuna.',';	
 		$comunas = trim($comunas, ',');
-		
-		// print_r($comunas);
+			
 		
 		//CONSULTA
 				
