@@ -29,18 +29,15 @@ class ControllerListener
     {        	
 		$request = $event->getRequest();
 		
-		$variable = explode('/',strtoupper($request->getPathInfo('_pattern')))[1];				
+		$variable = explode('/',strtoupper($request->getPathInfo('_pattern')))[1];								
 		
-		if(!in_array($variable,['LOGIN','_WDT','DASHBOARD']))
+		if(!in_array($variable,['LOGIN','_WDT','DASHBOARD','H']))
 		{
 			$variables = $this->clienteHelper->getVariables();	
 			if(!in_array($variable,$variables)){	
-				if($this->security->isGranted('ROLE_USER') || $this->security->isGranted('ROLE_ADMIN'))		
-				{
-					$request->attributes->set('_controller', 'CademReporteBundle:Dashboard:index');
-					$request->attributes->set('_route', $this->router->generate('dashboard_index'));
-					$event->setController($this->resolver->getController($request));
-				}					
+				$request->attributes->set('_controller', 'CademReporteBundle:Dashboard:index');
+				// $request->attributes->set('_route', $this->router->generate('dashboard_index'));
+				$event->setController($this->resolver->getController($request));						
 			}
 		}
     }
