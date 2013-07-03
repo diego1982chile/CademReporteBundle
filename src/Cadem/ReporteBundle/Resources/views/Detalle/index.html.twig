@@ -30,7 +30,7 @@
 								{% for key,value in head %}
 								{% if loop.index>columnas_reservadas and loop.index!=head|length %}										
 								<th>
-									{{key}}
+									{{value['cod_sala']}}
 								</th>
 								{% else %}	
 								<th rowspan="2" style='vertical-align:middle'>
@@ -42,8 +42,8 @@
 							<tr>
 								{% for key,value in head %}
 								{% if loop.index>columnas_reservadas and loop.index!=head|length %}
-								<th title='{{ value }}'>
-									{{value[0:16]}}...											
+								<th title="{{ value['nom_sala'] }}">
+									{{value['nom_sala'][0:16]}}...											
 								</th>
 								{% endif %}		
 								{% endfor %}

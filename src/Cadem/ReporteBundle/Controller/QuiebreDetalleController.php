@@ -193,8 +193,7 @@ class QuiebreDetalleController extends Controller
 		$comunas='';
 		foreach(array_keys($choices_comunas) as $comuna)
 			$comunas.=$comuna.',';	
-		$comunas = trim($comunas, ',');
-			
+		$comunas = trim($comunas, ',');					
 		
 		//CONSULTA
 				
@@ -207,7 +206,7 @@ class QuiebreDetalleController extends Controller
 		INNER JOIN COMUNA com on s.COMUNA_ID=com.ID
 		INNER JOIN CADENA cad on s.CADENA_ID=cad.ID	
 		INNER JOIN ITEM i on i.ID = ic.ITEM_ID	
-		ORDER BY SEGMENTO,NOM_PRODUCTO,NOM_SALA";
+		ORDER BY SEGMENTO,NOM_PRODUCTO,NOM_SALA";			
 		
 		$sha1 = sha1($sql);
 
@@ -328,7 +327,11 @@ class QuiebreDetalleController extends Controller
 		foreach($salas_aux as $sala)
 		{
 			array_push($salas,$sala['ID_SALA']);	
-			$head[$sala['COD_SALA']]=$sala['NOM_SALA'];
+			// $head[$sala['COD_SALA']]=$sala['NOM_SALA'];
+			$fila=array();
+			$fila['cod_sala']=$sala['COD_SALA'];
+			$fila['nom_sala']=$sala['NOM_SALA'];
+			array_push($head,$fila);
 			$fila=array();
 			$fila['aTargets']=array($cont);		
 			// $fila['sWidth']="2%";
@@ -341,7 +344,7 @@ class QuiebreDetalleController extends Controller
 		array_push($aoColumnDefs,$fila);		
 		foreach(array_reverse($prefixes) as $prefix)		
 			array_unshift($head,$prefix);		
-		array_push($head,'TOTAL');			
+		array_push($head,'TOTAL');							
 		
 		// Guardamos resultado de consulta en variable de sesión para reusarlas en un action posterior
 		$session->set("salas",$salas);				
