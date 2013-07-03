@@ -181,6 +181,17 @@ table.DTFC_Cloned tfoot {
     vertical-align: middle !important;
 }
 
+.dataTables_filter label input{
+	margin-bottom: 0em !important;
+	font-size: 14px !important;
+	height: 20px !important;
+	padding: .1em !important;
+}
+
+.dataTables_filter label{
+	margin-bottom: 0em !important;	
+}
+
 /* Block out the gap above the scrollbar on the right, when there is a fixed
  * right column
  */
@@ -191,6 +202,12 @@ div.DTFC_Blocker {
 .fueraRango{
 	background:red;
 	color:white;
+}
+
+.matched{		
+	border-style:solid;
+	/*border-color: #ff0000;*/
+	border-color: #00FF00;
 }
 
 div.DataTables_sort_wrapper {
@@ -279,6 +296,8 @@ function construirTabla()
 			"bScrollCollapse": true,
 			"bFilter": false,
 			"bSort": false,
+			"bDeferLoading": false,
+			// "bSortClasses": false,
 			"bInfo": false,
 			"bPaginate": false,			
 			// "sDom": "frtiS",				
@@ -325,7 +344,52 @@ function construirTabla()
 					quitarloader();
 				}
 		});
-		 $('div.fg-toolbar:first').append("<h5 style='float:left;margin:0em'>Tabla Detalle {{tag_variable}}: (%)</h5>");		
+		$('div.fg-toolbar:first').append("<div align='left' style='float:left'><h5 style='float:left;margin:0em'>Tabla Detalle {{tag_variable}}: (%)</h5><div>");	
+		$("<div class='dataTables_filter' align='right' style='float:right'><label>buscar: <input id='buscar' /></label></div>").appendTo('#tabla_resumen_wrapper .fg-toolbar:first');				 		
+	});	
+}
+
+function listenerFiltro()
+{	
+	$('#buscar').keydown(function(e){									
+		switch(e.keyCode)
+		{			
+			case 13:	
+				var delta=$('table.DTFC_Cloned tbody tr').height();
+				var offset=delta;
+				var oSettings = oTable.fnSettings();
+				var ventana= maxHeight;				
+				var hit=false;
+				// $('.ui-state-active').removeClass('ui-state-active');				
+				$('.matched').removeClass('matched');				
+				var needle=$('#buscar').val().toUpperCase();				
+				$('table.DTFC_Cloned tbody tr').each(function(){						
+					var haystack=$(this).attr('title').toString().toUpperCase();					
+					if (haystack.indexOf(needle)!=-1) {		
+						$('#buscar').val('');
+						// $(this).addClass('ui-state-active');						
+						$(this).addClass('matched');						
+						hit=true;
+						return false;
+					}
+					offset=offset+delta;
+				});
+				if(hit)
+				{					
+					if(offset<=ventana)
+						offset=0;
+					else
+						offset=offset-delta;					
+					$('.dataTables_scrollBody').animate({ scrollTop: offset });		
+				}
+				else
+				{
+					alert('El item no fue encontrado');
+					$('#buscar').val('');
+					$('.dataTables_scrollBody').animate({ scrollTop: 0 });	
+				}
+				break;
+		}
 	});	
 }
 
@@ -385,6 +449,7 @@ function fixedColumn1()
 					nCell = document.createElement( 'td' );
 					nCell.className = "group tag";
 					nCell.innerHTML = sGroup.toUpperCase();
+					nGroup.setAttribute('title',sGroup.toUpperCase());	
 					nGroup.appendChild( nCell );
                     // Se añade fila de agregacion para tabla fija
 					$(nGroup).insertBefore( $('tbody tr:eq('+(i+iCorrector)+')', left.body)[0] );
@@ -408,7 +473,7 @@ function fixedColumn1()
 				// alert(matriz_totales[row][j]);
 				nCell.innerHTML = matriz_totales[row][j];																
 				nGroup.appendChild( nCell );						 
-			}		
+			}					
 			$(nGroup).insertBefore( $('tbody tr:eq('+(0)+')', right.body)[0] );						
 			// Se crea atributo que asocie la fila de agregacion con sus filas hijas
 			var att=document.createAttribute("data-tt-id");
@@ -423,10 +488,12 @@ function fixedColumn1()
 			nCell.className = "group tag";
 			nCell.innerHTML = "TOTAL GENERAL";
 			nGroup.appendChild( nCell );
+			nGroup.setAttribute('title',"TOTAL GENERAL");	
 			// Se añade fila de agregacion para tabla fija
 			$(nGroup).insertBefore( $('tbody tr:eq(0)', left.body)[0] );			
 		}
 	});	
+	listenerFiltro();
 }
 
 function fixedColumn2()
@@ -622,8 +689,7 @@ $(document).ready(function () {
 		.done(function() { /*alert("second success");*/ })
 		.fail(function() { alert("Se produjo un error al cargar las comunas"); })
 		.always(function() { /*alert("finished");*/ quitarloader();});
-	});
-	
+	});		
 });
 	
 	//LOGICA DEL SUBMIT DEL FORMULARIO, SE DEBERIA OCUPAR AJAX
@@ -721,7 +787,7 @@ $(document).ready(function () {
 		  '<strong>'+strong+'</strong> '+text+
 		'</div>';
 		$('#container').parent().append(alerttipo);
-	}	
+	}			
 	
  </script>
 {% endblock %}
