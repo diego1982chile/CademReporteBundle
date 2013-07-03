@@ -14,7 +14,7 @@ class QuiebreEvolucionController extends Controller
     
 	public function indexAction()
     {
-		
+		$start = microtime(true);
 		$session = $this->get("session");
 	
 		$user = $this->getUser();
@@ -156,8 +156,7 @@ class QuiebreEvolucionController extends Controller
 			))
 			->getForm();		
 		
-		//CONSULTA
-		
+		//CONSULTA SACAR ULTIMAS 12 MEDICIONES
 		$sql = "SELECT TOP(12) m2.ID as ID, m2.NOMBRE as NOMBRE, m2.FECHAINICIO as FECHAINICIO FROM MEDICION m2 INNER JOIN ESTUDIOVARIABLE ev on m2.ESTUDIOVARIABLE_ID=ev.ID INNER JOIN ESTUDIO e on ev.ESTUDIO_ID=e.ID and e.CLIENTE_ID={$user->getClienteID()} ORDER BY m2.FECHAINICIO DESC";											
 		
 		$data_mediciones = $em->getConnection()->executeQuery($sql)->fetchAll();				
@@ -172,7 +171,6 @@ class QuiebreEvolucionController extends Controller
 		foreach($data_mediciones as $registro)
 		{
 			$fila=array();
-			// print_r($resumen_quiebre);
 			if(!in_array($registro['NOMBRE'],$head))
 			{
 				array_push($head,$registro['NOMBRE']);
@@ -192,16 +190,17 @@ class QuiebreEvolucionController extends Controller
 		// Construir consulta mediante UNION con los ID de las últimas 12 mediciones, obtenidos previamente
 		$sql="";
 		
+		// TIME 2500MS
 		foreach($mediciones_id as $medicion_id)
 		{
 			$sql.="SELECT (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre, i.NOMBRE as PRODUCTO,  ni.NOMBRE as SEGMENTO, m.NOMBRE, m.FECHAINICIO FROM QUIEBRE q
-				INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID and p.MEDICION_ID={$medicion_id}	
-				INNER JOIN MEDICION m on p.MEDICION_ID=m.ID			
-				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
+				INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID and p.MEDICION_ID = {$medicion_id}	
+				INNER JOIN MEDICION m on p.MEDICION_ID=m.ID
 				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
-				INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
 				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
 				INNER JOIN ITEM i on i.ID = ic.ITEM_ID
+				INNER JOIN ESTUDIOVARIABLE ev on ev.ID = m.ESTUDIOVARIABLE_ID
+				INNER JOIN ESTUDIO e on e.ID = ev.ESTUDIO_ID AND e.CLIENTE_ID = {$user->getClienteID()}
 				GROUP BY  ni.NOMBRE,i.NOMBRE,m.NOMBRE,m.FECHAINICIO
 				UNION ";
 		}
@@ -214,7 +213,10 @@ class QuiebreEvolucionController extends Controller
 			$evolucion_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();
 			$session->set($sha1,$evolucion_quiebre);
 		}
-		else $evolucion_quiebre = $session->get($sha1);		
+		else $evolucion_quiebre = $session->get($sha1);
+
+		
+		
 		
 		$head=array('SKU/MEDICIÓN','CATEGORIA');	
 		
@@ -253,7 +255,7 @@ class QuiebreEvolucionController extends Controller
 		array_push($head,'TOTAL');
 		
 		// Obtener totales horizontales por producto
-			
+		// TIME 700MS
 		$sql = "SELECT i.NOMBRE, ni.NOMBRE, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
 		INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID and p.MEDICION_ID IN ({$mediciones_id_str})		
 		INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
@@ -270,9 +272,12 @@ class QuiebreEvolucionController extends Controller
 		}
 		else $totales_producto = $session->get($sha1);
 
+		
+
 		// Obtener totales verticales por segmento
 		
 		$sql="";
+		// TIME 2000MS
 		
 		foreach($mediciones_id as $medicion_id)
 		{
@@ -294,10 +299,13 @@ class QuiebreEvolucionController extends Controller
 			$session->set($sha1,$totales_segmento);
 		}
 		else $totales_segmento = $session->get($sha1);
+
+		
 		
 
-		// Obtener totales horizontales por totales segmento (ultima columna de totales verticales por categoria)
 		
+		// Obtener totales horizontales por totales segmento (ultima columna de totales verticales por categoria)
+		//TIME 270MS
 		$sql =	"SELECT ni.NOMBRE as SEGMENTO, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
 		INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID and p.MEDICION_ID IN ({$mediciones_id_str})			
 		INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
@@ -307,9 +315,9 @@ class QuiebreEvolucionController extends Controller
 			
 		$totales_horizontales_segmento = $em->getConnection()->executeQuery($sql)->fetchAll();					
 
-		// Obtener totales verticales por totales categoria						
-		
+		// Obtener totales verticales por totales categoria	
 		$sql="";
+		//TIME 500MS
 		
 		foreach($mediciones_id as $medicion_id)
 		{
@@ -329,13 +337,18 @@ class QuiebreEvolucionController extends Controller
 			$session->set($sha1,$totales_verticales_segmento);
 		}
 		else $totales_verticales_segmento = $session->get($sha1);
+
+		
 				
 		// Obtener total horizontal por totales verticales por totales categoria
-		
+		//TIME 200MS
 		$sql = "SELECT  SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
 		INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID and p.MEDICION_ID IN ({$mediciones_id_str})";		
 
-		$total = $em->getConnection()->executeQuery($sql)->fetchAll();									
+		$total = $em->getConnection()->executeQuery($sql)->fetchAll();
+
+		
+
 
 		// Calcula el ancho máximo de la tabla	
 		$extension=count($head)*11-100;
@@ -367,6 +380,8 @@ class QuiebreEvolucionController extends Controller
 		
 		$session->set("head",$head);
 		$session->set("aoColumnDefs",$aoColumnDefs);
+		
+		$time_taken = microtime(true) - $start;
 						
 		//RESPONSE
 		$response = $this->render('CademReporteBundle:Evolucion:index.html.twig',
@@ -402,7 +417,7 @@ class QuiebreEvolucionController extends Controller
 	// Definimos un comparador de fechas para ordenar las mediciones
 	function sortFunction( $a, $b ) {		
 		return strtotime($a['fecha']) - strtotime($b['fecha']);
-	}		
+	}
 	
 	public function bodyAction(Request $request)
 	{		
@@ -414,9 +429,7 @@ class QuiebreEvolucionController extends Controller
 		$totales_horizontales_segmento=$session->get("totales_horizontales_segmento");	
 		$totales_verticales_segmento=$session->get("totales_verticales_segmento");	
 		$total=$session->get("total");							
-		$evolucion_quiebre=$session->get("evolucion_quiebre");	
-
-		// print_r($evolucion_quiebre);
+		$evolucion_quiebre=$session->get("evolucion_quiebre");
 				
 		/* Recorrer vector de mediciones, y resultado de la consulta de forma sincrona; cada vez que se encuentre coincidencia hacer 
 		fetch en resultado consulta, si no, asignar vacio */

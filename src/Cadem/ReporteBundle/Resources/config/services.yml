@@ -7,18 +7,18 @@ services:
 #        arguments: [@service_id, "plain_value", %parameter%]
     cadem_reporte.request_listener:
         class: Cadem\ReporteBundle\EventListener\RequestListener
-        arguments: [@router, @security.context]
+        arguments: [@router, @security.context, @cadem_reporte.helper.cliente]
         tags:
             - { name: kernel.event_listener, event: kernel.request, method: onKernelRequest  }
     cadem_reporte.response_listener:
         class: Cadem\ReporteBundle\EventListener\ResponseListener
         tags:
             - { name: kernel.event_listener, event: kernel.response, method: onKernelResponse  }
-    cadem_reporte.controller_listener:
-        class: Cadem\ReporteBundle\EventListener\ControllerListener
-        arguments: [@router, @security.context, @cadem_reporte.helper.cliente, @debug.controller_resolver]
-        tags:	
-            - { name: kernel.event_listener, event: kernel.controller, method: onKernelController  }		
+    # cadem_reporte.controller_listener:
+    #     class: Cadem\ReporteBundle\EventListener\ControllerListener
+    #     arguments: [@router, @security.context, @cadem_reporte.helper.cliente, @debug.controller_resolver]
+    #     tags:	
+    #         - { name: kernel.event_listener, event: kernel.controller, method: onKernelController  }		
     cadem_reporte.twig.rst_extension:
         class: Cadem\ReporteBundle\Twig\RstExtension
         tags:

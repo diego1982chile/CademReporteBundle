@@ -29,7 +29,9 @@ class LoginSuccessHandler implements AuthenticationSuccessHandlerInterface
 		{
 			// $response = new RedirectResponse($this->router->generate('algo'));
 			$response = new Response("NO PERMITIDO");
-			$this->security->setToken(null);//SE DEBE DESLOGIAR
+			//SE DESLOGEA
+			$this->security->setToken(null);
+			$request->getSession()->invalidate();
 		}
 		else if ($this->security->isGranted('ROLE_ADMIN'))
 		{
