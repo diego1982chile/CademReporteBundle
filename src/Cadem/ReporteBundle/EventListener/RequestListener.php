@@ -36,5 +36,13 @@ class RequestListener
 			$url = $this->router->generate('dashboard_index');
 			$event->setResponse(new RedirectResponse($url));
 		}
+		elseif ($routeName === "precio_evolucion_index" && $this->security->isGranted('ROLE_USER')) {
+			$variable = 'PRECIO';
+			$variables = array('QUIEBRE');
+			if (!in_array($variable, $variables)) {
+				$id_user = $this->security->getToken()->getUser()->getId();
+				
+			}
+		}
     }
 }
