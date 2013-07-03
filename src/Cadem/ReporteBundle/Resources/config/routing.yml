@@ -40,6 +40,15 @@ dashboard_indicadores:
     pattern:  /dashboard/indicadores
     defaults: { _controller: CademReporteBundle:Dashboard:indicadores }
 #PRECIO
+precio_resumen_index:
+    pattern: /precio/resumen
+    defaults: { _controller: CademReporteBundle:PrecioResumen:index } 
+precio_resumen_header:
+    pattern:  /precio/resumen/header
+    defaults: { _controller: CademReporteBundle:PrecioResumen:header }	
+precio_resumen_body:
+    pattern:  /precio/resumen/body
+    defaults: { _controller: CademReporteBundle:PrecioResumen:body }	
 precio_evolucion_index:
     pattern: /precio/evolucion
     defaults: { _controller: CademReporteBundle:PrecioEvolucion:index } 
