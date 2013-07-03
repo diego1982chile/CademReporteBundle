@@ -21,7 +21,8 @@ class ClienteHelper {
 
     public function getCantidadNiveles() {
 		$em = $this->em;
-		$user = $this->user;
+		if($this->user == null) $user = $this->security->getToken()->getUser();
+		else $user = $this->user;
 		$id_user = $user->getId();
 		$id_cliente = $user->getClienteID();
 		
@@ -40,12 +41,8 @@ class ClienteHelper {
 	
 	public function getVariables() {
 		$em = $this->em;
-		$user = $this->user;
-		// print_r($user);
-		
-		// if($user=='anon.')				
-			// return array();
-				
+		if($this->user == null) $user = $this->security->getToken()->getUser();
+		else $user = $this->user;
 		$id_user = $user->getId();
 		$id_cliente = $user->getClienteID();
 				
@@ -54,8 +51,7 @@ class ClienteHelper {
 			'SELECT v.id, v.nombre FROM CademReporteBundle:variable v	
 			JOIN v.estudiovariables ev
 			JOIN ev.estudio e
-			JOIN e.cliente c
-			WHERE c.id = :idcliente')
+			WHERE e.clienteid = :idcliente')
 			->setParameter('idcliente', $id_cliente);
 
 		$variables_q = $query->getArrayResult();
@@ -64,8 +60,56 @@ class ClienteHelper {
 			$this->variables=array();
 			foreach($variables_q as $variable_q)
 				array_push($this->variables,$variable_q['nombre']);			
-		}		
+		}
 		return $this->variables;
-    }	
-	
+    }
+
+  //   public function getVariables1($id_cliente) {
+		// $em = $this->em;
+				
+		// //CLIENTE
+		// $query = $em->createQuery(
+		// 	'SELECT v.id, v.nombre FROM CademReporteBundle:variable v	
+		// 	JOIN v.estudiovariables ev
+		// 	JOIN ev.estudio e
+		// 	WHERE e.clienteid = :idcliente')
+		// 	->setParameter('idcliente', $id_cliente);
+
+		// $variables_q = $query->getArrayResult();
+		
+		// if(count($variables_q) > 0){
+		// 	$this->variables=array();
+		// 	foreach($variables_q as $variable_q)
+		// 		array_push($this->variables,$variable_q['nombre']);			
+		// }
+		// return $this->variables;
+  //   }
+
+
+ //    public function __call($method_name, $arguments) {
+ 
+	// 	//la lista de metodos sobrecargados
+	// 	$accepted_methods = array("getVariables");
+	// 	if(!in_array($method_name, $accepted_methods)) {
+	//   		trigger_error("Metodo <strong>$method_name</strong> no existe", E_USER_ERROR);
+	// 	}
+ 
+	// 	//metodo sin argumentos
+	// 	if(count($arguments) == 0) {
+	// 	  $this->$method_name();
+ 
+	// 	  //metodo con 1 argumento
+	// 	} elseif(count($arguments) == 1) {
+	// 	  $this->${$method_name.'1'}($arguments[0]);
+ 
+	// 	  //metodo con 2 argumentos
+	// 	// } elseif(count($arguments) == 2) {
+	// 	//   $this->${$method_name.'2'}($arguments[0], $arguments[1]);
+ 
+ 
+	// 	//error +de 2 parametros, metodo no definido
+	// 	} else {
+	// 	  return false;
+	// 	}
+	// }
 }
