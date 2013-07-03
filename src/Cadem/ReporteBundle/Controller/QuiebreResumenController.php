@@ -374,36 +374,17 @@ class QuiebreResumenController extends Controller
 		$id_estudio = intval($data['f_estudio']['Estudio']);// 0 = TODOS
 		$array_comuna = $data['f_comuna']['Comuna'];
 		foreach($array_comuna as $k => $v) $array_comuna[$k] = intval($v);
-		
-		
-		//DATOS DEL EJE X EN EVOLUTIVO
-		$sql = "SELECT TOP(12) m.NOMBRE, m.FECHAINICIO, m.FECHAFIN FROM MEDICION m
-			INNER JOIN PLANOGRAMAQ p on p.MEDICION_ID = m.ID
-			INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
-			INNER JOIN SALA s on s.ID = sc.SALA_ID
-			
-			WHERE sc.CLIENTE_ID = ? AND s.COMUNA_ID IN ( ? )
-			ORDER BY m.FECHAINICIO DESC";
-		$param = array($id_cliente, $array_comuna);
-		$tipo_param = array(\PDO::PARAM_INT, \Doctrine\DBAL\Connection::PARAM_INT_ARRAY);
-		$mediciones_q = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
-		$mediciones_q = array_reverse($mediciones_q);
-		
-		foreach($mediciones_q as $m){
-			$fi = new \DateTime($m['FECHAINICIO']);
-			$ff = new \DateTime($m['FECHAFIN']);
-			$mediciones_data[] = $fi->format('d/m').'-'.$ff->format('d/m');
-			$mediciones_tooltip[] = $m['NOMBRE'];
-		}
-		
+
+
+
 		//SI SE NECESITA AGREGAR UN GRAFICO POR CADENA
 		if(isset($data['cadena'])){
 			$cadena = $data['cadena'];
-			$cadena_join = " INNER JOIN CADENA c on c.ID = s.CADENA_ID ";
-			$cadena_where = " AND c.NOMBRE = '{$cadena}' ";
+			$cadena_join = "INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
+							INNER JOIN SALA s on s.ID = sc.SALA_ID
+							INNER JOIN CADENA c on c.ID = s.CADENA_ID AND c.NOMBRE = '{$cadena}' ";
 		}
 		else{
-			$cadena_join = "";
 			$cadena_where = "";
 		}
 		
@@ -412,40 +393,61 @@ class QuiebreResumenController extends Controller
 			$nivel = $data['nivel'];
 			$esCategoria = $data['cat'];
 			$nivel_join = " INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID ";
-			if($esCategoria === 'true') $nivel_join .= " INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID2 ";
-			else $nivel_join .= " INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID ";
-			$nivel_where = " AND ni.NOMBRE = '{$nivel}' ";
+			if($esCategoria === 'true') $nivel_join .= " INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID2 AND ni.NOMBRE = '{$nivel}' ";
+			else $nivel_join .= " INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID AND ni.NOMBRE = '{$nivel}' ";
 		}
 		else{
 			$nivel_join = "";
-			$nivel_where = "";
 		}
-		
-		//DATOS DEL EJE Y EN EVOLUTIVO
-		$sql = "SELECT TOP(12) (SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 END)*1.0)/COUNT(q.ID) as QUIEBRE FROM QUIEBRE q
-			INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID
-			INNER JOIN MEDICION m on m.ID = p.MEDICION_ID
-			INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
-			INNER JOIN SALA s on s.ID = sc.SALA_ID
+
+
+
+
+
+		//EVOLUTIVO
+		$sql = "SELECT * FROM 
+			(SELECT m.ID, m.NOMBRE, m.FECHAINICIO, m.FECHAFIN FROM MEDICION m
+			INNER JOIN ESTUDIOVARIABLE ev on ev.ID = m.ESTUDIOVARIABLE_ID
+			INNER JOIN ESTUDIO e on e.ID = ev.ESTUDIO_ID AND e.CLIENTE_ID = ?
+
+			GROUP BY m.ID, m.NOMBRE, m.FECHAINICIO, m.FECHAFIN) as A LEFT JOIN
+
+
+			(SELECT (SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 END)*1.0)/COUNT(q.ID) as QUIEBRE, m.ID as ID2 FROM MEDICION m
+			INNER JOIN PLANOGRAMAQ p on m.ID = p.MEDICION_ID
+			INNER JOIN QUIEBRE q on q.PLANOGRAMAQ_ID = p.ID
+			INNER JOIN ESTUDIOVARIABLE ev on ev.ID = m.ESTUDIOVARIABLE_ID
+			INNER JOIN ESTUDIO e on e.ID = ev.ESTUDIO_ID AND e.CLIENTE_ID = ?
 			{$cadena_join}
 			{$nivel_join}
 			
-			WHERE sc.CLIENTE_ID = ? AND s.COMUNA_ID IN ( ? ) {$cadena_where} {$nivel_where}
-			GROUP BY m.FECHAINICIO
-			ORDER BY m.FECHAINICIO DESC";
-		$param = array($id_cliente, $array_comuna);
-		$tipo_param = array(\PDO::PARAM_INT, \Doctrine\DBAL\Connection::PARAM_INT_ARRAY);
-		$quiebres_q = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
-		$quiebres_q = array_reverse($quiebres_q);
+			GROUP BY m.ID
+			) as B on A.ID = B.ID2 ORDER BY FECHAINICIO DESC";
+		$param = array($id_cliente,$id_cliente);
+		$tipo_param = array(\PDO::PARAM_INT, \PDO::PARAM_INT);
+		$mediciones_q = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
+		$mediciones_q = array_reverse($mediciones_q);
+
+		$mediciones_data = array();
+		$mediciones_tooltip = array();
+		$porc_quiebre = array();
 		
-		foreach ($quiebres_q as $q) $porc_quiebre[] = round($q['QUIEBRE']*100,1);
-		if(isset($porc_quiebre) === false) $porc_quiebre = -1;//EL FILTRO SELECCIONADO NO TIENE DATOS
+		foreach($mediciones_q as $m){
+			$fi = new \DateTime($m['FECHAINICIO']);
+			$ff = new \DateTime($m['FECHAFIN']);
+			$mediciones_data[] = $fi->format('d/m').'-'.$ff->format('d/m');
+			$mediciones_tooltip[] = $m['NOMBRE'];
+			$porc_quiebre[] = $m['QUIEBRE'] !== null?round($m['QUIEBRE']*100,1):null;
+		}
+
+
+
 		
 		//RESPONSE
 		$response = array(
 			'evo_ejex' => $mediciones_data,
 			'evo_tooltip' => $mediciones_tooltip,
-			'evo_ejey' => $porc_quiebre,			
+			'evo_ejey' => $porc_quiebre,
 		);
 		$response = new JsonResponse($response);
 		
