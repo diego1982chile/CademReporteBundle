@@ -206,6 +206,17 @@ class PrecioDetalleController extends Controller
 		INNER JOIN ITEM i on i.ID = ic.ITEM_ID	
 		ORDER BY SEGMENTO,NOM_PRODUCTO,NOM_SALA";
 		
+		// $sql = "SELECT precio, ic.CODIGOITEM1 as COD_PRODUCTO,i.NOMBRE as NOM_PRODUCTO,ni.NOMBRE as SEGMENTO,p.politicaprecio ISNULL(sc.CODIGOSALA, UPPER(cad.NOMBRE+' '+com.NOMBRE+' '+s.CALLE+' '+s.NUMEROCALLE)) as ID_SALA, ISNULL(sc.CODIGOSALA,'-') as COD_SALA, UPPER(cad.NOMBRE+' '+com.NOMBRE+' '+s.CALLE+' '+s.NUMEROCALLE) as NOM_SALA FROM QUIEBRE q
+		// INNER JOIN PLANOGRAMAP p on p.ID = q.PLANOGRAMAP_ID and p.MEDICION_ID = {$id_ultima_medicion}
+		// INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
+		// INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in ({$comunas})
+		// INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
+		// INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
+		// INNER JOIN COMUNA com on s.COMUNA_ID=com.ID
+		// INNER JOIN CADENA cad on s.CADENA_ID=cad.ID	
+		// INNER JOIN ITEM i on i.ID = ic.ITEM_ID	
+		// ORDER BY SEGMENTO,NOM_PRODUCTO,NOM_SALA";		
+		
 		$sha1 = sha1($sql);
 
 		if(!$session->has($sha1)){
@@ -225,6 +236,16 @@ class PrecioDetalleController extends Controller
 				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID				
 				GROUP BY i.NOMBRE, ni.NOMBRE
 				ORDER BY ni.NOMBRE,i.NOMBRE";
+				
+		// $sql =	"SELECT  i.NOMBRE, ni.NOMBRE, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
+				// INNER JOIN PLANOGRAMAP p on p.ID = q.PLANOGRAMAP_ID AND p.MEDICION_ID = {$id_ultima_medicion}
+				// INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
+				// INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in ({$comunas})
+				// INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
+				// INNER JOIN ITEM i on i.ID = ic.ITEM_ID
+				// INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID				
+				// GROUP BY i.NOMBRE, ni.NOMBRE
+				// ORDER BY ni.NOMBRE,i.NOMBRE";				
 			
 		$totales_producto = $em->getConnection()->executeQuery($sql)->fetchAll();		
 
