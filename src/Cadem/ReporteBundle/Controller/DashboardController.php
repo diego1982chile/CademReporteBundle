@@ -133,7 +133,7 @@ class DashboardController extends Controller
 			$ff = new \DateTime($m['FECHAFIN']);
 			$mediciones_data[] = $fi->format('d/m').'-'.$ff->format('d/m');
 			$mediciones_tooltip[] = $m['NOMBRE'];
-			$porc_quiebre[] = round($m['QUIEBRE']*100,1);
+			$porc_quiebre[] = $m['QUIEBRE'] !== null?round($m['QUIEBRE']*100,1):null;
 		}
 
 
