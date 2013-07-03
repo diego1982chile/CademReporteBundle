@@ -31,7 +31,7 @@ class ControllerListener
 		
 		$variable = explode('/',strtoupper($request->getPathInfo('_pattern')))[1];								
 		
-		if(!in_array($variable,['LOGIN','_WDT','DASHBOARD','H']))
+		if(!in_array($variable,array('LOGIN','_WDT','DASHBOARD','H')))
 		{
 			$variables = $this->clienteHelper->getVariables();	
 			if(!in_array($variable,$variables)){	
