@@ -41,7 +41,7 @@ class RequestListener
 			$url = $this->router->generate('dashboard_index');
 			$event->setResponse(new RedirectResponse($url));
 		}
-		else if ($variable !== null && in_array($variable, ['quiebre','precio','presencia']) && $this->security->isGranted('ROLE_USER')) {
+		else if ($variable !== null && in_array($variable, array('quiebre','precio','presencia')) && $this->security->isGranted('ROLE_USER')) {
 			$variables = array_map('strtolower', $this->clienteHelper->getVariables());
 			if (!in_array($variable, $variables)) $event->setResponse(new RedirectResponse($this->router->generate('dashboard_index')));
 		}
