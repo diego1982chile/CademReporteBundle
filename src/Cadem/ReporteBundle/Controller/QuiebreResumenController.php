@@ -169,9 +169,7 @@ class QuiebreResumenController extends Controller
 			INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
 			INNER JOIN NIVELITEM ni2 on ni2.ID = ic.NIVELITEM_ID2			
 			GROUP BY ni2.NOMBRE, ni.NOMBRE, cad.NOMBRE
-			ORDER BY categoria, segmento";
-		
-		// print_r($sql);		
+			ORDER BY categoria, segmento";	
 		
 		$resumen_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();
 		$niveles=2;
@@ -288,42 +286,35 @@ class QuiebreResumenController extends Controller
 			$extension=0;
 			
 		$max_width=100+$extension;
-		
-		
-		//DATOS DEL EJE X EN EVOLUTIVO
-		$sql = "SELECT TOP(12) m.NOMBRE, m.FECHAINICIO, m.FECHAFIN FROM MEDICION m
-			INNER JOIN PLANOGRAMAQ p on p.MEDICION_ID = m.ID
-			INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID AND sc.CLIENTE_ID = ?
+
+
+		//EVOLUTIVO
+		$sql = "SELECT TOP(12) (SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 END)*1.0)/COUNT(q.ID) as QUIEBRE, m.NOMBRE, m.FECHAINICIO, m.FECHAFIN, m.ID FROM QUIEBRE q
+			INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID
+			INNER JOIN MEDICION m on m.ID = p.MEDICION_ID
+			INNER JOIN ESTUDIOVARIABLE ev on ev.ID = m.ESTUDIOVARIABLE_ID
+			INNER JOIN ESTUDIO e on e.ID = ev.ESTUDIO_ID AND e.CLIENTE_ID = ?
 			
-			GROUP BY m.NOMBRE, m.FECHAINICIO, m.FECHAFIN
+			GROUP BY m.FECHAINICIO, m.NOMBRE, m.FECHAINICIO, m.FECHAFIN, m.ID
 			ORDER BY m.FECHAINICIO DESC";
 		$param = array($id_cliente);
 		$tipo_param = array(\PDO::PARAM_INT);
 		$mediciones_q = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
 		$mediciones_q = array_reverse($mediciones_q);
+
+		$mediciones_data = array();
+		$mediciones_tooltip = array();
+		$porc_quiebre = array();
 		
 		foreach($mediciones_q as $m){
 			$fi = new \DateTime($m['FECHAINICIO']);
 			$ff = new \DateTime($m['FECHAFIN']);
 			$mediciones_data[] = $fi->format('d/m').'-'.$ff->format('d/m');
 			$mediciones_tooltip[] = $m['NOMBRE'];
+			$porc_quiebre[] = round($m['QUIEBRE']*100,1);
 		}
-		
-		//DATOS DEL EJE Y EN EVOLUTIVO
-		$sql = "SELECT TOP(12) (SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 END)*1.0)/COUNT(q.ID) as QUIEBRE FROM QUIEBRE q
-			INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID
-			INNER JOIN MEDICION m on m.ID = p.MEDICION_ID
-			INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID AND sc.CLIENTE_ID = ?
-			INNER JOIN SALA s on s.ID = sc.SALA_ID
-			
-			GROUP BY m.FECHAINICIO
-			ORDER BY m.FECHAINICIO DESC";
-		$param = array($id_cliente);
-		$tipo_param = array(\PDO::PARAM_INT);
-		$quiebres_q = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
-		$quiebres_q = array_reverse($quiebres_q);
-		
-		foreach ($quiebres_q as $q) $porc_quiebre[] = round($q['QUIEBRE']*100,1);
+
+
 		
 		$periodos= array(
 			'tooltip' => $mediciones_tooltip,
