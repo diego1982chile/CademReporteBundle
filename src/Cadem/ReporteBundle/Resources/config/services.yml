@@ -29,6 +29,7 @@ services:
             entityManager: @doctrine.orm.entity_manager
             security: @security.context
             medicion: @cadem_reporte.helper.medicion
+            total_salas_name: "%total_salas_name%"
     cadem_reporte.helper.medicion:
         class: Cadem\ReporteBundle\Helper\MedicionHelper
         arguments:
