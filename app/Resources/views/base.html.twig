@@ -92,7 +92,7 @@
 							{% set active_quiebre = '' %}
 							{% endif %}
 							{% set variables=service_variablescliente.getVariables %}
-							{% if 'QUIEBRE' in variables %}
+							{% if 'QUIEBRE' or 'PRESENCIA' in variables %}
 							{% set disponible='true' %}
 							{% else %}
 							{% set disponible='false' %}
