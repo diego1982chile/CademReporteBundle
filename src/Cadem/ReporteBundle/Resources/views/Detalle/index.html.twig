@@ -204,10 +204,19 @@ div.DTFC_Blocker {
 	color:white;
 }
 
-.matched{		
-	border-style:solid;
-	/*border-color: #ff0000;*/
+.matched_active{			
+	/*border-style: solid;	
+	border-width: 2px;*/
 	border-color: #00FF00;
+	background-color: #d1ffd1 !important;
+	
+}
+
+.matched{			
+	/*border-style: solid;
+	border-width: 2px;*/
+	border-color: yellow;
+	background-color: rgb(253, 255, 209) !important;
 }
 
 div.DataTables_sort_wrapper {
@@ -351,43 +360,81 @@ function construirTabla()
 
 function listenerFiltro()
 {	
+	var filtrado= false;
+	var indice=0;
+
 	$('#buscar').keydown(function(e){									
 		switch(e.keyCode)
 		{			
 			case 13:	
+				var needle=$('#buscar').val().toUpperCase();	
 				var delta=$('table.DTFC_Cloned tbody tr').height();
 				var offset=delta;
 				var oSettings = oTable.fnSettings();
-				var ventana= maxHeight;				
-				var hit=false;
-				// $('.ui-state-active').removeClass('ui-state-active');				
-				$('.matched').removeClass('matched');				
-				var needle=$('#buscar').val().toUpperCase();				
-				$('table.DTFC_Cloned tbody tr').each(function(){						
-					var haystack=$(this).attr('title').toString().toUpperCase();					
-					if (haystack.indexOf(needle)!=-1) {		
-						$('#buscar').val('');
-						// $(this).addClass('ui-state-active');						
-						$(this).addClass('matched');						
-						hit=true;
-						return false;
+				var ventana= maxHeight;					
+				
+				if(needle=='')
+				{
+					$('.matched').removeClass('matched');	
+					$('.matched_active').removeClass('matched_active');	
+					return false;
+				}
+				if(!filtrado)
+				{
+					filtrado=true;							
+					var hit=false;
+					// $('.ui-state-active').removeClass('ui-state-active');				
+					$('.matched').removeClass('matched');	
+					$('.matched_active').removeClass('matched_active');	
+					$('table.DTFC_Cloned tbody tr').each(function(){						
+						var haystack=$(this).attr('title').toString().toUpperCase();					
+						if (haystack.indexOf(needle)!=-1) {															
+							if(!hit)							
+								clase='matched_active';														
+							else							
+								clase='matched';
+														
+							
+							$(this).addClass(clase);
+							
+							$('#tabla_resumen tbody').children(':eq('+$(this).index()+')').addClass(clase);
+							hit=true;							
+						}
+						if(!hit)
+							offset=offset+delta;
+					});
+					if(hit)
+					{					
+						if(offset<=ventana)
+							offset=0;
+						else
+							offset=offset-delta;					
+						$('.dataTables_scrollBody').animate({ scrollTop: offset });		
 					}
-					offset=offset+delta;
-				});
-				if(hit)
-				{					
-					if(offset<=ventana)
-						offset=0;
 					else
-						offset=offset-delta;					
-					$('.dataTables_scrollBody').animate({ scrollTop: offset });		
+					{
+						alert('El item no fue encontrado');
+						$('#buscar').val('');
+						$('.dataTables_scrollBody').animate({ scrollTop: 0 });	
+					}
 				}
 				else
-				{
-					alert('El item no fue encontrado');
-					$('#buscar').val('');
-					$('.dataTables_scrollBody').animate({ scrollTop: 0 });	
+				{									
+					offset=($('.matched:first').index())*delta-ventana/2;
+					if($('.matched').length==2)
+						filtrado=false;
+					$('.matched_active').removeClass('matched_active');	
+					$('#tabla_resumen tbody tr.matched:first').addClass('matched_active');
+					$('#tabla_resumen tbody tr.matched:first').removeClass('matched');	
+					
+					$('table.DTFC_Cloned tbody tr.matched:first').addClass('matched_active');
+					$('table.DTFC_Cloned tbody tr.matched:first').removeClass('matched');						
+					
+					$('.dataTables_scrollBody').animate({ scrollTop: offset });						
 				}
+				break;
+			default:
+				filtrado=false;
 				break;
 		}
 	});	
@@ -548,7 +595,7 @@ function colorTotales(){
 			var color_fondo = 'rgb(255, 235, 158)';
 			$('.DTFC_Cloned tbody tr:first td').css('background-color',color_fondo);
 			$('.table:not(.DTFC_Cloned) tbody tr:first td').css('background-color',color_fondo);
-			$('.table:not(.DTFC_Cloned) tbody tr td:last-of-type:not(.group)').css('background-color',color_fondo);		
+			// $('.table:not(.DTFC_Cloned) tbody tr td:last-of-type:not(.group)').css('background-color',color_fondo);		
 			break;
 		case 2:						
 			// $('.DTFC_Cloned tbody tr td:first-of-type:not(.group)').css({
