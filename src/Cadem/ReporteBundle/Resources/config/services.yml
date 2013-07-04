@@ -49,3 +49,6 @@ services:
     cadem_reporte.authentication.login_success_handler:
         class: Cadem\ReporteBundle\EventListener\LoginSuccessHandler
         arguments:  [@router, @security.context]
+    cadem_reporte.authentication.logout_success_handler:
+        class: Cadem\ReporteBundle\EventListener\LoginSuccessHandler
+        arguments:  [@router, @security.context]		
