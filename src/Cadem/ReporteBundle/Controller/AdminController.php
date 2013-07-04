@@ -128,7 +128,7 @@ class AdminController extends Controller
         $em = $this->getDoctrine()->getManager();
         $sql = "SELECT c.ID as idc, m.ID as idm, c.NOMBREFANTASIA as nombre, m.NOMBRE as medicion FROM CLIENTE c
                 INNER JOIN ESTUDIO e on e.CLIENTE_ID = c.ID
-                INNER JOIN ESTUDIOVARIABLE ev on ev.ESTUDIO_ID = e.ID
+                INNER JOIN ESTUDIOVARIABLE ev on ev.ESTUDIO_ID = e.ID AND ev.VARIABLE_ID IN (1,5)
                 INNER JOIN MEDICION m on m.ESTUDIOVARIABLE_ID = ev.ID
                 ORDER BY c.NOMBREFANTASIA, m.NOMBRE";
         $query = $em->getConnection()->executeQuery($sql)->fetchAll();
@@ -165,7 +165,7 @@ class AdminController extends Controller
         $em = $this->getDoctrine()->getManager();
         $sql = "SELECT c.ID as idc, m.ID as idm, c.NOMBREFANTASIA as nombre, m.NOMBRE as medicion FROM CLIENTE c
                 INNER JOIN ESTUDIO e on e.CLIENTE_ID = c.ID
-                INNER JOIN ESTUDIOVARIABLE ev on ev.ESTUDIO_ID = e.ID
+                INNER JOIN ESTUDIOVARIABLE ev on ev.ESTUDIO_ID = e.ID AND ev.VARIABLE_ID = 2
                 INNER JOIN MEDICION m on m.ESTUDIOVARIABLE_ID = ev.ID
                 ORDER BY c.NOMBREFANTASIA, m.NOMBRE";
         $query = $em->getConnection()->executeQuery($sql)->fetchAll();
