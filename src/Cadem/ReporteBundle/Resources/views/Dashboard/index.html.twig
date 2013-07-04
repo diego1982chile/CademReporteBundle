@@ -300,14 +300,6 @@ $(document).ready(function () {
 		
 	{% endfor %}//TERMINA FOR
 
-	// $('form#filtros').submit(function() {
-	// 	$.get( "{{ path('dashboard_indicadores') }}", $(this).serialize(), function(data) {
-				
-				
-	// 		},
-	// 	'json');
-	// 	return false;
-	// });
 	
 	$.get( "{{ path('dashboard_indicadores') }}", $('form#filtros').serialize(), function(data) {
 	
@@ -342,16 +334,18 @@ $(document).ready(function () {
 							color: '#4572A7'
 						}
 					}
-				},
-				{
-					title: {
-						text: 'Incumplimiento Precio',
-						style: {
-							color: 'red'
-						}
-					},
-					opposite: true
-				}],
+				}
+				// ,
+				// {
+				// 	title: {
+				// 		text: 'Incumplimiento Precio',
+				// 		style: {
+				// 			color: 'red'
+				// 		}
+				// 	},
+				// 	opposite: true
+				// }
+				],
 				tooltip: {
 					// shared: true,
 					formatter: function() {
@@ -368,7 +362,9 @@ $(document).ready(function () {
 					floating: true,
 					backgroundColor: '#FFFFFF'
 				},
-				series: [data.evolutivo.serie_quiebre, data.evolutivo.serie_precio],
+				series: [data.evolutivo.serie_quiebre
+				// , data.evolutivo.serie_precio
+				],
 				credits: {
 					enabled: false
 				}
