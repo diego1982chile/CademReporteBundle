@@ -52,7 +52,7 @@ class AdminController extends Controller
     public function cargaborrarregistroplanoAction(Request $request)
     {
         $em = $this->getDoctrine()->getManager();
-        $clientemedicion = $request->query->get('f_medicion');
+        $clientemedicion = $request->request->get('f_medicion');
         list($id_cliente, $id_medicion) = explode("-", $clientemedicion['Cliente_Medicion']);
         if(!isset($id_cliente) || !isset($id_medicion)){
             return new JsonResponse(array(

@@ -47,12 +47,12 @@
 $(document).ready(function () {
 
   $('#btn-borrarplano').click(function(){
-    var datos = $(this).serializeArray();
+    var datos = $('#f_medicion_Cliente_Medicion').serializeArray();
     if (confirm("¿Desea eliminar el planograma y quiebre de esta medición?")){
       $.post("{{ path('admin_carga_borrarregistros_plano', {'plano': 'planoquiebre'}) }}", datos, function(data){
         if(data.status == true){
           $('#registros').text(0);
-          alert('SE ELEIMINARON TODOS LOS REGISTROS');
+          alert('SE ELIMINARON TODOS LOS REGISTROS');
         }
         else{
           alert("ERROR AL ELIMINAR LOS REGISTROS. E1: " + data.mensaje);
