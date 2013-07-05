@@ -1484,6 +1484,7 @@ class AdminController extends Controller
                     $chunk = 0;
                     foreach($m as $k => $value){
                         $folioean[floor($chunk/2000)][] = $value[0].'-'.$value[1];
+                        if(strlen($value[2]) === 0) $m[$k][2] = "NULL"; //SI NO HAY PRECIO SE PASA A NULL PARA EL INSERT
                         if(strlen($value[3]) === 0) $m[$k][3] = "NULL"; //SI NO HAY POLITICAPRECIO SE PASA A NULL PARA EL INSERT
                         if(strlen($value[4]) === 0) $m[$k][4] = "NULL"; //SI NO HAY FECHAHORACAPTURA SE PASA A NULL PARA EL INSERT
                         $chunk++;
@@ -1533,19 +1534,19 @@ class AdminController extends Controller
                                 'mensaje' => 'EL "EAN" NO PUEDE ESTAR VACIA, CERCA DE LA LINEA '.$k
                             ));
                         }
-                        if(strlen($fila[2]) === 0){//EL "PRECIO" NO PUEDE SER VACIO
-                            return new JsonResponse(array(
-                                'status' => false,
-                                'mensaje' => 'EL "PRECIO" NO PUEDE ESTAR VACIA, CERCA DE LA LINEA '.$k
-                            ));
-                        }
-                        if($fila[2] != (string) intval($fila[2]) || intval($fila[2]) < 0){//EL "PRECIO" DEBE SER ENTERO MAYOR O IGUAL A CERO
+                        // if(strlen($fila[2]) === 0){//EL "PRECIO" NO PUEDE SER VACIO
+                        //     return new JsonResponse(array(
+                        //         'status' => false,
+                        //         'mensaje' => 'EL "PRECIO" NO PUEDE ESTAR VACIA, CERCA DE LA LINEA '.$k
+                        //     ));
+                        // }
+                        if($fila[2] !== "NULL" && ($fila[2] != (string) intval($fila[2]) || intval($fila[2]) < 0)){//EL "PRECIO" DEBE SER ENTERO MAYOR O IGUAL A CERO
                             return new JsonResponse(array(
                                 'status' => false,
                                 'mensaje' => 'EL "PRECIO" DEBE SER ENTERO MAYOR O IGUAL A CERO, CERCA DE LA LINEA '.$k
                             ));
                         }
-                        if($fila[3] !== "NULL" && ($fila[2] != (string) intval($fila[2]) || intval($fila[2]) < 0) ){//EL "POLITICAPRECIO" DEBE SER ENTERO MAYOR O IGUAL A CERO
+                        if($fila[3] !== "NULL" && ($fila[3] != (string) intval($fila[3]) || intval($fila[3]) < 0) ){//EL "POLITICAPRECIO" DEBE SER ENTERO MAYOR O IGUAL A CERO
                             return new JsonResponse(array(
                                 'status' => false,
                                 'mensaje' => 'LA "POLITICAPRECIO" DEBE SER ENTERO MAYOR O IGUAL A CERO, CERCA DE LA LINEA '.$k
