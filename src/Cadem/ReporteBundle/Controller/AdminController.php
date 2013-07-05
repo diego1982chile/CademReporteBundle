@@ -142,16 +142,17 @@ class AdminController extends Controller
     public function cargaitemclienteAction()
     {
         $em = $this->getDoctrine()->getManager();
-        $sql = "SELECT c.ID as idc, m.ID as idm, c.NOMBREFANTASIA as nombre, m.NOMBRE as medicion FROM CLIENTE c
+        $sql = "SELECT c.ID as idc, m.ID as idm, c.NOMBREFANTASIA as nombre, m.NOMBRE as medicion, v.NOMBRE as variable FROM CLIENTE c
                 INNER JOIN ESTUDIO e on e.CLIENTE_ID = c.ID
                 INNER JOIN ESTUDIOVARIABLE ev on ev.ESTUDIO_ID = e.ID
                 INNER JOIN MEDICION m on m.ESTUDIOVARIABLE_ID = ev.ID
-                ORDER BY c.NOMBREFANTASIA, m.NOMBRE";
+                INNER JOIN VARIABLE v on v.ID = ev.VARIABLE_ID
+                ORDER BY c.NOMBREFANTASIA, v.NOMBRE, m.NOMBRE";
         $query = $em->getConnection()->executeQuery($sql)->fetchAll();
         $choices_medicion = array();
         foreach($query as $r)
         {
-            $choices_medicion[$r['idc'].'-'.$r['idm']] = strtoupper($r['nombre'].'-'.$r['medicion']);
+            $choices_medicion[$r['idc'].'-'.$r['idm']] = strtoupper($r['nombre'].'['.$r['variable'].'] '.$r['medicion']);
         }
 
         $form_medicion = $this->get('form.factory')->createNamedBuilder('f_medicion', 'form')
@@ -179,16 +180,17 @@ class AdminController extends Controller
     public function cargasalaclienteAction()
     {
         $em = $this->getDoctrine()->getManager();
-        $sql = "SELECT c.ID as idc, m.ID as idm, c.NOMBREFANTASIA as nombre, m.NOMBRE as medicion FROM CLIENTE c
+        $sql = "SELECT c.ID as idc, m.ID as idm, c.NOMBREFANTASIA as nombre, m.NOMBRE as medicion, v.NOMBRE as variable FROM CLIENTE c
                 INNER JOIN ESTUDIO e on e.CLIENTE_ID = c.ID
                 INNER JOIN ESTUDIOVARIABLE ev on ev.ESTUDIO_ID = e.ID
                 INNER JOIN MEDICION m on m.ESTUDIOVARIABLE_ID = ev.ID
-                ORDER BY c.NOMBREFANTASIA, m.NOMBRE";
+                INNER JOIN VARIABLE v on v.ID = ev.VARIABLE_ID
+                ORDER BY c.NOMBREFANTASIA, v.NOMBRE, m.NOMBRE";
         $query = $em->getConnection()->executeQuery($sql)->fetchAll();
         $choices_medicion = array();
         foreach($query as $r)
         {
-            $choices_medicion[$r['idc'].'-'.$r['idm']] = strtoupper($r['nombre'].'-'.$r['medicion']);
+            $choices_medicion[$r['idc'].'-'.$r['idm']] = strtoupper($r['nombre'].'['.$r['variable'].'] '.$r['medicion']);
         }
 
         $form_medicion = $this->get('form.factory')->createNamedBuilder('f_medicion', 'form')
