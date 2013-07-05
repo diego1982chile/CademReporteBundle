@@ -17,6 +17,69 @@ class AdminController extends Controller
         $this->uploadDIR = __DIR__.'/../../../../web/uploads/';
     }
 
+    public function cargaregistroplanoAction(Request $request)
+    {
+        $em = $this->getDoctrine()->getManager();
+        $clientemedicion = $request->query->get('f_medicion');
+        list($id_cliente, $id_medicion) = explode("-", $clientemedicion['Cliente_Medicion']);
+        if(!isset($id_cliente) || !isset($id_medicion)){
+            return new JsonResponse(array(
+                'status' => false,
+                'mensaje' => 'NO SE INDENTIFICA AL CLIENTE O LA MEDICION'
+            ));
+        }
+        $sql = "SELECT COUNT(p.ID) as c FROM PLANOGRAMAQ p
+                INNER JOIN MEDICION m on m.ID = p.MEDICION_ID AND m.ID = {$id_medicion}
+                INNER JOIN ESTUDIOVARIABLE ev on ev.ID = m.ESTUDIOVARIABLE_ID
+                INNER JOIN ESTUDIO e on e.ID = ev.ESTUDIO_ID AND e.CLIENTE_ID = {$id_cliente}
+                ";
+        $query = $em->getConnection()->executeQuery($sql)->fetchAll();
+        $registros = isset($query[0])?intval($query[0]['c']):-1;
+        if($registros === -1){
+            return new JsonResponse(array(
+                'status' => false,
+                'mensaje' => 'ERROR AL CONSULTAR LA CANTIDAD DE REGISTROS'
+            ));
+        }
+
+        return new JsonResponse(array(
+            'status' => true,
+            'registros' => $registros
+        ));
+    }
+
+
+    public function cargaborrarregistroplanoAction(Request $request)
+    {
+        $em = $this->getDoctrine()->getManager();
+        $clientemedicion = $request->query->get('f_medicion');
+        list($id_cliente, $id_medicion) = explode("-", $clientemedicion['Cliente_Medicion']);
+        if(!isset($id_cliente) || !isset($id_medicion)){
+            return new JsonResponse(array(
+                'status' => false,
+                'mensaje' => 'NO SE INDENTIFICA AL CLIENTE O LA MEDICION'
+            ));
+        }
+        $sql = "DELETE FROM PLANOGRAMAQ
+                WHERE MEDICION_ID = ?
+                ";
+        $param = array($id_medicion);
+        $row_affected = $em->getConnection()->executeUpdate($sql,$param);
+        if(!is_int($row_affected)){
+            return new JsonResponse(array(
+                'status' => false,
+                'mensaje' => 'ERROR AL CONSULTAR LA CANTIDAD DE FILAS BORRADAS'
+            ));
+        }
+
+        
+
+        return new JsonResponse(array(
+            'status' => true,
+            'row_affected' => $row_affected
+        ));
+    }
+
 	public function cargaitemAction()
     {
         
@@ -133,8 +196,12 @@ class AdminController extends Controller
                 ORDER BY c.NOMBREFANTASIA, m.NOMBRE";
         $query = $em->getConnection()->executeQuery($sql)->fetchAll();
         $choices_medicion = array();
-        foreach($query as $r)
+        foreach($query as $k => $r)
         {
+            if($k === 0){
+                $id_cliente = intval($r['idc']);
+                $id_medicion = intval($r['idm']);
+            }
             $choices_medicion[$r['idc'].'-'.$r['idm']] = strtoupper($r['nombre'].'-'.$r['medicion']);
         }
 
@@ -146,10 +213,25 @@ class AdminController extends Controller
             ))
             ->getForm();
 
+        if(isset($id_cliente) && isset($id_medicion)){
+            $sql = "SELECT COUNT(p.ID) as c FROM PLANOGRAMAQ p
+                    INNER JOIN MEDICION m on m.ID = p.MEDICION_ID AND m.ID = {$id_medicion}
+                    INNER JOIN ESTUDIOVARIABLE ev on ev.ID = m.ESTUDIOVARIABLE_ID
+                    INNER JOIN ESTUDIO e on e.ID = ev.ESTUDIO_ID AND e.CLIENTE_ID = {$id_cliente}
+                    ";
+            $query = $em->getConnection()->executeQuery($sql)->fetchAll();
+            $registros = isset($query[0])?intval($query[0]['c']):0;
+        }
+        else $registros = 0;
+        
+
 
         //RESPONSE
         $response = $this->render('CademReporteBundle:Admin:cargaplanoquiebre.html.twig',
-        array('form_medicion' => $form_medicion->createView())
+        array(
+            'form_medicion' => $form_medicion->createView(),
+            'registros' => $registros
+            )
         );
 
         //CACHE
