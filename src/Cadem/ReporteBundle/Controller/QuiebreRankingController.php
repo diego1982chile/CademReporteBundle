@@ -217,7 +217,7 @@ class QuiebreRankingController extends Controller
 		
 		// RANKING POR VENDEDOR--------------------------------------------------
 		$sql = "DECLARE @id_cliente integer = :id_cliente;
-		SELECT *, ROUND(quiebre-quiebre_anterior, 1) as diferencia FROM 
+		SELECT  TOP(20) *, ROUND(quiebre-quiebre_anterior, 1) as diferencia FROM 
 (SELECT e.id, e.nombre, car.nombre as cargo, (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre FROM SALACLIENTE sc
 			INNER JOIN PLANOGRAMAQ p on p.SALACLIENTE_ID = sc.ID AND p.MEDICION_ID = :id_medicion_actual AND sc.CLIENTE_ID = @id_cliente
 			INNER JOIN QUIEBRE q on q.PLANOGRAMAQ_ID = p.ID
@@ -379,7 +379,7 @@ class QuiebreRankingController extends Controller
 		
 		// RANKING POR VENDEDOR--------------------------------------------------
 		$sql = "DECLARE @id_cliente integer = ?; DECLARE @id_medicion_actual integer = ? ; DECLARE @id_medicion_anterior integer = ? ;
-		SELECT *, ROUND(quiebre-quiebre_anterior, 1) as diferencia FROM 
+		SELECT  TOP(20) *, ROUND(quiebre-quiebre_anterior, 1) as diferencia FROM 
 (SELECT e.id, e.nombre, car.nombre as cargo, (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre FROM SALACLIENTE sc
 			INNER JOIN SALA s on s.ID = sc.SALA_ID AND sc.CLIENTE_ID = @id_cliente AND sc.MEDICION_ID = @id_medicion_actual AND s.COMUNA_ID IN ( ? )
 			INNER JOIN PLANOGRAMAQ p on p.SALACLIENTE_ID = sc.ID AND p.MEDICION_ID = @id_medicion_actual
