@@ -97,9 +97,10 @@ class PrecioResumenController extends Controller
 			JOIN m.estudiovariable ev
 			JOIN ev.estudio e
 			JOIN e.cliente c
-			WHERE c.id = :id
+			WHERE c.id = :id AND ev.variableid = :id_ev
 			ORDER BY m.fechainicio DESC')
 			->setParameter('id', $cliente->getId());
+			->setParameter('id_ev', 2);
 		$mediciones_q = $query->getArrayResult();
 		
 		foreach($mediciones_q as $m) $mediciones[$m['id']] = $m['nombre'];
