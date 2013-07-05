@@ -1515,10 +1515,10 @@ class AdminController extends Controller
                     
                     $start_valid = microtime(true);
                     foreach ($m as $k => $fila) {
-                        if(count($fila) !== 4){//SIEMPRE DEBEN HABER 5 COLUMNAS
+                        if(count($fila) !== 5){//SIEMPRE DEBEN HABER 5 COLUMNAS
                             return new JsonResponse(array(
                                 'status' => false,
-                                'mensaje' => 'NO HAY 4 COLUMNAS CERCA DE LA LINEA '.$k
+                                'mensaje' => 'NO HAY 5 COLUMNAS CERCA DE LA LINEA '.$k
                             ));
                         }
                         if(strlen($fila[0]) === 0){//EL "FOLIO" NO PUEDE SER VACIA
