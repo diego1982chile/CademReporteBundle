@@ -11,7 +11,16 @@
 
         <form id="f1" action="{{ path('admin_fileupload') }}" method="POST" enctype="multipart/form-data" encoding="multipart/form-data">
 
-          {{ form_widget(form_medicion) }}
+          <div id="f_medicion">
+            <div>
+                {{ form_label(form_medicion.Cliente_Medicion) }}
+                {{ form_errors(form_medicion.Cliente_Medicion) }}
+                {{ form_widget(form_medicion.Cliente_Medicion) }}
+                (<span id="registros">{{ registros }}</span> REGISTROS)
+                <button id="btn-borrarplano" style="margin-bottom:10px;margin-left:20px" class="btn btn-danger">BORRAR PLANO-QUIEBRE</button>
+            </div>
+          </div>
+          
           <label class="required">CSV</label>
           <div id="fileupload1" class="fileupload fileupload-new" data-provides="fileupload">
             <div class="input-append">
@@ -36,6 +45,45 @@
 <script src="http://malsup.github.com/jquery.form.js"></script>
 <script>
 $(document).ready(function () {
+
+  if($('#f_medicion_Cliente_Medicion option').length == 0) $('#btn-borrarplano').addClass('disabled');
+
+  $('#btn-borrarplano').click(function(){
+    if($('#btn-borrarplano').hasClass('disabled')) return false;
+    var datos = $('#f_medicion_Cliente_Medicion').serializeArray();
+    if (confirm("¿Desea eliminar el planograma y quiebre de esta medición?")){
+      $.post("{{ path('admin_carga_borrarregistros_plano', {'plano': 'planoquiebre'}) }}", datos, function(data){
+        if(data.status == true){
+          $('#registros').text(0);
+          alert('SE ELIMINARON TODOS LOS REGISTROS');
+        }
+        else{
+          alert("ERROR AL ELIMINAR LOS REGISTROS. E1: " + data.mensaje);
+        }
+      }, "json")
+      .fail(function() { alert("ERROR AL ELIMINAR LOS REGISTROS. E2"); });
+    }
+    return false;
+  });
+
+
+
+  $('#f_medicion_Cliente_Medicion').change(function(){
+    if($('#f_medicion_Cliente_Medicion option').length == 0) $('#btn-borrarplano').addClass('disabled');
+    else $('#btn-borrarplano').removeClass('disabled');
+
+    var datos = $(this).serializeArray();
+    $.get("{{ path('admin_carga_registros_plano', {'plano': 'planoquiebre'}) }}", datos, function(data){
+      if(data.status == true){
+        $('#registros').text(data.registros);
+      }
+      else{
+        alert("ERROR AL CARGAR LOS REGISTROS. E1: " + data.mensaje);
+      }
+    }, "json")
+    .fail(function() { alert("ERROR AL CARGAR LOS REGISTROS. E2"); });
+    return false;
+  });
 
 
   $('#f1').ajaxForm({

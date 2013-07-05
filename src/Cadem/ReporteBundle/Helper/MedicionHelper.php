@@ -46,6 +46,7 @@ class MedicionHelper {
 
     private function getIdUltimaMedicion_() {
 		$em = $this->em;
+		if($this->user === null) $this->user = $this->security->getToken()->getUser();
 		$user = $this->user;
 		$id_user = $user->getId();
 		$id_cliente = $user->getClienteID();

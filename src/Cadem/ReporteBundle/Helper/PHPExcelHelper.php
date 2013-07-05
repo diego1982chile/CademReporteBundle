@@ -47,10 +47,10 @@ class PHPExcelHelper {
 		cad.NOMBRE as CAD_SALA,
 		com.NOMBRE as COM_SALA
 		FROM QUIEBRE q
-		INNER JOIN PLANOGRAMA p on p.ID = q.PLANOGRAMA_ID and p.MEDICION_ID = {$id_ultima_medicion}
-		INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$id_cliente}
+		INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID and p.MEDICION_ID = {$id_ultima_medicion}
+		INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$id_cliente} AND sc.MEDICION_ID = {$id_ultima_medicion}
 		INNER JOIN SALA s on s.ID = sc.SALA_ID
-		INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
+		INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID AND ic.MEDICION_ID = {$id_ultima_medicion}
 		INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
 		INNER JOIN COMUNA com on s.COMUNA_ID=com.ID
 		INNER JOIN CADENA cad on s.CADENA_ID=cad.ID	

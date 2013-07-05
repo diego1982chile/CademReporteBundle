@@ -1,6 +1,9 @@
 imports:
     - { resource: parameters.yml }
     - { resource: security.yml }
+# PARAMETROS PROPIOS DE REPORTEBUNDLE
+parameters:
+    total_salas_name: total_salas
 
 framework:
     #esi:             ~
