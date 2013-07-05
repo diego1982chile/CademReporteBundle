@@ -2261,7 +2261,7 @@ class AdminController extends Controller
                             $tipo_param = array(
                                 \PDO::PARAM_INT,
                                 \PDO::PARAM_INT,
-                                \PDO::PARAM_INT,
+                                ($fila[2] === "NULL")?\PDO::PARAM_NULL:\PDO::PARAM_INT,
                                 ($fila[4] === "NULL")?\PDO::PARAM_NULL:\PDO::PARAM_STR,
                                 );
 
