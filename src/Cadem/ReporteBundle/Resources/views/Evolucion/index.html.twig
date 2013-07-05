@@ -233,8 +233,9 @@ function construirTabla()
 								switch(variable)
 								{
 									case 1:
+									case 5:
 										var col=0;
-										break;
+										break;										
 									case 2:
 										var col=1;
 										break;										
@@ -248,14 +249,15 @@ function construirTabla()
 									$(nRow).children(':eq('+col+')').text(aData[col].substring(0,40).replace(/ /g,'_')+'...');
 								else
 									$(nRow).children(':eq('+col+')').text(aData[col].replace(/ /g,'_'));							 
-								$(nRow).attr('title',aData[col]);		  
+								$(nRow).attr('title',aData[col]);													
 							},						
 			"fnInitComplete": function() {
 					switch(parseInt(variable))
 					{
-						case 1:														
+						case 1:	
+						case 5:
 							fixedColumn1();
-							break;
+							break;						
 						case 2:							
 							fixedColumn2();
 							break;							
@@ -281,7 +283,8 @@ function listenerFiltro()
 	var filtrado= false;
 	var indice=0;
 
-	$('#buscar').keydown(function(e){									
+	$('#buscar').keydown(function(e){				
+		setTimeout("setFocus('buscar')", 0);	
 		switch(e.keyCode)
 		{			
 			case 13:	
@@ -305,7 +308,8 @@ function listenerFiltro()
 					$('.matched').removeClass('matched');	
 					$('.matched_active').removeClass('matched_active');	
 					$('table.DTFC_Cloned tbody tr').each(function(){						
-						var haystack=$(this).attr('title').toString().toUpperCase();					
+						var haystack=$(this).attr('title').toString().toUpperCase();		
+						// alert(haystack);
 						if (haystack.indexOf(needle)!=-1) {															
 							if(!hit)							
 								clase='matched_active';														
@@ -354,10 +358,14 @@ function listenerFiltro()
 			default:
 				filtrado=false;
 				break;
-		}
+		}		
 	});	
 }
 
+function setFocus(id)
+{
+	document.getElementById(id).focus();
+}
 
 function fixedColumn1()
 {				
@@ -406,8 +414,8 @@ function fixedColumn1()
                     nTrs[i].parentNode.insertBefore( nGroup, nTrs[i] );
 					// Se crea atributo que asocie la fila de agregacion con sus filas hijas
 					// Se añade fila de agregacion para tabla principal
-					nTrs[i].previousSibling.setAttribute("data-tt-id",sGroup);									
-                    
+					nTrs[i].previousSibling.setAttribute("data-tt-id",sGroup);									                    					
+					
 					// /* Cell to insert into the frozen columns */
 					
                     nGroup = document.createElement( 'tr' );
@@ -415,7 +423,8 @@ function fixedColumn1()
 					nCell.className = "group tag";
 					nCell.setAttribute('index',row);
 					nCell.innerHTML = sGroup;
-					nGroup.appendChild( nCell );
+					nGroup.appendChild( nCell );					
+					nGroup.setAttribute("title",sGroup);
                     // Se añade fila de agregacion para tabla fija
 					$(nGroup).insertBefore( $('tbody tr:eq('+(i+iCorrector)+')', left.body)[0] );						
 					++row;
@@ -444,15 +453,15 @@ function fixedColumn1()
 			var att=document.createAttribute("data-tt-id");
 			att.value="TOTALES";			
 			// Se añade fila de agregacion para tabla principal
-			nTrs[0].previousSibling.setAttributeNode(att);						
-			
+			nTrs[0].previousSibling.setAttributeNode(att);									
 			// /* Cell to insert into the frozen columns */
 			
 			nGroup = document.createElement( 'tr' );
 			nCell = document.createElement( 'td' );
 			nCell.className = "group tag";
 			nCell.innerHTML = "TOTAL GENERAL";
-			nGroup.appendChild( nCell );
+			nGroup.appendChild( nCell );			
+			nGroup.setAttribute("title","TOTAL GENERAL");
 			// Se añade fila de agregacion para tabla fija
 			$(nGroup).insertBefore( $('tbody tr:eq(0)', left.body)[0] );					
 		}
@@ -510,14 +519,20 @@ function fixedColumn2()
 function colorTotales(){
 	$('.tag').each(function(){
 		$(this).css('cursor','pointer');
-		$(this).parent().attr('title',$(this).text());
+		// $(this).parent().attr('title',$(this).text());
 	});
 	switch(parseInt(variable))
 	{
 		case 1:
+		case 5:
 			var color_fondo = 'rgb(255, 235, 158)';
+			
 			$('.DTFC_Cloned tbody tr:first td').css('background-color',color_fondo);			
 			$('.table:not(.DTFC_Cloned) tbody tr:first td').css('background-color',color_fondo);			
+			
+			// $('.DTFC_Cloned tbody tr:first td').addClass('btn-warning');			
+			// $('.table:not(.DTFC_Cloned) tbody tr:first td').addClass('btn-warning');			
+			
 			$('.table:not(.DTFC_Cloned) tbody tr td:last-of-type:not(.group)').css('background-color',color_fondo);
 			// $('.DTFC_Cloned tbody tr td:first-of-type:not(.group)').css({
 				// 'background-color':'rgb(238, 236, 255)',
@@ -554,10 +569,23 @@ function construirGrafico()
 				if(data[i] == '-') data[i]=null;
 			}
 			var series= [{
-						name: '% Quiebre',
+						name: '% Total Quiebre',
 						data: data
 						}]
+			var prefijo='%';
 			break;
+		case 5:
+			var data=matriz_totales[matriz_totales.length-1];			
+			data= data.slice(0,data.length-1);
+			for(i in data){
+				if(data[i] == '-') data[i]=null;
+			}
+			var series= [{
+						name: '% Total Presencia',
+						data: data
+						}]
+			var prefijo='%';
+			break;			
 		case 2:
 			var data=oTable.fnGetData(0);
 			var tag=data[1];
@@ -566,9 +594,10 @@ function construirGrafico()
 				if(data[i] == '-') data[i]=null;
 			}
 			var series=[{
-						name: '% PRECIO '+tag,
+						name: '% Precio '+tag,
 						data: data
-						}];			
+						}];	
+			var prefijo='$';						
 			break;
 	}			
 	
@@ -593,7 +622,7 @@ function construirGrafico()
 				text: 'Evolución {{estudios[0].getEstudioVariables[0].getNombrevariable}}'
 			},
 			tooltip: {
-				pointFormat: ' <span style="color:{series.color}">{series.name}</span>: <b>${point.y}</b><br/>',
+				pointFormat: ' <span style="color:{series.color}">{series.name}</span>: <b>'+prefijo+'{point.y}</b><br/>',
 				percentageDecimals: 1,
 				enabled: true
 			},
@@ -695,7 +724,7 @@ $(document).ready(function () {
 	//GRAFICAR FILAS
 	$(document).on('click', 'td.tag', function(e) {				
 		
-		var label= $(this).parent().attr('title');
+		var label= $(this).parent().attr('title').toLowerCase();
 		var index=$(this).attr('index');				
 		
 		if($(this).hasClass('group'))
@@ -733,6 +762,7 @@ $(document).ready(function () {
 				switch(parseInt(variable))
 				{
 					case 1:
+					case 5:
 						ini=1;
 						break;
 					case 2:

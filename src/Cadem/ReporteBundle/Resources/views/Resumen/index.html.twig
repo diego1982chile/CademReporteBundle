@@ -3,6 +3,8 @@
 {% set url_body = path('quiebre_resumen_body') %}
 {% set url_evolutivo = path('quiebre_resumen_evolutivo') %}
 {% set url_header = path('quiebre_resumen_header') %}
+{% set url_body_action = path(body_action) %}
+{% set url_header_action = path(header_action) %}
 
 {% block title %}Cadem Analytics{% endblock %}
 
@@ -159,7 +161,7 @@ function construirTabla()
 		oTable = $('#tabla_resumen').dataTable({
 			"bProcessing": true,
 			"bServerSide": true,
-			"sAjaxSource": "{{ url_body }}",
+			"sAjaxSource": "{{ url_body_action }}",
 			"fnServerData": function ( sSource, aoData, fnCallback ) {				
 				//AGREGAMOS LOS DATOS SOLO SI HAY
 				if (DatosAdicionales.length > 0) for(i in DatosAdicionales) aoData.push(DatosAdicionales[i]);
@@ -374,11 +376,11 @@ $(document).ready(function () {
 			// min: 0,
             //categories: [0,100],
 			title: {
-                    text: 'Promedio Quiebre (%)'
+                    text: 'Promedio {{tag_variable}} (%)'
             }
 		},		
 		series: [{
-                    name: '% Quiebre',
+                    name: '% {{tag_variable}}',
                     data: {{ evolutivo }}
                 }],
 		legend: {
@@ -392,9 +394,7 @@ $(document).ready(function () {
 		credits: {
 			enabled: false
 		}
-	});
-
-	
+	});	
 	cargartooltip();
 			
 	//GUARDA QUE BOTON SE PRESIONA EN EL FORMULARIO

@@ -10,7 +10,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Session;
 
 
-class QuiebreResumenController extends Controller
+class PresenciaResumenController extends Controller
 {		
 	
 	public function indexAction()
@@ -338,10 +338,10 @@ class QuiebreResumenController extends Controller
 			'logostyle' => $logostyle,
 			'evolutivo' => json_encode($evolutivo),
 			'periodos' => json_encode($periodos),	
-			'estudios' => $estudios,			
-			'header_action' => 'quiebre_resumen_header',
-			'body_action' => 'quiebre_resumen_body',	
-			'tag_variable' => 'Quiebre'			
+			'estudios' => $estudios,		
+			'header_action' => 'presencia_resumen_header',
+			'body_action' => 'presencia_resumen_body',
+			'tag_variable' => 'Presencia'			
 			)
 		);		
 		//CACHE

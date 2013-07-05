@@ -164,7 +164,7 @@ $(document).ready(function () {
 			},
 		
 			series: [{
-				name: 'Quiebre',
+				name: '{{ev.getVariable.getNombre}}',
 				data: [{{attribute(indicadores,ev.getVariable.getNombre)|number_format(1)}}],
 				tooltip: {
 					valueSuffix: ' %'
@@ -275,7 +275,7 @@ $(document).ready(function () {
 			},
 		
 			series: [{
-				name: 'Quiebre',
+				name: {{ev.getVariable.getNombre}},
 				data: [{{attribute(indicadores,ev.getVariable.getNombre)|number_format(1)}}],
 				tooltip: {
 					valueSuffix: ' %'

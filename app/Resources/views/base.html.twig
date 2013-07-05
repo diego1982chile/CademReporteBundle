@@ -8,7 +8,7 @@
 		<meta name="author" content="">
 		<link href="{{ asset('bundles/cademreporte/css/bootstrap.min.css') }}" rel="stylesheet">
 		<link href="{{ asset('bundles/cademreporte/css/bootstrap-responsive.min.css') }}" rel="stylesheet">
-		<link href="{{ asset('bundles/cademreporte/css/redmond/jquery-ui.min.css') }}" rel="stylesheet">
+		<link href="{{ asset('bundles/cademreporte/css/redmond/jquery-ui.min.css') }}" rel="stylesheet">				
 		<style type="text/css">
 		  body {
 			padding-top: 60px;
@@ -47,13 +47,17 @@
 
 		  .divider-vertical {
 		  	border-left: 1px solid rgb(219, 219, 219) !important;
-		  }
+		  }		  
+		  
+/*  		  #nav li{
+			width: 120px !important;
+			height: 40px !important;
+		  }  */
 		  
 		  {% block customstyles %}{% endblock %}
 		</style>
         {% block stylesheets %}{% endblock %}
-        <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}" />
-		
+        <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}" />				
 		
     </head>
 	
@@ -78,7 +82,7 @@
 								<li><a href="{{ path('fos_user_security_logout') }}">{{ 'layout.logout'|trans({}, 'FOSUserBundle') }}</a></li>
 							</ul>
 						</div>
-						<ul class="nav">
+						<ul id='nav' class="nav">
 							<li class="{% if app.request.attributes.get('_route') == 'dashboard_index' %}active{% endif %}"><a href="{{ path('dashboard_index')}}">Dashboard</a></li>
 							{% 
 							if 
@@ -92,11 +96,12 @@
 							{% set active_quiebre = '' %}
 							{% endif %}
 							{% set variables=service_variablescliente.getVariables %}
-							{% if 'QUIEBRE' or 'PRESENCIA' in variables %}
+							{% if 'QUIEBRE' in variables %}
 							{% set disponible='true' %}
 							{% else %}
 							{% set disponible='false' %}
-							{% endif %}							
+							{% endif %}						
+							{% if 'QUIEBRE' in variables %}							
 							<li class="dropdown {{active_quiebre}}">								
 				                <a href="#" disponible={{disponible}} class="dropdown-toggle variable" data-toggle="dropdown">Quiebre <b class="caret"></b></a>
 				                <ul class="dropdown-menu">
@@ -110,6 +115,23 @@
 				                  <li class="disabled"><a href="#">One more separated link</a></li> -->
 				                </ul>
 			                </li>
+							{% endif %}						
+							{% if 'PRESENCIA' in variables %}
+							{% set disponible='true' %}
+							{% else %}
+							{% set disponible='false' %}
+							{% endif %}							
+							{% if 'PRESENCIA' in variables %}
+							<li class="dropdown">								
+				                <a href="#" disponible={{disponible}} class="dropdown-toggle variable" data-toggle="dropdown">Presencia <b class="caret"></b></a>
+				                <ul class="dropdown-menu">
+				                  <li><a href="{{ path('presencia_resumen_index')}}">Resumen</a></li>
+				                  <li><a href="{{ path('presencia_ranking_index')}}">Ranking</a></li>
+				                  <li><a href="{{ path('presencia_evolucion_index')}}">Evolución</a></li>
+				                  <li><a href="{{ path('presencia_detalle_index')}}">Detalle</a></li>
+				                </ul>
+			                </li>							
+							{% endif %}						
 							{% if 'PRECIO' in variables %}
 							{% set disponible='true' %}
 							{% else %}
@@ -147,7 +169,7 @@
 			                	{% endif %}
 								  
 								</ul>
-			                </li>
+			                </li>						
 							<li class="divider-vertical"></li>
 							<li><div style="width:auto;height:auto;margin-top:10px;margin-left:10px">Salas Medidas (<b>{{ service_salasmedidas.getSalasmedidas }}/{{ service_salasmedidas.getTotalsalas }}</b>)</div></li>
 							<li><div id="progressbar" style="width:100px;height:15px;margin-top:12px;margin-left:5px"><div class="progress-label"></div></div></li>
@@ -205,7 +227,8 @@
 		<script src="{{ asset('bundles/cademreporte/js/jquery-1.9.1.min.js') }}"></script>
 		<script src="{{ asset('bundles/cademreporte/js/jquery-ui.min.js') }}"></script>
 		<script src="{{ asset('bundles/cademreporte/js/bootstrap.min.js') }}"></script>
-		<script src="{{ asset('bundles/cademreporte/js/highcharts.js') }}"></script>
+		<script src="{{ asset('bundles/cademreporte/js/highcharts.js') }}"></script>				
+		
         {% block javascripts %}{% endblock %}
 		<script>
 		$(function() {
@@ -234,6 +257,11 @@
 					return false;
 				}
 			});
+			
+			// $('#nav').hoverscroll({
+				// width: '40%',
+				// heigth: 30,
+			// });
 		});
 		</script>
     </body>

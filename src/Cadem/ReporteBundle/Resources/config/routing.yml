@@ -90,7 +90,7 @@ quiebre_resumen_index:
     pattern: /{variable}/resumen
     defaults: { _controller: CademReporteBundle:QuiebreResumen:index, variable: quiebre }
     requirements:
-        variable:  quiebre
+        variable: quiebre
 quiebre_resumen_evolutivo:
     pattern: /{variable}/resumen/evolutivo
     defaults: { _controller: CademReporteBundle:QuiebreResumen:evolutivo, variable: quiebre }
@@ -151,6 +151,72 @@ quiebre_detalle_excel:
     defaults: { _controller: CademReporteBundle:QuiebreDetalle:excel, variable: quiebre }
     requirements:
         variable:  quiebre
+#PRESENCIA
+presencia_resumen_index:
+    pattern: /{variable}/resumen
+    defaults: { _controller: CademReporteBundle:PresenciaResumen:index, variable: presencia }
+    requirements:
+        variable: presencia
+presencia_resumen_evolutivo:
+    pattern: /{variable}/resumen/evolutivo
+    defaults: { _controller: CademReporteBundle:PresenciaResumen:evolutivo, variable: presencia }
+    requirements:
+        variable: presencia
+presencia_resumen_header:
+    pattern: /{variable}/resumen/header
+    defaults: { _controller: CademReporteBundle:PresenciaResumen:header, variable: presencia }
+    requirements:
+        variable:  presencia
+presencia_resumen_body:
+    pattern: /{variable}/resumen/body
+    defaults: { _controller: CademReporteBundle:PresenciaResumen:body, variable: presencia }
+    requirements:
+        variable:  presencia
+presencia_ranking_index:
+    pattern:  /{variable}/ranking
+    defaults: { _controller: CademReporteBundle:PresenciaRanking:index, variable: presencia }
+    requirements:
+        variable:  presencia
+presencia_ranking_filtros:
+    pattern:  /{variable}/ranking/filtros
+    defaults: { _controller: CademReporteBundle:PresenciaRanking:filtros, variable: presencia }
+    requirements:
+        variable: presencia
+presencia_evolucion_index:
+    pattern:  /{variable}/evolucion
+    defaults: { _controller: CademReporteBundle:PresenciaEvolucion:index, variable: presencia }
+    requirements:
+        variable:  presencia
+presencia_evolucion_header:
+    pattern:  /{variable}/evolucion/header
+    defaults: { _controller: CademReporteBundle:PresenciaEvolucion:header, variable: presencia }
+    requirements:
+        variable: presencia
+presencia_evolucion_body:
+    pattern:  /{variable}/evolucion/body
+    defaults: { _controller: CademReporteBundle:PresenciaEvolucion:body, variable: presencia }
+    requirements:
+        variable: presencia
+presencia_detalle_index:
+    pattern:  /{variable}/detalle
+    defaults: { _controller: CademReporteBundle:PresenciaDetalle:index, variable: presencia }
+    requirements:
+        variable: presencia
+presencia_detalle_header:
+    pattern:  /{variable}/detalle/header
+    defaults: { _controller: CademReporteBundle:PresenciaDetalle:header, variable: presencia }
+    requirements:
+        variable: presencia
+presencia_detalle_body:
+    pattern:  /{variable}/detalle/body
+    defaults: { _controller: CademReporteBundle:PresenciaDetalle:body, variable: presencia }
+    requirements:
+        variable: presencia
+presencia_detalle_excel:
+    pattern:  /{variable}/detalle/excel
+    defaults: { _controller: CademReporteBundle:PresenciaDetalle:excel, variable: presencia }
+    requirements:
+        variable: presencia
 #RUTAS GENERALES Y AYUDANTES
 helper_filtro_region:
     pattern:  /h/filtro/region
