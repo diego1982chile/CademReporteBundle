@@ -17,7 +17,7 @@ class AdminController extends Controller
         $this->uploadDIR = __DIR__.'/../../../../web/uploads/';
     }
 
-    public function cargaregistroplanoAction(Request $request)
+    public function cargaregistroplanoAction(Request $request, $plano)
     {
         $em = $this->getDoctrine()->getManager();
         $clientemedicion = $request->query->get('f_medicion');
@@ -28,7 +28,20 @@ class AdminController extends Controller
                 'mensaje' => 'NO SE INDENTIFICA AL CLIENTE O LA MEDICION'
             ));
         }
-        $sql = "SELECT COUNT(p.ID) as c FROM PLANOGRAMAQ p
+        
+        switch ($plano) {
+            case 'planoquiebre':
+                $planograma = 'PLANOGRAMAQ';
+                break;
+            case 'planoprecio':
+                $planograma = 'PLANOGRAMAP';
+                break;
+            
+            default:
+                //ERROR
+                break;
+        }
+        $sql = "SELECT COUNT(p.ID) as c FROM {$planograma} p
                 INNER JOIN MEDICION m on m.ID = p.MEDICION_ID AND m.ID = {$id_medicion}
                 INNER JOIN ESTUDIOVARIABLE ev on ev.ID = m.ESTUDIOVARIABLE_ID
                 INNER JOIN ESTUDIO e on e.ID = ev.ESTUDIO_ID AND e.CLIENTE_ID = {$id_cliente}
@@ -49,7 +62,7 @@ class AdminController extends Controller
     }
 
 
-    public function cargaborrarregistroplanoAction(Request $request)
+    public function cargaborrarregistroplanoAction(Request $request, $plano)
     {
         $em = $this->getDoctrine()->getManager();
         $clientemedicion = $request->request->get('f_medicion');
@@ -60,7 +73,21 @@ class AdminController extends Controller
                 'mensaje' => 'NO SE INDENTIFICA AL CLIENTE O LA MEDICION'
             ));
         }
-        $sql = "DELETE FROM PLANOGRAMAQ
+
+        switch ($plano) {
+            case 'planoquiebre':
+                $planograma = 'PLANOGRAMAQ';
+                break;
+            case 'planoprecio':
+                $planograma = 'PLANOGRAMAP';
+                break;
+            
+            default:
+                //ERROR
+                break;
+        }
+
+        $sql = "DELETE FROM {$planograma}
                 WHERE MEDICION_ID = ?
                 ";
         $param = array($id_medicion);
@@ -254,6 +281,10 @@ class AdminController extends Controller
         $choices_medicion = array();
         foreach($query as $r)
         {
+            if($k === 0){
+                $id_cliente = intval($r['idc']);
+                $id_medicion = intval($r['idm']);
+            }
             $choices_medicion[$r['idc'].'-'.$r['idm']] = strtoupper($r['nombre'].'-'.$r['medicion']);
         }
 
@@ -265,10 +296,24 @@ class AdminController extends Controller
             ))
             ->getForm();
 
+        if(isset($id_cliente) && isset($id_medicion)){
+            $sql = "SELECT COUNT(p.ID) as c FROM PLANOGRAMAP p
+                    INNER JOIN MEDICION m on m.ID = p.MEDICION_ID AND m.ID = {$id_medicion}
+                    INNER JOIN ESTUDIOVARIABLE ev on ev.ID = m.ESTUDIOVARIABLE_ID
+                    INNER JOIN ESTUDIO e on e.ID = ev.ESTUDIO_ID AND e.CLIENTE_ID = {$id_cliente}
+                    ";
+            $query = $em->getConnection()->executeQuery($sql)->fetchAll();
+            $registros = isset($query[0])?intval($query[0]['c']):0;
+        }
+        else $registros = 0;
+
 
         //RESPONSE
         $response = $this->render('CademReporteBundle:Admin:cargaplanoprecio.html.twig',
-        array('form_medicion' => $form_medicion->createView())
+        array(
+            'form_medicion' => $form_medicion->createView(),
+            'registros' => $registros
+            )
         );
 
         //CACHE
