@@ -281,7 +281,7 @@ class AdminController extends Controller
                 ORDER BY c.NOMBREFANTASIA, m.NOMBRE";
         $query = $em->getConnection()->executeQuery($sql)->fetchAll();
         $choices_medicion = array();
-        foreach($query as $r)
+        foreach($query as $k => $r)
         {
             if($k === 0){
                 $id_cliente = intval($r['idc']);
@@ -2249,6 +2249,7 @@ class AdminController extends Controller
                                    ,[ACTIVO])
                              VALUES
                                    (?
+                                   ,?
                                    ,?
                                    ,?
                                    ,1 )";
