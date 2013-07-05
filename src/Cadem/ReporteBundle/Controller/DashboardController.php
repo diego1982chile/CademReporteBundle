@@ -76,7 +76,7 @@ class DashboardController extends Controller
 		$noticias = $query->getArrayResult();
 
 		//INDICADORES
-		$indicadores = array('QUIEBRE' => $porc_quiebre, 'PRECIO' => 10, 'PRESENCIA' => 0);
+		$indicadores = array('QUIEBRE' => $porc_quiebre, 'PRECIO' => 10, 'PRESENCIA' => $porc_quiebre);
 		
 		
 		//RESPONSE

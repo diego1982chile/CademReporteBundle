@@ -9,7 +9,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 
 use Symfony\Component\HttpFoundation\Session;
 
-class QuiebreDetalleController extends Controller
+class PresenciaDetalleController extends Controller
 {    	
 	public function indexAction()
     {
@@ -387,11 +387,11 @@ class QuiebreDetalleController extends Controller
 			'logostyle' => $logostyle,
 			'estudios' => $estudios,
 			'variable' => 1,
-			'header_action' => 'quiebre_detalle_header',
-			'body_action' => 'quiebre_detalle_body',	
+			'header_action' => 'presencia_detalle_header',
+			'body_action' => 'presencia_detalle_body',	
 			'aoColumnDefs' => json_encode($aoColumnDefs),
 			'columnas_reservadas' => 2,
-			'tag_variable' => 'QUIEBRE'				
+			'tag_variable' => 'Presencia'				
 			)
 		);
 		$time_taken = microtime(true) - $start;
@@ -460,7 +460,6 @@ class QuiebreDetalleController extends Controller
 			$nivel1=$detalle_quiebre[$cont_regs]['COD_PRODUCTO'];		
 			// Lleno la fila con vacios, le agrego 1 posiciones, correspondientes al total					
 			$fila=array_fill(0,$num_salas+3,"<div style='background:grey;height:2.22em'></div>");								
-			// $fila=array_fill(0,$num_salas+3,"-");								
 			$nivel2=$detalle_quiebre[$cont_regs]['SEGMENTO'];																								
 			$cont_totales_producto=0;				
 		
@@ -473,7 +472,6 @@ class QuiebreDetalleController extends Controller
 				{									
 					$fila[0]=$detalle_quiebre[$cont_regs]['NOM_PRODUCTO'];//.' ['.$detalle_quiebre[$cont_regs]['COD_PRODUCTO'].']';					
 					$fila[1]=$detalle_quiebre[$cont_regs]['SEGMENTO'];	
-					// $fila[$columna_quiebre+2]=$detalle_quiebre[$cont_regs]['quiebre'];
 					switch($detalle_quiebre[$cont_regs]['quiebre'])
 					{
 						case '0':
@@ -492,7 +490,6 @@ class QuiebreDetalleController extends Controller
 					$nivel1=$detalle_quiebre[$cont_regs]['COD_PRODUCTO'];
 					array_push($body,$fila);
 					$fila=array_fill(0,$num_salas+3,"<div style='background:grey;height:2.22em'></div>");	
-					// $fila=array_fill(0,$num_salas+3,"-");	
 				}
 				if($cont_regs==$num_regs)		
 				{						
@@ -506,7 +503,6 @@ class QuiebreDetalleController extends Controller
 							$fila[$columna_quiebre+2]="<div style='background:$color_negativo;height:2.22em'></div>";	
 							break;
 					}					
-					// $fila[$columna_quiebre+2]=$detalle_quiebre[$cont_regs-1]['quiebre'];
 					$fila[$num_salas+2]=round($totales_producto[$cont_totales_producto]['QUIEBRE']*100,1);					
 					$cont_totales_producto++;								
 					array_push($body,$fila);

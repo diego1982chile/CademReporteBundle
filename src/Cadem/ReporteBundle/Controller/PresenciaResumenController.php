@@ -10,7 +10,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Session;
 
 
-class QuiebreResumenController extends Controller
+class PresenciaResumenController extends Controller
 {		
 	
 	public function indexAction()
@@ -338,10 +338,10 @@ class QuiebreResumenController extends Controller
 			'logostyle' => $logostyle,
 			'evolutivo' => json_encode($evolutivo),
 			'periodos' => json_encode($periodos),	
-			'estudios' => $estudios,			
-			'header_action' => 'quiebre_resumen_header',
-			'body_action' => 'quiebre_resumen_body',	
-			'tag_variable' => 'Quiebre'			
+			'estudios' => $estudios,		
+			'header_action' => 'presencia_resumen_header',
+			'body_action' => 'presencia_resumen_body',
+			'tag_variable' => 'Presencia'			
 			)
 		);		
 		//CACHE
@@ -388,7 +388,7 @@ class QuiebreResumenController extends Controller
 							INNER JOIN CADENA c on c.ID = s.CADENA_ID AND c.NOMBRE = '{$cadena}' ";
 		}
 		else{
-			$cadena_join = "";
+			$cadena_where = "";
 		}
 		
 		//SI SE NECESITA AGREGAR UN GRAFICO POR NIVEL
@@ -408,7 +408,7 @@ class QuiebreResumenController extends Controller
 
 
 		//EVOLUTIVO
-		$sql = "SELECT TOP(12) * FROM 
+		$sql = "SELECT * FROM 
 			(SELECT m.ID, m.NOMBRE, m.FECHAINICIO, m.FECHAFIN FROM MEDICION m
 			INNER JOIN ESTUDIOVARIABLE ev on ev.ID = m.ESTUDIOVARIABLE_ID
 			INNER JOIN ESTUDIO e on e.ID = ev.ESTUDIO_ID AND e.CLIENTE_ID = ?
