@@ -46,7 +46,10 @@
 <script>
 $(document).ready(function () {
 
+  if($('#f_medicion_Cliente_Medicion option').length == 0) $('#btn-borrarplano').addClass('disabled');
+
   $('#btn-borrarplano').click(function(){
+    if($('#btn-borrarplano').hasClass('disabled')) return false;
     var datos = $('#f_medicion_Cliente_Medicion').serializeArray();
     if (confirm("¿Desea eliminar el planograma y quiebre de esta medición?")){
       $.post("{{ path('admin_carga_borrarregistros_plano', {'plano': 'planoquiebre'}) }}", datos, function(data){
@@ -66,6 +69,9 @@ $(document).ready(function () {
 
 
   $('#f_medicion_Cliente_Medicion').change(function(){
+    if($('#f_medicion_Cliente_Medicion option').length == 0) $('#btn-borrarplano').addClass('disabled');
+    else $('#btn-borrarplano').removeClass('disabled');
+
     var datos = $(this).serializeArray();
     $.get("{{ path('admin_carga_registros_plano', {'plano': 'planoquiebre'}) }}", datos, function(data){
       if(data.status == true){
