@@ -327,7 +327,7 @@ class PrecioDetalleController extends Controller
 		
 		$head=array();
 		
-		// Oonstruir inicialización de columnas
+				// Oonstruir inicialización de columnas
 		$aoColumnDefs=array();
 		
 		$fila=array();
@@ -347,26 +347,30 @@ class PrecioDetalleController extends Controller
 		$fila['sWidth']="20px";
 		array_push($aoColumnDefs,$fila);	
 
-		$cont=3;
+		$cont=3;		
 		
 		foreach($salas_aux as $sala)
 		{
-			array_push($salas,$sala['ID_SALA']);	
-			$head[$sala['COD_SALA']]=$sala['NOM_SALA'];	
+			$fila=array();
+			$fila['cod_sala']=$sala['COD_SALA'];
+			$fila['nom_sala']=$sala['NOM_SALA'];			
+			array_push($salas,$sala['ID_SALA']);		
+			array_push($head,$fila);
 			$fila=array();
 			$fila['aTargets']=array($cont);		
 			// $fila['sWidth']="2%";
 			$cont++;
-			array_push($aoColumnDefs,$fila);				
+			array_push($aoColumnDefs,$fila);			
+			// $head[$sala['COD_SALA']]=$sala['NOM_SALA'];											
 		}		
 		$fila=array();
 		$fila['aTargets']=array($cont);	
-		$fila['bVisible']=false;			
+		$fila['bVisible']=false;	
 		// $fila['sWidth']="2%";
-		array_push($aoColumnDefs,$fila);
+		array_push($aoColumnDefs,$fila);		
 		foreach(array_reverse($prefixes) as $prefix)		
 			array_unshift($head,$prefix);		
-		array_push($head,'TOTAL');			
+		array_push($head,'TOTAL');		
 		
 		// Guardamos resultado de consulta en variable de sesión para reusarlas en un action posterior
 		$session->set("salas",$salas);				
@@ -406,7 +410,7 @@ class PrecioDetalleController extends Controller
 			'body_action' => 'precio_detalle_body',
 			'aoColumnDefs' => json_encode($aoColumnDefs),
 			'columnas_reservadas' => 3,
-			'tag_variable' => 'PRECIO'			
+			'tag_variable' => 'Precio'			
 			)
 		);
 		$time_taken = microtime(true) - $start;
@@ -484,7 +488,7 @@ class PrecioDetalleController extends Controller
 					$cont_totales_producto++;																			
 					$nivel1=$detalle_quiebre[$cont_regs]['COD_PRODUCTO'];
 					array_push($body,$fila);
-					$fila=array_fill(0,$num_salas+4," ");	
+					$fila=array_fill(0,$num_salas+3," ");	
 				}
 				if($cont_regs==$num_regs)		
 				{						

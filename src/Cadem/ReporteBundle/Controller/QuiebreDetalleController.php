@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\Session;
 
 class QuiebreDetalleController extends Controller
 {    	
-	public function indexAction()
+	public function indexAction(Request $request)
     {
 		$start = microtime(true);
 		$session = $this->get("session");
@@ -187,8 +187,17 @@ class QuiebreDetalleController extends Controller
 			))
 			->getForm();
 		
+		// Obtener id de la variable
+		$estudio_variable=$estudios[0]->getEstudiovariables();	
+		
+		$variable=$estudio_variable[0]->getVariable()->getId();				
+				
+		$session->set("variable",$variable);	
+		
+		print_r($variable);
+		
 		//ULTIMA MEDICION
-		$id_ultima_medicion = $this->get('cadem_reporte.helper.medicion')->getIdUltimaMedicion();
+		$id_ultima_medicion = $this->get('cadem_reporte.helper.medicion')->getIdUltimaMedicion($variable);
 		
 		$comunas='';
 		foreach(array_keys($choices_comunas) as $comuna)
@@ -361,14 +370,7 @@ class QuiebreDetalleController extends Controller
 		if($extension<0)
 			$extension=0;
 			
-		$max_width=100+$extension;	
-
-		// Obtener id de la variable
-		$estudio_variable=$estudios[0]->getEstudiovariables();	
-		
-		$variable=$estudio_variable[0]->getVariable()->getId();				
-				
-		$session->set("variable",$variable);			
+		$max_width=100+$extension;			
 				
 		//RESPONSE
 		$response = $this->render('CademReporteBundle:Detalle:index.html.twig',

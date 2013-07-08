@@ -260,6 +260,7 @@ var matriz_totales = [];
 var variable = parseInt({{variable}});
 var aoColumnDefs = {{aoColumnDefs|raw}};
 var columnas_reservadas = parseInt({{columnas_reservadas}});
+var filtrar_por='sku';
 
 function preInitTabla()
 {
@@ -305,8 +306,8 @@ function construirTabla()
 					"success": function(data){//QUE PASA SI FALLA?									
 								matriz_totales=data.matriz_totales;	
 								maxWidth=parseInt(data.max_width);																							
-								// alert(JSON.stringify(matriz_totales));
-								fnCallback(data);
+								// alert(JSON.stringify(matriz_totales));								
+								fnCallback(data);								
 								DatosAdicionales = [];//AL FINAL SE BORRAN
 							}
 				} )
@@ -334,6 +335,7 @@ function construirTabla()
 								switch(variable)
 								{
 									case 1:
+									case 5:
 										var col=0;
 										break;
 									case 2:
@@ -369,7 +371,8 @@ function construirTabla()
 			"fnInitComplete": function() {
 					switch(parseInt(variable))
 					{
-						case 1:														
+						case 1:			
+						case 5:							
 							fixedColumn1();
 							break;
 						case 2:							
@@ -392,9 +395,13 @@ function construirTabla()
 			$('.input-append button').removeClass('btn-warning');
 			$(this).addClass('btn-warning');			
 			if($(this).attr('id')=='filtro_sku')
-				listenerFiltro();
+			{
+				filtrar_por='sku';
+			}
 			else
-				listenerFiltroSala();
+			{
+				filtrar_por='sala';				
+			}
 		});
 	});	
 }
@@ -408,150 +415,141 @@ function listenerFiltro()
 		switch(e.keyCode)
 		{			
 			case 13:	
-				var needle=$('#filtro').val().toUpperCase();					
-				var delta=$('table.DTFC_Cloned tbody tr').height();
-				var offset=delta;
-				var oSettings = oTable.fnSettings();
-				var ventana= maxHeight;					
-				
-				if(needle=='')
+				switch(filtrar_por)
 				{
-					$('.matched').removeClass('matched');	
-					$('.matched_active').removeClass('matched_active');	
-					return false;
-				}
-				if(!filtrado)
-				{
-					filtrado=true;							
-					var hit=false;
-					// $('.ui-state-active').removeClass('ui-state-active');				
-					$('.matched').removeClass('matched');	
-					$('.matched_active').removeClass('matched_active');	
-					$('table.DTFC_Cloned tbody tr').each(function(){						
-						var haystack=$(this).attr('title').toString().toUpperCase();					
-						if (haystack.indexOf(needle)!=-1) {															
-							if(!hit)							
-								clase='matched_active';														
-							else							
-								clase='matched';
-																					
-							$(this).addClass(clase);
+					case 'sku':
+						var needle=$('#filtro').val().toUpperCase();					
+						var delta=$('table.DTFC_Cloned tbody tr').height();
+						var offset=delta;
+						var oSettings = oTable.fnSettings();
+						var ventana= maxHeight;					
+						
+						if(needle=='')
+						{
+							$('.matched').removeClass('matched');	
+							$('.matched_active').removeClass('matched_active');	
+							return false;
+						}
+						if(!filtrado)
+						{
+							filtrado=true;							
+							var hit=false;
+							// $('.ui-state-active').removeClass('ui-state-active');				
+							$('.matched').removeClass('matched');	
+							$('.matched_active').removeClass('matched_active');	
+							$('table.DTFC_Cloned tbody tr').each(function(){						
+								var haystack=$(this).attr('title').toString().toUpperCase();					
+								if (haystack.indexOf(needle)!=-1) {															
+									if(!hit)							
+										clase='matched_active';														
+									else							
+										clase='matched';
+																							
+									$(this).addClass(clase);
+									
+									$('#tabla_resumen tbody').children(':eq('+$(this).index()+')').addClass(clase);
+									hit=true;							
+								}
+								if(!hit)
+									offset=offset+delta;
+							});
+							if(hit)
+							{					
+								if(offset<=ventana)
+									offset=0;
+								else
+									offset=offset-2*ventana/3;					
+								$('.dataTables_scrollBody').animate({ scrollTop: offset });		
+							}
+							else
+							{
+								alert('El item no fue encontrado');
+								$('#filtro').val('');
+								$('.dataTables_scrollBody').animate({ scrollTop: 0 });	
+							}
+						}
+						else
+						{									
+							offset=($('.matched:first').index())*delta-2*ventana/3;
+							if($('.matched').length==2)
+								filtrado=false;
+							$('.matched_active').removeClass('matched_active');	
+							$('#tabla_resumen tbody tr.matched:first').addClass('matched_active');
+							$('#tabla_resumen tbody tr.matched:first').removeClass('matched');	
 							
-							$('#tabla_resumen tbody').children(':eq('+$(this).index()+')').addClass(clase);
-							hit=true;							
+							$('table.DTFC_Cloned tbody tr.matched:first').addClass('matched_active');
+							$('table.DTFC_Cloned tbody tr.matched:first').removeClass('matched');						
+							
+							$('.dataTables_scrollBody').animate({ scrollTop: offset });						
 						}
-						if(!hit)
-							offset=offset+delta;
-					});
-					if(hit)
-					{					
-						if(offset<=ventana)
-							offset=0;
-						else
-							offset=offset-delta;					
-						$('.dataTables_scrollBody').animate({ scrollTop: offset });		
-					}
-					else
-					{
-						alert('El item no fue encontrado');
-						$('#filtro').val('');
-						$('.dataTables_scrollBody').animate({ scrollTop: 0 });	
-					}
-				}
-				else
-				{									
-					offset=($('.matched:first').index())*delta-ventana/2;
-					if($('.matched').length==2)
-						filtrado=false;
-					$('.matched_active').removeClass('matched_active');	
-					$('#tabla_resumen tbody tr.matched:first').addClass('matched_active');
-					$('#tabla_resumen tbody tr.matched:first').removeClass('matched');	
+					break;
 					
-					$('table.DTFC_Cloned tbody tr.matched:first').addClass('matched_active');
-					$('table.DTFC_Cloned tbody tr.matched:first').removeClass('matched');						
-					
-					$('.dataTables_scrollBody').animate({ scrollTop: offset });						
-				}
-				break;
-			default:
-				filtrado=false;
-				break;
-		}
-	});	
-}
-
-function listenerFiltroSala()
-{	
-	var filtrado= false;
-	var indice=0;
-	
-	$('#filtro').keydown(function(e){											
-		switch(e.keyCode)
-		{			
-			case 13:	
-				var needle=$('#filtro').val().toUpperCase();					
-				var delta=$('#tabla_resumen thead tr th').width()/2;
-				// var delta=20;
-				var offset=delta;
-				var oSettings = oTable.fnSettings();
-				var ventana= 800;									
-				
-				if(needle=='')
-				{
-					$('th.btn-warning').removeClass('btn-warning');	
-					$('th.btn-success').removeClass('btn-success');	
-					return false;
-				}
-				if(!filtrado)
-				{
-					filtrado=true;							
-					var hit=false;
-					// $('.ui-state-active').removeClass('ui-state-active');				
-					$('th.btn-warning').removeClass('btn-warning');	
-					$('th.btn-success').removeClass('btn-success');	
-					$('.DataTables_sort_wrapper').slice(2,$('.DataTables_sort_wrapper').length-1).each(function(){							
-						var haystack=$(this).parent().attr('title').toString().toUpperCase();					
-						if (haystack.indexOf(needle)!=-1) {																																										
-							if(!hit)							
-								clase='btn-success';														
-							else							
-								clase='btn-warning';																					
-							$(this).addClass(clase);																												
-							hit=true;							
+					case 'sala':
+						var needle=$('#filtro').val().toUpperCase();					
+						var delta=$('#tabla_resumen thead tr th').width();
+						// var delta=20;
+						var offset=delta;
+						var oSettings = oTable.fnSettings();
+						var ventana= 1000;									
+						if(needle=='')
+						{
+							$('th.btn-warning').removeClass('btn-warning');	
+							$('th.btn-success').removeClass('btn-success');	
+							return false;
 						}
-						if(!hit)
-							offset=offset+delta;						
-					});					
-					if(hit)
-					{											
-						if(offset<=ventana)
-							offset=0;
+						if(!filtrado)
+						{					
+							filtrado=true;							
+							var hit=false;
+							// $('.ui-state-active').removeClass('ui-state-active');				
+							$('th.btn-warning').removeClass('btn-warning');	
+							$('th.btn-success').removeClass('btn-success');	
+							$('.DataTables_sort_wrapper').slice(2,$('.DataTables_sort_wrapper').length-1).each(function(){							
+								var haystack=$(this).parent().attr('title').toString().toUpperCase();					
+								if (haystack.indexOf(needle)!=-1) {																																										
+									if(!hit)							
+										clase='btn-success';														
+									else							
+										clase='btn-warning';																					
+									$(this).addClass(clase);																												
+									hit=true;							
+								}
+								if(!hit)
+									offset=offset+2*delta/3;						
+							});					
+							if(hit)
+							{											
+								if(offset<=ventana)
+									offset=0;
+								else
+									offset=offset-4*ventana/3;													
+								$('.dataTables_scrollBody').animate({ scrollLeft: offset });		
+							}
+							else
+							{
+								alert('El item no fue encontrado');
+								$('#filtro').val('');
+								$('.dataTables_scrollBody').animate({ scrollLeft: 0 });	
+							}
+						}
 						else
-							offset=offset-delta;													
-						$('.dataTables_scrollBody').animate({ scrollLeft: offset });		
-					}
-					else
-					{
-						alert('El item no fue encontrado');
-						$('#filtro').val('');
-						$('.dataTables_scrollBody').animate({ scrollLeft: 0 });	
-					}
+						{											
+							offset=($('.btn-success').parent().index()+4)*4*delta/7-ventana;							
+							if($('th div.btn-warning').length==0)
+								filtrado=false;					
+							$('th div.btn-success').removeClass('btn-success');	
+							$('th div.btn-warning:first').addClass('btn-success');
+							$('th div.btn-warning:first').removeClass('btn-warning');	
+							oTable.fnDraw();			
+							$('.dataTables_scrollBody').animate({ scrollLeft: offset });						
+						}
+					break;
 				}
-				else
-				{										
-					offset=($('th.btn-success').index())*delta-ventana;
-					if($('th.btn-warning').length==2)
-						filtrado=false;					
-					$('th.btn-success').removeClass('btn-success');	
-					$('th.btn-success:first').addClass('btn-success');
-					$('th.btn-warning:first').removeClass('btn-warning');	
-										
-					$('.dataTables_scrollBody').animate({ scrollLeft: offset });						
-				}
-				break;
+			break;
+			
 			default:
-				filtrado=false;
-				break;
+				filtrado=false;				
+			break;
 		}
 	});	
 }

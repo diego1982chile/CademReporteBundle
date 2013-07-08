@@ -210,6 +210,8 @@ class PrecioEvolucionController extends Controller
 		$sql = substr($sql, 0, -6);
 		$sql.="ORDER BY ni.NOMBRE,i.NOMBRE";									
 		
+		print_r($sql);
+		
 		$sha1 = sha1($sql);
 
 		if(!$session->has($sha1)){
@@ -342,7 +344,7 @@ class PrecioEvolucionController extends Controller
 		$total = $em->getConnection()->executeQuery($sql)->fetchAll();									
 
 		// Calcula el ancho máximo de la tabla	
-		$extension=count($head)*10-100;
+		$extension=count($head)*12-100;
 	
 		if($extension<0)
 			$extension=0;
