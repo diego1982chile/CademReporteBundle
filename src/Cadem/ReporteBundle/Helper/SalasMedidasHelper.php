@@ -23,6 +23,7 @@ class SalasMedidasHelper {
 		$this->medicion = $medicion;
 		$this->clienteHelper = $clienteHelper;
 		// $this->session = $session;
+
 		if($security->getToken() != null) $this->user = $security->getToken()->getUser();
 		else $this->user = null;
 		$this->total_salas_name = $total_salas_name;

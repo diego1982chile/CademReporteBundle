@@ -41,18 +41,18 @@ $(document).ready(function () {
   $('#f1').ajaxForm({
     success: function(data) {
         // console.log(data);
-        if(data.status == false){
+        if(data.status != true){
           alert('SE PRODUJO UN ERROR AL SUBIR EL ARCHIVO');
           return;
         }
         //AHORA SE DEBE VALIDAR EL ARCHIVO SUBIDO
         $.get("{{ path('admin_filevalid') }}", {name: data.name, tipo_carga: data.tipo_carga, id_cliente: data.id_cliente, id_medicion: data.id_medicion}, function(data2) {
-          if(typeof data2.status == 'undefined' || data2.status == false){
+          if(typeof data2.status == 'undefined' || data2.status != true){
             alert('SE PRODUJO UN ERROR EN LA VALIDACION DEL ARCHIVO: ' + data2.mensaje);
             return;
           }
           $.get("{{ path('admin_fileprocess') }}", {name: data2.name, tipo_carga: data2.tipo_carga, id_cliente: data2.id_cliente, id_medicion: data2.id_medicion}, function(data3) {
-            if(data3.status == false){
+            if(data3.status != true){
               alert('SE PRODUJO UN ERROR EN LA CARGA DEL ARCHIVO: ' + data3.mensaje);
               return;
             }
