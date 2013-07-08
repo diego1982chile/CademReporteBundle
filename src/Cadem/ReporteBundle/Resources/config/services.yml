@@ -33,8 +33,9 @@ services:
     cadem_reporte.helper.medicion:
         class: Cadem\ReporteBundle\Helper\MedicionHelper
         arguments:
-            entityManager: @doctrine.orm.entity_manager
-            security: @security.context
+            # entityManager: @doctrine.orm.entity_manager
+            # security: @security.context
+            service_container: @service_container
     cadem_reporte.helper.cliente:
         class: Cadem\ReporteBundle\Helper\ClienteHelper
         arguments:

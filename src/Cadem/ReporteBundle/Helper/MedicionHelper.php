@@ -1,28 +1,30 @@
 <?php
 namespace Cadem\ReporteBundle\Helper;
 
-use Doctrine\ORM\EntityManager;
-use Symfony\Component\Security\Core\SecurityContext;
+// use Doctrine\ORM\EntityManager;
+// use Symfony\Component\Security\Core\SecurityContext;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class MedicionHelper {
 
-    protected $em;
-	protected $security;
-	protected $user;
+ //    protected $em;
+	// protected $security;
+	// protected $user;
+	private $container;
 	private $id_ultima_medicion = null;
 	private $id_medicion_anterior = null;
 	private $nombre_medicion;
 
-    public function __construct(EntityManager $entityManager, SecurityContext $security) {
-        $this->em = $entityManager;
-		$this->security = $security;
-		if($security->getToken() != null) $this->user = $security->getToken()->getUser();
-		else $this->user = null;
+    public function __construct(ContainerInterface $container) {
+		$this->container = $container;
+		// if($security->getToken() != null) $this->user = $security->getToken()->getUser();
+		// else $this->user = null;
     }
 
     private function getNombreMedicion_($id_medicion) {
-		$em = $this->em;
-		$user = $this->user;
+		$em = $this->container->get('doctrine.orm.entity_manager');
+		$security = $this->container->get('security.context');
+		if($security->getToken() != null) $user = $security->getToken()->getUser();
 		$id_user = $user->getId();
 		$id_cliente = $user->getClienteID();
 		
@@ -45,19 +47,21 @@ class MedicionHelper {
     }
 
     private function getIdUltimaMedicion_() {
-		$em = $this->em;
-		if($this->user === null) $this->user = $this->security->getToken()->getUser();
-		$user = $this->user;
+		$em = $this->container->get('doctrine.orm.entity_manager');
+		$security = $this->container->get('security.context');
+		if($security->getToken() != null) $user = $security->getToken()->getUser();
 		$id_user = $user->getId();
 		$id_cliente = $user->getClienteID();
+		$request = $this->container->get('request');
+		$variable = $request->attributes->get('variable');
 		
 		//ULTIMA MEDICION
 		$query = $em->createQuery(
-			'SELECT m.id FROM CademReporteBundle:Medicion m
+			"SELECT m.id FROM CademReporteBundle:Medicion m
 			JOIN m.estudiovariable ev
 			JOIN ev.estudio e
 			WHERE e.clienteid = :idcliente
-			ORDER BY m.fechainicio DESC')
+			ORDER BY m.fechainicio DESC")
 			->setParameter('idcliente', $id_cliente);
 		$medicion_q = $query->getArrayResult();
 		if(count($medicion_q) > 0){
@@ -70,8 +74,9 @@ class MedicionHelper {
     }
 
     private function getIdMedicionAnterior_($id_medicion_actual) {
-		$em = $this->em;
-		$user = $this->user;
+		$em = $this->container->get('doctrine.orm.entity_manager');
+		$security = $this->container->get('security.context');
+		if($security->getToken() != null) $user = $security->getToken()->getUser();
 		$id_user = $user->getId();
 		$id_cliente = $user->getClienteID();
 		
