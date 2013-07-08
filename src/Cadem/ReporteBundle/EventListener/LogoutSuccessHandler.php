@@ -22,7 +22,7 @@ class LoginSuccessHandler implements LogoutSuccessHandlerInterface
 		$this->security = $security;
 	}
 	
-	public function onAuthenticationSuccess(Request $request, TokenInterface $token)
+	public function onLogoutSuccess(Request $request, TokenInterface $token)
 	{
 		
 		if ($this->security->isGranted('ROLE_SUPER_ADMIN') || $this->security->isGranted('ROLE_USER'))
