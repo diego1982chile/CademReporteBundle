@@ -250,6 +250,8 @@ div.DataTables_sort_wrapper {
 {% block javascripts %}
 <script src="{{ asset('bundles/cademreporte/js/jquery.dataTables.min.js') }}"></script>
 <script src="{{ asset('bundles/cademreporte/js/dataTables.fixedColumns.js') }}"></script>
+<script src="{{ asset('bundles/cademreporte/js/jquery.heatcolor.0.0.1.js') }}"></script>
+
 <script>
 
 var oTable;
@@ -261,6 +263,7 @@ var variable = parseInt({{variable}});
 var aoColumnDefs = {{aoColumnDefs|raw}};
 var columnas_reservadas = parseInt({{columnas_reservadas}});
 var filtrar_por='sku';
+var grupo='group';
 
 function preInitTabla()
 {
@@ -350,7 +353,7 @@ function construirTabla()
 									$(nRow).children(':eq('+col+')').text(aData[col].substring(0,40).replace(/ /g,'_')+'...');
 								else
 									$(nRow).children(':eq('+col+')').text(aData[col].replace(/ /g,'_'));							 
-								$(nRow).attr('title',aData[col]);	
+								$(nRow).attr('title',aData[col]);																
 								
 								// $(aData.slice(2,aData.length-1)).each(function(key,value){									
 									// switch(value)
@@ -493,12 +496,14 @@ function listenerFiltro()
 						var ventana= 1000;									
 						if(needle=='')
 						{
-							$('th.btn-warning').removeClass('btn-warning');	
-							$('th.btn-success').removeClass('btn-success');	
+							$('th div.btn-warning').removeClass('btn-warning');	
+							$('th div.btn-success').removeClass('btn-success');	
 							return false;
 						}
 						if(!filtrado)
 						{					
+							$('th div.btn-warning').removeClass('btn-warning');	
+							$('th div.btn-success').removeClass('btn-success');	
 							filtrado=true;							
 							var hit=false;
 							// $('.ui-state-active').removeClass('ui-state-active');				
@@ -519,10 +524,11 @@ function listenerFiltro()
 							});					
 							if(hit)
 							{											
-								if(offset<=ventana)
-									offset=0;
-								else
-									offset=offset-4*ventana/3;													
+								// if(offset<=ventana)
+									// offset=0;
+								// else
+									// offset=offset-4*ventana/3;		
+								offset=($('.btn-success').parent().index())*6.5*delta/10-ventana/2;									
 								$('.dataTables_scrollBody').animate({ scrollLeft: offset });		
 							}
 							else
@@ -534,13 +540,15 @@ function listenerFiltro()
 						}
 						else
 						{											
-							offset=($('.btn-success').parent().index()+4)*4*delta/7-ventana;							
+							offset=($('.btn-success').parent().index())*6.3*delta/20-ventana/2;	
+							// offset=$('.btn-success').parent().position();	
+							
 							if($('th div.btn-warning').length==0)
 								filtrado=false;					
 							$('th div.btn-success').removeClass('btn-success');	
 							$('th div.btn-warning:first').addClass('btn-success');
 							$('th div.btn-warning:first').removeClass('btn-warning');	
-							oTable.fnDraw();			
+						
 							$('.dataTables_scrollBody').animate({ scrollLeft: offset });						
 						}
 					break;
@@ -571,7 +579,7 @@ function fixedColumn1()
 			var nTrs = $('#tabla_resumen tbody tr');
 			// var iColspan = nTrs[0].getElementsByTagName('td').length;
             var cols=oTable.fnSettings().aoColumns.length-2;
-			var row=0;
+			var row=0;			
 			
 			for ( var i=0 ; i<nTrs.length ; i++ )
 			{
@@ -585,14 +593,14 @@ function fixedColumn1()
 					// // Se agrgega una columna correspondiente a la columna oculta					
 					var nCell;
 					nCell = document.createElement( 'td' );						 
-					nCell.className = "group";																									
+					nCell.className = grupo;																									
 					nCell.innerHTML = 0;															
 					nGroup.appendChild( nCell ); 										
                   					
                     for(var j=0 ; j< cols ; j++)
 					{
 						nCell = document.createElement( 'td' );						 
-						nCell.className = "group";														
+						nCell.className = grupo;														
 						nCell.innerHTML = matriz_totales[row][j];																	
 						nGroup.appendChild( nCell );						 
 					}					
@@ -608,7 +616,7 @@ function fixedColumn1()
 					
                     nGroup = document.createElement( 'tr' );
 					nCell = document.createElement( 'td' );
-					nCell.className = "group tag";
+					nCell.className = grupo+" tag";
 					nCell.innerHTML = sGroup.toUpperCase();
 					nGroup.setAttribute('title',sGroup.toUpperCase());	
 					nGroup.appendChild( nCell );
@@ -623,14 +631,14 @@ function fixedColumn1()
 			// Se agrgega una columna correspondiente a la columna oculta			
 			var nCell;
 			nCell = document.createElement( 'td' );						 
-			nCell.className = "group";																									
+			nCell.className =grupo;																									
 			nCell.innerHTML = 0;															
 			nGroup.appendChild( nCell ); 				
 			
 			for(var j=0 ; j< cols ; ++j)
 			{
 				nCell = document.createElement( 'td' );						 
-				nCell.className = "group";																				
+				nCell.className = grupo;																				
 				// alert(matriz_totales[row][j]);
 				nCell.innerHTML = matriz_totales[row][j];																
 				nGroup.appendChild( nCell );						 
@@ -646,7 +654,7 @@ function fixedColumn1()
 			
 			nGroup = document.createElement( 'tr' );
 			nCell = document.createElement( 'td' );
-			nCell.className = "group tag";
+			nCell.className = grupo+" tag";
 			nCell.innerHTML = "TOTAL GENERAL";
 			nGroup.appendChild( nCell );
 			nGroup.setAttribute('title',"TOTAL GENERAL");	
@@ -655,6 +663,15 @@ function fixedColumn1()
 		}
 	});	
 	listenerFiltro();	
+	$("#tabla_resumen tbody tr td.group").heatcolor(
+		function() {			
+			return parseFloat($(this).text());
+			},
+			{ maxval: 0,
+			minval: 100,
+			colorStyle: 'greentored',
+			lightness: 0 }
+	);	
 }
 
 function fixedColumn2()
@@ -721,7 +738,7 @@ function colorTotales(){
 				// 'background-color':'rgb(232, 231, 245)',
 				// 'color': 'black',				
 			// });	
-			$('.DTFC_Cloned tbody tr td:first-of-type:not(.group)').css({
+			$('.DTFC_Cloned tbody tr td:first-of-type:not(.'+grupo+')').css({
 				'background-color':'rgb(232, 231, 245)',
 				'color': 'black',
 				'border': '1px solid #B2B2B2'

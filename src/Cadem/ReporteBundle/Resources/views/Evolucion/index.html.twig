@@ -143,7 +143,7 @@ div.DataTables_sort_wrapper {
 
 <script src="{{ asset('bundles/cademreporte/js/jquery.dataTables.min.js') }}"></script>
 <script src="{{ asset('bundles/cademreporte/js/dataTables.fixedColumns.js') }}"></script>
-
+<script src="{{ asset('bundles/cademreporte/js/jquery.heatcolor.0.0.1.js') }}"></script>
 <script>
 {#% for item in variables_clientes %#}
 {#{"var i_"~item.variable.nombre~";"}#}
@@ -551,6 +551,17 @@ function colorTotales(){
 			});			
 			break;		
 	}
+	// $("#tabla_resumen tbody tr td").each(function() {		
+		$("#tabla_resumen tbody tr td").heatcolor(
+		function() {			
+			return parseFloat($(this).text());
+			},
+			{ maxval: 0,
+			minval: 100,
+			colorStyle: 'greentored',
+			lightness: 0 }
+		);
+	// });	
 }
 
 function construirGrafico()
