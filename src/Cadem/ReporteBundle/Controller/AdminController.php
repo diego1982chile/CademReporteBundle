@@ -1473,7 +1473,7 @@ class AdminController extends Controller
 
 
                     //FORMATO ES:
-                    // FOLIO;EAN;PRECIO;POLITICAPRECIO;FECHAHORACAPTURA
+                    //FOLIO;EAN;PRECIO;POLITICAPRECIO;FECHAHORACAPTURA
 
                     
                     //SI LA PRIMERA FILA TIENE LOS ENCABEZADOS SE BORRA
@@ -1484,7 +1484,12 @@ class AdminController extends Controller
                     $chunk = 0;
                     foreach($m as $k => $value){
                         $folioean[floor($chunk/2000)][] = $value[0].'-'.$value[1];
-                        if(strlen($value[2]) === 0) $m[$k][2] = "NULL"; //SI NO HAY PRECIO SE PASA A NULL PARA EL INSERT
+                        $ean[floor($chunk/2000)][] = $value[1];
+                        if(strlen($value[2]) === 0) $m[$k][2] = "NULL"; //SI NO HAY PRECIO SE PASA A NULL
+                        else{
+                            if(isset($precio_csv[$value[1]]) && $value[2] == (string) intval($value[2])) $precio_csv[$value[1]] = array(intval($m[$k][2]) + $precio_csv[$value[1]][0], 1 + $precio_csv[$value[1]][1]);
+                            elseif($value[2] == (string) intval($value[2])) $precio_csv[$value[1]] = array(intval($m[$k][2]), 1);
+                        }
                         if(strlen($value[3]) === 0) $m[$k][3] = "NULL"; //SI NO HAY POLITICAPRECIO SE PASA A NULL PARA EL INSERT
                         if(strlen($value[4]) === 0) $m[$k][4] = "NULL"; //SI NO HAY FECHAHORACAPTURA SE PASA A NULL PARA EL INSERT
                         $chunk++;
@@ -1493,6 +1498,7 @@ class AdminController extends Controller
                     $folioean_encontrados = array();
                     $start_select = microtime(true);
                     foreach($folioean as $k => $chunk){
+                        //FOLIOS ENCONTRADOS
                         $sql = "SELECT s.FOLIOCADEM+'-'+i.CODIGO as folioean FROM PLANOGRAMAP p
                                 INNER JOIN SALACLIENTE sc on p.SALACLIENTE_ID = sc.ID
                                 INNER JOIN SALA s on s.ID = sc.SALA_ID
@@ -1504,7 +1510,33 @@ class AdminController extends Controller
                         $tipo_param = array(\Doctrine\DBAL\Connection::PARAM_STR_ARRAY, \PDO::PARAM_INT, \PDO::PARAM_INT, \PDO::PARAM_INT, \PDO::PARAM_INT);
                         $query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
                         foreach ($query as $v) $folioean_encontrados[] = $v['folioean'];
-                        set_time_limit(10);
+
+                        //PRECIO PROMEDIO
+                        $sql = "SELECT i.CODIGO as codigo, SUM(pr.PRECIO) as suma, COUNT(pr.ID) as count FROM PLANOGRAMAP p
+                                INNER JOIN PRECIO pr on p.ID = pr.PLANOGRAMAP_ID
+                                INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID AND ic.CLIENTE_ID = ?
+                                INNER JOIN ITEM i on i.ID = ic.ITEM_ID AND i.CODIGO IN ( ? )
+                                GROUP BY i.CODIGO";
+                        $param = array($id_cliente, $ean[$k]);
+                        $tipo_param = array(\PDO::PARAM_INT,\Doctrine\DBAL\Connection::PARAM_STR_ARRAY);
+                        $query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
+                        foreach ($query as $v){
+                            if(isset($precio_csv[$v['codigo']]) && $v['suma'] == (string) intval($v['suma'])){
+                                $precio_prom[$v['codigo']] = round((intval($v['suma'])+$precio_csv[$v['codigo']][0])/(intval($v['count'])+$precio_csv[$v['codigo']][1]));
+                            }
+                            elseif($v['suma'] == (string) intval($v['suma'])){
+                                $precio_prom[$v['codigo']] = round((intval($v['suma']))/(intval($v['count'])));
+                            }
+                            elseif(isset($precio_csv[$v['codigo']])){
+                                $precio_prom[$v['codigo']] = round(($precio_csv[$v['codigo']][0])/($precio_csv[$v['codigo']][1]));
+                            }
+                        }
+                        //SE AGREGAN LOS PRECIOS QUE FALTAN, NO ESTAN EN BD
+                        foreach ($precio_csv as $k => $v) {
+                            if(!isset($precio_prom[$k])) $precio_prom[$k] = round($v[0]/$v[1]);
+                        }
+
+                        set_time_limit(15);
                         $time_taken = microtime(true) - $start_select;
                         if($time_taken >= 600){
                             return new JsonResponse(array(
@@ -1534,12 +1566,6 @@ class AdminController extends Controller
                                 'mensaje' => 'EL "EAN" NO PUEDE ESTAR VACIA, CERCA DE LA LINEA '.$k
                             ));
                         }
-                        // if(strlen($fila[2]) === 0){//EL "PRECIO" NO PUEDE SER VACIO
-                        //     return new JsonResponse(array(
-                        //         'status' => false,
-                        //         'mensaje' => 'EL "PRECIO" NO PUEDE ESTAR VACIA, CERCA DE LA LINEA '.$k
-                        //     ));
-                        // }
                         if($fila[2] !== "NULL" && ($fila[2] != (string) intval($fila[2]) || intval($fila[2]) < 0)){//EL "PRECIO" DEBE SER ENTERO MAYOR O IGUAL A CERO
                             return new JsonResponse(array(
                                 'status' => false,
@@ -1551,6 +1577,15 @@ class AdminController extends Controller
                                 'status' => false,
                                 'mensaje' => 'LA "POLITICAPRECIO" DEBE SER ENTERO MAYOR O IGUAL A CERO, CERCA DE LA LINEA '.$k
                             ));
+                        }
+                        else{//SE VALIDA LA POLITICA DE PRECIO, SI NO HAY DATOS SE DEJA NULL
+                            if(isset($precio_prom[$fila[1]])) $m[$k][3] = $precio_prom[$fila[1]];
+                            // else{
+                            //     return new JsonResponse(array(
+                            //         'status' => false,
+                            //         'mensaje' => 'NO HAY PRECIOS HISTORICOS O ACTUALES PARA EL ITEM '.$fila[1].', CERCA DE LA LINEA '.$k
+                            //     ));
+                            // }
                         }
 
                         if(in_array($fila[0].'-'.$fila[1], $folioean_encontrados)){//SE BUSCAN Y DESCARTA LOS CODIGOSALA ENCONTRADOS Y SE REGISTRA
@@ -1629,13 +1664,15 @@ class AdminController extends Controller
                             $item_[$v] = $query[$k]['id'];
                         }
                     }
+
+                    
                        
 
                     
 
 
                     //FORMATO ES:
-                    // FOLIO;EAN;PRECIO;POLITICAPRECIO;ID_SALACLIENTE;ID_ITEMCLIENTE
+                    //FOLIO;EAN;PRECIO;POLITICAPRECIO;ID_SALACLIENTE;ID_ITEMCLIENTE
 
                     //ARCHIVO A ESCRIBIR CON LOS IDs FINALES
                     $fp = fopen($this->uploadDIR.$name.'_proc.csv', 'w');
@@ -2269,13 +2306,13 @@ class AdminController extends Controller
                             $row_affected += $conn->executeUpdate($sql,$param,$tipo_param);
 
 
-                            set_time_limit(10);
+                            set_time_limit(15);
                             $time_taken = microtime(true) - $start_insert;
-                            if($time_taken >= 600){
+                            if($time_taken >= 900){
                                 $conn->rollback();
                                 return new JsonResponse(array(
                                     'status' => false,
-                                    'mensaje' => 'TIEMPO EXCEDIDO ('.round($time_taken,1).' SEG) EN INSERT. EL TIEMPO MAX ES DE 600 SEG. LO QUE DEBERIA ALCANZAR PARA PROCESAR APROX 45 MIL FILAS. SI SU ARCHIVO TIENE MAS, POR FAVOR SAQUE LAS SUFICIENTES FILAS.'
+                                    'mensaje' => 'TIEMPO EXCEDIDO ('.round($time_taken,1).' SEG) EN INSERT. EL TIEMPO MAX ES DE 900 SEG. LO QUE DEBERIA ALCANZAR PARA PROCESAR APROX 20 MIL FILAS. SI SU ARCHIVO TIENE MAS, POR FAVOR SAQUE LAS SUFICIENTES FILAS.'
                                 ));
                             }
                         }

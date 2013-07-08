@@ -46,7 +46,7 @@
 <script>
 $(document).ready(function () {
 
-  if($('#f_medicion_Cliente_Medicion option').length == 0) $('#btn-borrarplano').addClass('disabled');
+  if($('#registros').text() == 0) $('#btn-borrarplano').addClass('disabled');
 
   $('#btn-borrarplano').click(function(){
     if($('#btn-borrarplano').hasClass('disabled')) return false;
@@ -69,13 +69,14 @@ $(document).ready(function () {
 
 
   $('#f_medicion_Cliente_Medicion').change(function(){
-    if($('#f_medicion_Cliente_Medicion option').length == 0) $('#btn-borrarplano').addClass('disabled');
-    else $('#btn-borrarplano').removeClass('disabled');
+    $('#btn-borrarplano').addClass('disabled');
 
     var datos = $(this).serializeArray();
     $.get("{{ path('admin_carga_registros_plano', {'plano': 'planoquiebre'}) }}", datos, function(data){
       if(data.status == true){
         $('#registros').text(data.registros);
+        if($('#registros').text() == 0) $('#btn-borrarplano').addClass('disabled');
+        else $('#btn-borrarplano').removeClass('disabled');
       }
       else{
         alert("ERROR AL CARGAR LOS REGISTROS. E1: " + data.mensaje);
