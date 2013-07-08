@@ -12,14 +12,16 @@ class SalasMedidasHelper {
 	protected $security;
 	protected $user;
 	protected $medicion;
+	protected $clienteHelper;
 	private $total_salas_name;
 	private $salasmedidas = null;
-	private $totalsalas = null;
+	private $totalsalas = null;	
 
-    public function __construct(EntityManager $entityManager, SecurityContext $security, MedicionHelper $medicion, $total_salas_name) {
+    public function __construct(EntityManager $entityManager, SecurityContext $security, MedicionHelper $medicion, $total_salas_name, ClienteHelper $clienteHelper) {
         $this->em = $entityManager;
 		$this->security = $security;
 		$this->medicion = $medicion;
+		$this->clienteHelper = $clienteHelper;
 		// $this->session = $session;
 		if($security->getToken() != null) $this->user = $security->getToken()->getUser();
 		else $this->user = null;
@@ -31,11 +33,18 @@ class SalasMedidasHelper {
 		$user = $this->user;
 		$id_cliente = $user->getClienteID();
 		
-		$id_ultima_medicion = $this->medicion->getIdUltimaMedicion();
-		if($id_ultima_medicion !== -1){
+		$variables = array_map('strtoupper', $this->clienteHelper->getVariables());
+				
+		
+		foreach($variables as $variable)
+		{							
+			
+			$id_ultima_medicion = $this->medicion->getIdUltimaMedicionPorVariable($variable);								
+		
+			if($id_ultima_medicion !== -1){
 			//SALAS MEDIDAS
-			$sql = "SELECT COUNT(p.ID) FROM PLANOGRAMAQ p
-					INNER JOIN QUIEBRE q on p.ID = q.PLANOGRAMAQ_ID
+			$sql = "SELECT COUNT(p.ID) FROM PLANOGRAMA".substr($variable,0,1)." p
+					INNER JOIN ".$variable." q on p.ID = q.PLANOGRAMA".substr($variable,0,1)."_ID
 					INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
                     WHERE sc.CLIENTE_ID = ? AND p.MEDICION_ID = ?
                     GROUP BY sc.SALA_ID";
@@ -44,11 +53,13 @@ class SalasMedidasHelper {
             $query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
             if(isset($query[0])) $total = count($query);
             else $total = -1;
-			
-			$this->salasmedidas = $total;
+			// print_r($total);
+			$this->salasmedidas += $total;
 		}
 		else $this->salasmedidas = -1;//NO HAY DATOS
 
+		}
+						
 		return $this->salasmedidas;
     }
 	
