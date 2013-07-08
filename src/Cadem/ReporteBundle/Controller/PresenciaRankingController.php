@@ -93,9 +93,10 @@ class PresenciaRankingController extends Controller
 			'SELECT m.id, m.nombre FROM CademReporteBundle:Medicion m
 			JOIN m.estudiovariable ev			
 			JOIN ev.estudio e
-			WHERE e.clienteid = :id
+			WHERE e.clienteid = :id AND ev.variableid = :id_ev
 			ORDER BY m.fechainicio DESC')
-			->setParameter('id', $cliente->getId());
+			->setParameter('id', $cliente->getId())
+			->setParameter('id_ev', 5);
 		$mediciones_q = $query->getArrayResult();
 		
 		foreach($mediciones_q as $m) $mediciones[$m['id']] = $m['nombre'];

@@ -319,13 +319,6 @@ $(document).ready(function () {
 				},
 				xAxis: {
 					categories: data.evolutivo.mediciones
-					//type: 'category'
-					// labels: {
-						// formatter: function() {
-							// alert(this.value);
-								// return this.value;
-						// // }
-					// }
 				},
 				yAxis: [{
 					title: {
@@ -362,7 +355,7 @@ $(document).ready(function () {
 					floating: true,
 					backgroundColor: '#FFFFFF'
 				},
-				series: [data.evolutivo.serie_quiebre
+				series: [data.evolutivo.serie_{{ev.getVariable.getNombre | lower }}
 				// , data.evolutivo.serie_precio
 				],
 				credits: {

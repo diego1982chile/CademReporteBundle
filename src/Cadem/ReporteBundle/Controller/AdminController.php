@@ -142,16 +142,17 @@ class AdminController extends Controller
     public function cargaitemclienteAction()
     {
         $em = $this->getDoctrine()->getManager();
-        $sql = "SELECT c.ID as idc, m.ID as idm, c.NOMBREFANTASIA as nombre, m.NOMBRE as medicion FROM CLIENTE c
+        $sql = "SELECT c.ID as idc, m.ID as idm, c.NOMBREFANTASIA as nombre, m.NOMBRE as medicion, v.NOMBRE as variable FROM CLIENTE c
                 INNER JOIN ESTUDIO e on e.CLIENTE_ID = c.ID
                 INNER JOIN ESTUDIOVARIABLE ev on ev.ESTUDIO_ID = e.ID
                 INNER JOIN MEDICION m on m.ESTUDIOVARIABLE_ID = ev.ID
-                ORDER BY c.NOMBREFANTASIA, m.NOMBRE";
+                INNER JOIN VARIABLE v on v.ID = ev.VARIABLE_ID
+                ORDER BY c.NOMBREFANTASIA, v.NOMBRE, m.NOMBRE";
         $query = $em->getConnection()->executeQuery($sql)->fetchAll();
         $choices_medicion = array();
         foreach($query as $r)
         {
-            $choices_medicion[$r['idc'].'-'.$r['idm']] = strtoupper($r['nombre'].'-'.$r['medicion']);
+            $choices_medicion[$r['idc'].'-'.$r['idm']] = strtoupper($r['nombre'].'['.$r['variable'].'] '.$r['medicion']);
         }
 
         $form_medicion = $this->get('form.factory')->createNamedBuilder('f_medicion', 'form')
@@ -179,16 +180,17 @@ class AdminController extends Controller
     public function cargasalaclienteAction()
     {
         $em = $this->getDoctrine()->getManager();
-        $sql = "SELECT c.ID as idc, m.ID as idm, c.NOMBREFANTASIA as nombre, m.NOMBRE as medicion FROM CLIENTE c
+        $sql = "SELECT c.ID as idc, m.ID as idm, c.NOMBREFANTASIA as nombre, m.NOMBRE as medicion, v.NOMBRE as variable FROM CLIENTE c
                 INNER JOIN ESTUDIO e on e.CLIENTE_ID = c.ID
                 INNER JOIN ESTUDIOVARIABLE ev on ev.ESTUDIO_ID = e.ID
                 INNER JOIN MEDICION m on m.ESTUDIOVARIABLE_ID = ev.ID
-                ORDER BY c.NOMBREFANTASIA, m.NOMBRE";
+                INNER JOIN VARIABLE v on v.ID = ev.VARIABLE_ID
+                ORDER BY c.NOMBREFANTASIA, v.NOMBRE, m.NOMBRE";
         $query = $em->getConnection()->executeQuery($sql)->fetchAll();
         $choices_medicion = array();
         foreach($query as $r)
         {
-            $choices_medicion[$r['idc'].'-'.$r['idm']] = strtoupper($r['nombre'].'-'.$r['medicion']);
+            $choices_medicion[$r['idc'].'-'.$r['idm']] = strtoupper($r['nombre'].'['.$r['variable'].'] '.$r['medicion']);
         }
 
         $form_medicion = $this->get('form.factory')->createNamedBuilder('f_medicion', 'form')
@@ -279,7 +281,7 @@ class AdminController extends Controller
                 ORDER BY c.NOMBREFANTASIA, m.NOMBRE";
         $query = $em->getConnection()->executeQuery($sql)->fetchAll();
         $choices_medicion = array();
-        foreach($query as $r)
+        foreach($query as $k => $r)
         {
             if($k === 0){
                 $id_cliente = intval($r['idc']);
@@ -1482,6 +1484,7 @@ class AdminController extends Controller
                     $chunk = 0;
                     foreach($m as $k => $value){
                         $folioean[floor($chunk/2000)][] = $value[0].'-'.$value[1];
+                        if(strlen($value[2]) === 0) $m[$k][2] = "NULL"; //SI NO HAY PRECIO SE PASA A NULL PARA EL INSERT
                         if(strlen($value[3]) === 0) $m[$k][3] = "NULL"; //SI NO HAY POLITICAPRECIO SE PASA A NULL PARA EL INSERT
                         if(strlen($value[4]) === 0) $m[$k][4] = "NULL"; //SI NO HAY FECHAHORACAPTURA SE PASA A NULL PARA EL INSERT
                         $chunk++;
@@ -1513,10 +1516,10 @@ class AdminController extends Controller
                     
                     $start_valid = microtime(true);
                     foreach ($m as $k => $fila) {
-                        if(count($fila) !== 4){//SIEMPRE DEBEN HABER 5 COLUMNAS
+                        if(count($fila) !== 5){//SIEMPRE DEBEN HABER 5 COLUMNAS
                             return new JsonResponse(array(
                                 'status' => false,
-                                'mensaje' => 'NO HAY 4 COLUMNAS CERCA DE LA LINEA '.$k
+                                'mensaje' => 'NO HAY 5 COLUMNAS CERCA DE LA LINEA '.$k
                             ));
                         }
                         if(strlen($fila[0]) === 0){//EL "FOLIO" NO PUEDE SER VACIA
@@ -1531,19 +1534,19 @@ class AdminController extends Controller
                                 'mensaje' => 'EL "EAN" NO PUEDE ESTAR VACIA, CERCA DE LA LINEA '.$k
                             ));
                         }
-                        if(strlen($fila[2]) === 0){//EL "PRECIO" NO PUEDE SER VACIO
-                            return new JsonResponse(array(
-                                'status' => false,
-                                'mensaje' => 'EL "PRECIO" NO PUEDE ESTAR VACIA, CERCA DE LA LINEA '.$k
-                            ));
-                        }
-                        if($fila[2] != (string) intval($fila[2]) || intval($fila[2]) < 0){//EL "PRECIO" DEBE SER ENTERO MAYOR O IGUAL A CERO
+                        // if(strlen($fila[2]) === 0){//EL "PRECIO" NO PUEDE SER VACIO
+                        //     return new JsonResponse(array(
+                        //         'status' => false,
+                        //         'mensaje' => 'EL "PRECIO" NO PUEDE ESTAR VACIA, CERCA DE LA LINEA '.$k
+                        //     ));
+                        // }
+                        if($fila[2] !== "NULL" && ($fila[2] != (string) intval($fila[2]) || intval($fila[2]) < 0)){//EL "PRECIO" DEBE SER ENTERO MAYOR O IGUAL A CERO
                             return new JsonResponse(array(
                                 'status' => false,
                                 'mensaje' => 'EL "PRECIO" DEBE SER ENTERO MAYOR O IGUAL A CERO, CERCA DE LA LINEA '.$k
                             ));
                         }
-                        if($fila[3] !== "NULL" && ($fila[2] != (string) intval($fila[2]) || intval($fila[2]) < 0) ){//EL "POLITICAPRECIO" DEBE SER ENTERO MAYOR O IGUAL A CERO
+                        if($fila[3] !== "NULL" && ($fila[3] != (string) intval($fila[3]) || intval($fila[3]) < 0) ){//EL "POLITICAPRECIO" DEBE SER ENTERO MAYOR O IGUAL A CERO
                             return new JsonResponse(array(
                                 'status' => false,
                                 'mensaje' => 'LA "POLITICAPRECIO" DEBE SER ENTERO MAYOR O IGUAL A CERO, CERCA DE LA LINEA '.$k
@@ -2248,6 +2251,7 @@ class AdminController extends Controller
                                    (?
                                    ,?
                                    ,?
+                                   ,?
                                    ,1 )";
                             $param = array(
                                 $id_p,
@@ -2258,7 +2262,7 @@ class AdminController extends Controller
                             $tipo_param = array(
                                 \PDO::PARAM_INT,
                                 \PDO::PARAM_INT,
-                                \PDO::PARAM_INT,
+                                ($fila[2] === "NULL")?\PDO::PARAM_NULL:\PDO::PARAM_INT,
                                 ($fila[4] === "NULL")?\PDO::PARAM_NULL:\PDO::PARAM_STR,
                                 );
 

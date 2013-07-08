@@ -154,6 +154,15 @@ class DashboardController extends Controller
 						'valueSuffix' => ' %'
 					)
 				),
+				'serie_presencia' => array(
+					'name' => '% Presencia',
+					'color' => '#4572A7',
+					'type' => 'spline',
+					'data' => $porc_quiebre,
+					'tooltip' => array(
+						'valueSuffix' => ' %'
+					)
+				),
 				'serie_precio' => array(
 					'name' => '% Incumplimiento Precio',
 					'color' => 'red',

@@ -23,6 +23,13 @@ class Estudiovariable
     private $id;
 
     /**
+     * @var integer
+     *
+     * @ORM\Column(name="VARIABLE_ID", type="integer", nullable=false)
+     */
+    private $variableid;
+
+    /**
      * @var string
      *
      * @ORM\Column(name="NOMBREVARIABLE", type="string", length=64, nullable=false)
@@ -85,6 +92,29 @@ class Estudiovariable
     public function getId()
     {
         return $this->id;
+    }
+
+    /**
+     * Set variableid
+     *
+     * @param integer $variableid
+     * @return Estudiovariable
+     */
+    public function setVariableId($variableid)
+    {
+        $this->variableid = $variableid;
+    
+        return $this;
+    }
+
+    /**
+     * Get variableid
+     *
+     * @return integer 
+     */
+    public function getVariableId()
+    {
+        return $this->variableid;
     }
 
     /**
