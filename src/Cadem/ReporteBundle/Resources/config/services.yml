@@ -30,12 +30,14 @@ services:
             security: @security.context
             medicion: @cadem_reporte.helper.medicion
             total_salas_name: "%total_salas_name%"
+        # scope: request
     cadem_reporte.helper.medicion:
         class: Cadem\ReporteBundle\Helper\MedicionHelper
         arguments:
             # entityManager: @doctrine.orm.entity_manager
             # security: @security.context
             service_container: @service_container
+        # scope: request
     cadem_reporte.helper.cliente:
         class: Cadem\ReporteBundle\Helper\ClienteHelper
         arguments:

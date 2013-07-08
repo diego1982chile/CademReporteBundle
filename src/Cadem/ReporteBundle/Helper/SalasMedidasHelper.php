@@ -20,7 +20,6 @@ class SalasMedidasHelper {
         $this->em = $entityManager;
 		$this->security = $security;
 		$this->medicion = $medicion;
-		// $this->session = $session;
 		if($security->getToken() != null) $this->user = $security->getToken()->getUser();
 		else $this->user = null;
 		$this->total_salas_name = $total_salas_name;
