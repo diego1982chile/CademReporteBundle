@@ -193,9 +193,7 @@ class QuiebreDetalleController extends Controller
 		
 		$variable=$estudio_variable[0]->getVariable()->getId();				
 				
-		$session->set("variable",$variable);	
-		
-		print_r($variable);
+		$session->set("variable",$variable);					
 		
 		//ULTIMA MEDICION
 		$id_ultima_medicion = $this->get('cadem_reporte.helper.medicion')->getIdUltimaMedicion($variable);
@@ -366,7 +364,7 @@ class QuiebreDetalleController extends Controller
 		$session->set("total",$total);	
 
 		// Calcula el ancho máximo de la tabla	
-		$extension=count($head)*12+sqrt(count($head))-100;
+		$extension=count($head)*(12+log(count($head),10))-100;
 	
 		if($extension<0)
 			$extension=0;
@@ -449,12 +447,12 @@ class QuiebreDetalleController extends Controller
 		switch($variable)
 		{
 			case 1: // Si el tag de la variable es quiebre 
-				$color_positivo='green';
-				$color_negativo='red';
+				$color_positivo='rgb(174, 247, 81)';
+				$color_negativo='rgb(234, 57, 21)';
 				break;
 			case 5: // Si el tag de la variable es presencia invertimos los colores
-				$color_positivo='red';
-				$color_negativo='green';
+				$color_positivo='rgb(234, 57, 21)';
+				$color_negativo='rgb(174, 247, 81)';
 				break;				
 		}
 	
