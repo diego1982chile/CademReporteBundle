@@ -369,7 +369,7 @@ function construirTabla()
 								// });
 								
 							},						
-			"fnInitComplete": function() {
+			"fnInitComplete": function() {					
 					switch(parseInt(variable))
 					{
 						case 1:			
@@ -378,6 +378,7 @@ function construirTabla()
 							break;
 						case 2:							
 							fixedColumn2();
+							$('#colorear').hide();							
 							break;							
 					}								  
 				},	
