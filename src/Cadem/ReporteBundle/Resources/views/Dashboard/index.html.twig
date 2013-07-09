@@ -148,7 +148,12 @@ $(document).ready(function () {
 					from: 0,
 					to: {{ indicadores.rango_quiebre }},
 					innerRadius: '95%',
+					{% if "QUIEBRE" in variables %}
 					color: '#55BF3B' // green
+					{% else %}
+					color: '#DF5353' // red
+					{% endif %}
+					
 				}, {
 				// 	from: 30,
 				// 	to: 70,
@@ -158,7 +163,12 @@ $(document).ready(function () {
 					from: {{ indicadores.rango_quiebre }},
 					to: 100,
 					innerRadius: '95%',
+					{% if "QUIEBRE" in variables %}
 					color: '#DF5353' // red
+					{% else %}
+					color: '#55BF3B' // green
+					{% endif %}
+					
 				}]        
 			},
 		
