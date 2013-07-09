@@ -204,9 +204,7 @@ div.DTFC_Blocker {
 	color:white;
 }
 
-.matched_active{			
-	/*border-style: solid;	
-	border-width: 2px;*/
+.matched_active{				
 	border-color: #00FF00;
 	background-color: #d1ffd1 !important;
 	
@@ -390,12 +388,12 @@ function construirTabla()
 					quitarloader();
 				}
 		});
-		$('div.fg-toolbar:first').append("<div align='left' style='float:left;width:40%'><h5 style='float:left;margin:0em'>Tabla Detalle {{tag_variable}}: (%)</h5><div>");	
+		$('div.fg-toolbar:first').append("<div align='left' style='float:left;width:30%'><h5 style='float:left;margin:0em'>Tabla Detalle {{tag_variable}}: (%)</h5><div>");	
 		// $("<div class='dataTables_filter' align='right' style='float:center;width:50%'><label>SALA: <input id='buscarsala' /></label></div>").appendTo('#tabla_resumen_wrapper .fg-toolbar:first');				 		
-		$("<div class='dataTables_filter input-append' align='right' style='float:right;width:60%'><input id='filtro' class='span2 input_filtro' /><button id='filtro_sku' class='btn btn_filtro btn-warning' type='button'>SKU</button><button id='filtro_sala' class='btn btn_filtro' type='button'>SALA</button></div>").appendTo('#tabla_resumen_wrapper .fg-toolbar:first');				 				
+		$("<div class='dataTables_filter input-append' align='right' style='float:right;width:70%'><button id='filtro_sku' class='btn btn_filtro btn-warning' type='button'>SKU</button><button id='filtro_sala' class='btn btn_filtro' type='button'>SALA</button><input id='filtro' class='span2 input_filtro' /><button id='colorear' class='btn' type='button'>Colorear</button></div>").appendTo('#tabla_resumen_wrapper .fg-toolbar:first');				 				
 		
 		$('.btn_filtro').mousedown(function(){
-			$('.input-append button').removeClass('btn-warning');
+			$('.input-append button.btn_filtro').removeClass('btn-warning');
 			$(this).addClass('btn-warning');			
 			if($(this).attr('id')=='filtro_sku')
 			{
@@ -406,7 +404,41 @@ function construirTabla()
 				filtrar_por='sala';				
 			}
 		});
+		$('#colorear').mousedown(function(){
+			if($(this).hasClass('btn-warning'))
+			{
+				$(this).removeClass('btn-warning');
+				colorearCeldas(false);
+			}
+			else
+			{
+				$(this).addClass('btn-warning');
+				colorearCeldas(true);
+			}
+		});			
 	});	
+}
+
+function colorearCeldas(flag){
+	
+	if(flag)
+	{
+		$("#tabla_resumen tbody tr td").heatcolor(
+			function() {			
+				return parseFloat($(this).text());
+				},
+				{ maxval: 0,
+				minval: 100,
+				colorStyle: 'greentored',
+				lightness: 0 
+				}		
+		);
+	}
+	else
+	{		
+		$("#tabla_resumen tbody tr td").removeAttr('style');
+	}
+	
 }
 
 function listenerFiltro()
@@ -662,20 +694,7 @@ function fixedColumn1()
 			$(nGroup).insertBefore( $('tbody tr:eq(0)', left.body)[0] );			
 		}
 	});	
-	listenerFiltro();	
-	colorearCeldas();
-}
-
-function colorearCeldas(){
-$("#tabla_resumen tbody tr td").heatcolor(
-		function() {			
-			return parseFloat($(this).text());
-			},
-			{ maxval: 0,
-			minval: 100,
-			colorStyle: 'greentored',
-			lightness: 0 }
-		);
+	listenerFiltro();		
 }
 
 function fixedColumn2()
