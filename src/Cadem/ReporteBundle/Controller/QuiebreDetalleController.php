@@ -196,7 +196,7 @@ class QuiebreDetalleController extends Controller
 		$session->set("variable",$variable);					
 		
 		//ULTIMA MEDICION
-		$id_ultima_medicion = $this->get('cadem_reporte.helper.medicion')->getIdUltimaMedicion($variable);
+		$id_ultima_medicion = $this->get('cadem_reporte.helper.medicion')->getIdUltimaMedicion();
 		
 		$comunas='';
 		foreach(array_keys($choices_comunas) as $comuna)

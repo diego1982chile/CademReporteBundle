@@ -197,13 +197,38 @@ class QuiebreResumenController extends Controller
 		else
 			$prefixes=array('SKU/CADENA','SEGMENTO');
 		
-		$head=array();		
+		$head=array();	
+
+		// Oonstruir inicialización de columnas
+		$aoColumnDefs=array();
+		
+		$fila=array();
+		$fila['aTargets']=array(0);
+		$fila['sClass']="tag";
+		$fila['sWidth']="160px";
+		array_push($aoColumnDefs,$fila);
+		
+		$fila=array();
+		$fila['aTargets']=array(1);
+		$fila['bVisible']=false;		
+		array_push($aoColumnDefs,$fila);		
+		
+		$cont=2;		
 		
 		foreach($cadenas_aux as $cadena)
 		{
 			array_push($cadenas,$cadena);
-			array_push($head,$cadena);					
-		}		
+			array_push($head,$cadena);
+			$fila=array();
+			$fila['sWidth']="100px";
+			$fila['aTargets']=array($cont);	
+			array_push($aoColumnDefs,$fila);
+			$cont++;
+		}	
+		$fila=array();
+		$fila['aTargets']=array($cont);		
+		// $fila['sWidth']="2%";	
+		array_push($aoColumnDefs,$fila);				
 		
 		foreach(array_reverse($prefixes) as $prefix)		
 			array_unshift($head,$prefix);		
@@ -339,7 +364,8 @@ class QuiebreResumenController extends Controller
 			'logostyle' => $logostyle,
 			'evolutivo' => json_encode($evolutivo),
 			'periodos' => json_encode($periodos),	
-			'estudios' => $estudios,			
+			'estudios' => $estudios,		
+			'aoColumnDefs' => json_encode($aoColumnDefs),			
 			'header_action' => 'quiebre_resumen_header',
 			'body_action' => 'quiebre_resumen_body',	
 			'tag_variable' => 'Quiebre'

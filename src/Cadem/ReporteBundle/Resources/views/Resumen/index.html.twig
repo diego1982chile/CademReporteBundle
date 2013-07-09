@@ -113,6 +113,17 @@ legend {
 	margin-bottom: 10px !important;
 	color: '#999' !important;
 }
+
+.dataTables_filter{
+	margin-bottom: 10px !important;
+	font-size: 14px !important;
+	height: 16px !important;
+	padding: .1em !important;
+}
+
+.dataTables_filter label{
+	margin-bottom: 0em !important;	
+}
 {% endblock %}
 
 {% block stylesheets %}
@@ -123,6 +134,7 @@ legend {
 {% block javascripts %}
 <script src="{{ asset('bundles/cademreporte/js/jquery.dataTables.min.js') }}"></script>
 <script src="{{ asset('bundles/cademreporte/js/dataTables.fixedColumns.js') }}"></script>
+<script src="{{ asset('bundles/cademreporte/js/jquery.heatcolor.0.0.1.js') }}"></script>
 <script>
 
 var i_quiebre;
@@ -133,6 +145,7 @@ var maxWidth;
 var maxWidth={{max_width}};
 var DatosAdicionales = [];
 var matriz_totales = [];
+var aoColumnDefs = {{aoColumnDefs|raw}};
 
 function calcularAnchoMaximo()
 {
@@ -200,11 +213,7 @@ function construirTabla()
 			"bPaginate": false,
 			"bJQueryUI": true,
 			// "bAutoWidth": true, 
-			"aoColumnDefs": [
-				{ "bVisible": false, "aTargets": [1] },
-				{ "sClass": "tag", "aTargets": [0], "sWidth": "150px" }
-				// { "sWidth": "20%", "aTargets": [0] }
-			],
+			"aoColumnDefs": aoColumnDefs,
 			// "fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {			
 				// $(nRow).attr("data-tt-parent-id",aData[1]);
 			// },		
@@ -221,6 +230,8 @@ function construirTabla()
 		//	"sDom": '<"H"Cfr>t<"F"ip>',					
 		});
 		$('div.fg-toolbar:first').append("<h5 style='float:left;margin:0em'>Tabla Resumen {{estudios[0].getEstudioVariables[0].getNombrevariable}}: (%)</h5>");
+		var html='<div class="btn-group"><button class="btn dropdown-toggle" data-toggle="dropdown">Action<span class="caret"></span></button><ul class="dropdown-menu">...</ul></div>'		
+		$("<div class='dataTables_filter input-append' align='right' style='float:right;width:60%'>"+html+"</div>").appendTo('#tabla_resumen_wrapper .fg-toolbar:first');				 				
 	});
 }
 
@@ -323,17 +334,33 @@ function fixedColumn()
 			matriz_totales=[];
 		}
 	});
+	colorearCeldas();
+}
+
+function colorearCeldas(){
+$("#tabla_resumen tbody tr td").heatcolor(
+		function() {			
+			return parseFloat($(this).text());
+			},
+			{ maxval: 0,
+			minval: 100,
+			colorStyle: 'greentored',
+			lightness: 0 }
+		);
 }
 
 function colorTotales(){
+	// var color_fondo = 'rgb(255, 235, 158)';
+	// $('.DTFC_Cloned tbody tr:first td').css('background-color',color_fondo);
+	// $('.table:not(.DTFC_Cloned) tbody tr:first td').css('background-color',color_fondo);
+	// $('.table:not(.DTFC_Cloned) tbody tr td:last-of-type:not(.group)').css('background-color',color_fondo);
+	// $('.DTFC_Cloned tbody tr td:first-of-type:not(.group)').css({
+		// 'background-color':'rgb(238, 236, 255)',
+		// 'color': 'black',
+		// });
 	var color_fondo = 'rgb(255, 235, 158)';
 	$('.DTFC_Cloned tbody tr:first td').css('background-color',color_fondo);
-	$('.table:not(.DTFC_Cloned) tbody tr:first td').css('background-color',color_fondo);
-	$('.table:not(.DTFC_Cloned) tbody tr td:last-of-type:not(.group)').css('background-color',color_fondo);
-	$('.DTFC_Cloned tbody tr td:first-of-type:not(.group)').css({
-		'background-color':'rgb(238, 236, 255)',
-		'color': 'black',
-		});
+	// $('.table:not(.DTFC_Cloned) tbody tr:first td').css('background-color',color_fondo);		
 	$('.DTFC_Cloned tbody tr:not(:first) td:first-of-type').css('cursor','pointer');
 }
 
