@@ -61,7 +61,7 @@
 								</label>
 							</th>
 							<th width='10%' class='ui-widget-content'>
-								<div style='background:green;height:1.9em'>
+								<div style='background:rgb(174, 247, 81);height:1.9em'>
 								</div>
 							</th>
 							<th width='10%' class='ui-widget-content'>
@@ -70,7 +70,7 @@
 								</label>
 							</th>
 							<th width='10%' class='ui-widget-content'>
-								<div style='background:red;height:1.9em'>
+								<div style='background:rgb(234, 57, 21);height:1.9em'>
 								</div>
 							</th>
 							<th class='ui-widget-content' width='15%'>
@@ -663,7 +663,11 @@ function fixedColumn1()
 		}
 	});	
 	listenerFiltro();	
-	$("#tabla_resumen tbody tr td.group").heatcolor(
+	colorearCeldas();
+}
+
+function colorearCeldas(){
+$("#tabla_resumen tbody tr td").heatcolor(
 		function() {			
 			return parseFloat($(this).text());
 			},
@@ -671,7 +675,7 @@ function fixedColumn1()
 			minval: 100,
 			colorStyle: 'greentored',
 			lightness: 0 }
-	);	
+		);
 }
 
 function fixedColumn2()
@@ -717,15 +721,17 @@ function fixedColumn2()
 		"iLeftColumns": 3,
 	});	
 	calcular_incumplimiento();
+	listenerFiltro();	
 }
 
 function colorTotales(){
 	switch(parseInt(variable))
 	{
 		case 1:
+		case 5:
 			var color_fondo = 'rgb(255, 235, 158)';
 			$('.DTFC_Cloned tbody tr:first td').css('background-color',color_fondo);
-			$('.table:not(.DTFC_Cloned) tbody tr:first td').css('background-color',color_fondo);
+			// $('.table:not(.DTFC_Cloned) tbody tr:first td').css('background-color',color_fondo);
 			// $('.table:not(.DTFC_Cloned) tbody tr td:last-of-type:not(.group)').css('background-color',color_fondo);		
 			break;
 		case 2:						
@@ -781,6 +787,23 @@ function calcular_incumplimiento()
 	$('#pctje_incumplimiento').text((100*cont/total).toFixed(1)+'%');
 }
 
+function construirSlider(rango_precio){
+	
+	$( "#slider-range-min" ).slider({
+		  range: "min",
+		  value: rango_precio,
+		  min: 0,
+		  max: 100,
+		  slide: function( event, ui ) {
+			$( "#amount" ).val( ui.value + '%');	
+		  },
+		  change: function( event, ui ) {
+			calcular_incumplimiento();
+		  }
+	});
+	$( "#amount" ).val( $( "#slider-range-min" ).slider( "value" ) + '%');	
+}
+
 $(document).ready(function () {		
 			
 	var callbacks = $.Callbacks();	
@@ -788,21 +811,11 @@ $(document).ready(function () {
 	callbacks.add( construirTabla() );
 	alerta('Advertencia','Esta búsqueda retornó muchas salas, es posible que la carga y la respuesta tarden más de lo habitual. Se recomienda filtrar la búsqueda o utilizar "Chrome"');			
 	$('.alert').hide();
-	// callbacks.add( fixedColumn() );					
+	// callbacks.add( fixedColumn() );						
 	
-	$( "#slider-range-min" ).slider({
-      range: "min",
-      value: 25,
-      min: 0,
-      max: 100,
-      slide: function( event, ui ) {
-        $( "#amount" ).val( ui.value + '%');	
-      },
-	  change: function( event, ui ) {
-		calcular_incumplimiento();
-	  }
-    });
-    $( "#amount" ).val( $( "#slider-range-min" ).slider( "value" ) + '%');	
+	{% if rango_precio is defined %}
+		construirSlider({{rango_precio}});
+	{% endif %}
 
 	$(window).bind('resize', function () {
 		$('.DTFC_Cloned').find('.DataTables_sort_icon').append('<img class="loader" alt="" style="float:left;margin-left:20px" src="/bundles/cademreporte/images/loader-minitrans.gif">');	

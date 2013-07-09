@@ -159,6 +159,7 @@ var aoColumnDefs = {{aoColumnDefs|raw}};
 var columnas_reservadas = parseInt({{columnas_reservadas}});
 var i_quiebre;
 var mediciones = {{mediciones|raw}};
+var grupo='group';
 
 function preInitTabla()
 {
@@ -399,14 +400,14 @@ function fixedColumn1()
 					// Se agrgega una columna correspondiente a la columna oculta					 
 					var nCell;
 					nCell = document.createElement( 'td' );						 
-					nCell.className = "group";																									
+					nCell.className = grupo;																									
 					nCell.innerHTML = 0;															
 					nGroup.appendChild( nCell ); 					
 					
                     for(var j=0 ; j< cols ; ++j)
 					{
 						nCell = document.createElement( 'td' );						 
-						nCell.className = "group";																				
+						nCell.className = grupo;																				
 						// alert(matriz_totales[row][j]);
 						nCell.innerHTML = matriz_totales[row][j];																						
 						nGroup.appendChild( nCell );						 
@@ -420,7 +421,7 @@ function fixedColumn1()
 					
                     nGroup = document.createElement( 'tr' );
 					nCell = document.createElement( 'td' );
-					nCell.className = "group tag";
+					nCell.className = grupo+" tag";
 					nCell.setAttribute('index',row);
 					nCell.innerHTML = sGroup;
 					nGroup.appendChild( nCell );					
@@ -436,14 +437,14 @@ function fixedColumn1()
 			// Se agrgega una columna correspondiente a la columna oculta			
 			var nCell;
 			nCell = document.createElement( 'td' );						 
-			nCell.className = "group";																									
+			nCell.className = grupo;																									
 			nCell.innerHTML = 0;															
 			nGroup.appendChild( nCell ); 				
 			
 			for(var j=0 ; j< cols ; ++j)
 			{
 				nCell = document.createElement( 'td' );						 
-				nCell.className = "group";																				
+				nCell.className = grupo;																				
 				// alert(matriz_totales[row][j]);
 				nCell.innerHTML = matriz_totales[row][j];																
 				nGroup.appendChild( nCell );						 
@@ -458,7 +459,7 @@ function fixedColumn1()
 			
 			nGroup = document.createElement( 'tr' );
 			nCell = document.createElement( 'td' );
-			nCell.className = "group tag";
+			nCell.className = grupo+" tag";
 			nCell.innerHTML = "TOTAL GENERAL";
 			nGroup.appendChild( nCell );			
 			nGroup.setAttribute("title","TOTAL GENERAL");
@@ -468,6 +469,7 @@ function fixedColumn1()
 	});	
 	construirGrafico();
 	listenerFiltro();
+	colorearCeldas();
 }
 
 function fixedColumn2()
@@ -514,6 +516,7 @@ function fixedColumn2()
 	});
 		
 	construirGrafico();		
+	listenerFiltro();
 }
 
 function colorTotales(){
@@ -526,18 +529,9 @@ function colorTotales(){
 		case 1:
 		case 5:
 			var color_fondo = 'rgb(255, 235, 158)';
-			
-			$('.DTFC_Cloned tbody tr:first td').css('background-color',color_fondo);			
-			$('.table:not(.DTFC_Cloned) tbody tr:first td').css('background-color',color_fondo);			
-			
-			// $('.DTFC_Cloned tbody tr:first td').addClass('btn-warning');			
-			// $('.table:not(.DTFC_Cloned) tbody tr:first td').addClass('btn-warning');			
-			
-			$('.table:not(.DTFC_Cloned) tbody tr td:last-of-type:not(.group)').css('background-color',color_fondo);
-			// $('.DTFC_Cloned tbody tr td:first-of-type:not(.group)').css({
-				// 'background-color':'rgb(238, 236, 255)',
-				// 'color': 'black',				
-				// });			
+			$('.DTFC_Cloned tbody tr:first td').css('background-color',color_fondo);
+			$('.table:not(.DTFC_Cloned) tbody tr:first td').css('background-color',color_fondo);
+			// $('.table:not(.DTFC_Cloned) tbody tr td:last-of-type:not(.group)').css('background-color',color_fondo);		
 			break;
 		case 2:					
 			$('.DTFC_Cloned tbody tr td:first-of-type:not(.group)').css({
@@ -550,9 +544,11 @@ function colorTotales(){
 				'cursor': 'pointer'
 			});			
 			break;		
-	}
-	// $("#tabla_resumen tbody tr td").each(function() {		
-		$("#tabla_resumen tbody tr td").heatcolor(
+	}	
+}
+
+function colorearCeldas(){
+$("#tabla_resumen tbody tr td").heatcolor(
 		function() {			
 			return parseFloat($(this).text());
 			},
@@ -561,7 +557,6 @@ function colorTotales(){
 			colorStyle: 'greentored',
 			lightness: 0 }
 		);
-	// });	
 }
 
 function construirGrafico()
