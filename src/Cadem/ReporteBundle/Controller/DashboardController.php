@@ -46,28 +46,56 @@ class DashboardController extends Controller
 		$logofilename = $cliente->getLogofilename();
 		$logostyle = $cliente->getLogostyle();
 		
-		//ULTIMA MEDICION
-		$id_ultima_medicion = $this->get('cadem_reporte.helper.medicion')->getIdUltimaMedicion();
-		
-		if($id_ultima_medicion !== -1){
-		
-			//QUIEBRE ULTIMA MEDICION
-			$sql = "SELECT (SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 END)*100.0)/COUNT(q.ID) as porc_quiebre FROM QUIEBRE q
-					INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID
-					INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
-                    WHERE sc.CLIENTE_ID = ? AND p.MEDICION_ID = ?";
-            $param = array($id_cliente, $id_ultima_medicion);
-            $tipo_param = array(\PDO::PARAM_INT, \PDO::PARAM_INT);
-            $query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
+		$variables = array_map('strtoupper', $this->get('cadem_reporte.helper.cliente')->getVariables());
+		//ULTIMA MEDICION	
+						
+		foreach($variables as $variable)
+		{													
+			$id_ultima_medicion = $this->get('cadem_reporte.helper.medicion')->getIdUltimaMedicionPorVariable($variable);								
 
-            if(isset($query[0])){
-            	$porc_quiebre = $query[0]['porc_quiebre'];
-            	$porc_quiebre = round($porc_quiebre,1);
-            }
-            else $porc_quiebre = 0;
-		}
-		else $porc_quiebre = 0;
+			if($id_ultima_medicion !== -1){								
 		
+				switch($variable)
+				{
+					case 'QUIEBRE':
+						//QUIEBRE ULTIMA MEDICION			
+						$sql = "SELECT (SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 END)*100.0)/COUNT(q.ID) as porc_quiebre FROM QUIEBRE q
+								INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID
+								INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
+								WHERE sc.CLIENTE_ID = ? AND p.MEDICION_ID = ?";
+						$param = array($id_cliente, $id_ultima_medicion);
+						$tipo_param = array(\PDO::PARAM_INT, \PDO::PARAM_INT);
+						$query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
+
+						if(isset($query[0])){
+							$porc_quiebre = $query[0]['porc_quiebre'];
+							$porc_quiebre = round($porc_quiebre,1);
+						}
+						else $porc_quiebre = 0;            
+						break;
+					case 'PRECIO':
+						//QUIEBRE ULTIMA MEDICION			
+						$sql = "SELECT (SUM(case when ABS(pr.PRECIO-p.POLITICAPRECIO)>pa.VALOR*p.POLITICAPRECIO/100 then 1 else 0 END)*100.0)/COUNT(pr.ID) as porc_incumplimiento FROM PRECIO pr
+								INNER JOIN PLANOGRAMAP p on p.ID = pr.PLANOGRAMAP_ID
+								INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
+								INNER JOIN PARAMETRO pa on pa.CLIENTE_ID = ? and pa.NOMBRE='rango_precio'
+								WHERE sc.CLIENTE_ID = ? AND p.MEDICION_ID = ?";
+						$param = array($id_cliente,$id_cliente, $id_ultima_medicion);
+						$tipo_param = array(\PDO::PARAM_INT, \PDO::PARAM_INT, \PDO::PARAM_INT);
+						$query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
+
+						if(isset($query[0])){
+							$porc_incumplimiento = $query[0]['porc_incumplimiento'];
+							$porc_incumplimiento = round($porc_incumplimiento,1);
+						}
+						else $porc_incumplimiento = 0;            					
+						break;
+					case 'PRESENCIA':
+						break;
+				}			
+			}			
+		}
+						
 		//NOTICIAS
 		$query = $em->createQuery(
 			'SELECT n FROM CademReporteBundle:Noticia n
@@ -118,7 +146,8 @@ class DashboardController extends Controller
 			INNER JOIN ESTUDIO e on e.ID = ev.ESTUDIO_ID AND e.CLIENTE_ID = ?
 			
 			GROUP BY m.FECHAINICIO, m.NOMBRE, m.FECHAINICIO, m.FECHAFIN, m.ID
-			ORDER BY m.FECHAINICIO DESC";
+			ORDER BY m.FECHAINICIO DESC";		
+		
 		$param = array($id_cliente);
 		$tipo_param = array(\PDO::PARAM_INT);
 		$mediciones_q = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
@@ -132,8 +161,8 @@ class DashboardController extends Controller
 			$fi = new \DateTime($m['FECHAINICIO']);
 			$ff = new \DateTime($m['FECHAFIN']);
 			$mediciones_data[] = $fi->format('d/m').'-'.$ff->format('d/m');
-			$mediciones_tooltip[] = $m['NOMBRE'];
-			$porc_quiebre[] = $m['QUIEBRE'] !== null?round($m['QUIEBRE']*100,1):null;
+			$mediciones_tooltip[] = $m['NOMBRE'];			
+			$porc_quiebre[] = $m['QUIEBRE'] !== null?round($m['QUIEBRE']*100,1):null;			
 		}
 
 

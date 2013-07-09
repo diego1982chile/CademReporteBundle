@@ -156,9 +156,26 @@ class PrecioEvolucionController extends Controller
 			))
 			->getForm();		
 		
+		// Obtener id de la variable para obtener las mediciones correspondientes
+		// Obtener tag de la variable para ser desplegada en la vista
+		$estudio_variable=$estudios[0]->getEstudiovariables();	
+		$id_variable=null;
+		
+		foreach($estudio_variable as $variables)
+		{			
+			if(strtoupper($variables->getVariable()->getNombre())=='PRECIO')
+			{
+				$id_variable=$variables->getVariable()->getId();
+				$tag_variable=$variables->getVariable()->getNombre();
+			}
+		}				
+		
 		//CONSULTA
 		
-		$sql = "SELECT TOP(12) m2.ID as ID, m2.NOMBRE as NOMBRE, m2.FECHAINICIO as FECHAINICIO FROM MEDICION m2 INNER JOIN ESTUDIOVARIABLE ev on m2.ESTUDIOVARIABLE_ID=ev.ID INNER JOIN ESTUDIO e on ev.ESTUDIO_ID=e.ID and e.CLIENTE_ID={$user->getClienteID()} ORDER BY m2.FECHAINICIO DESC";											
+		$sql = "SELECT TOP(12) m2.ID as ID, m2.NOMBRE as NOMBRE, m2.FECHAINICIO as FECHAINICIO FROM MEDICION m2 
+		INNER JOIN ESTUDIOVARIABLE ev on m2.ESTUDIOVARIABLE_ID=ev.ID AND ev.VARIABLE_ID={$id_variable}
+		INNER JOIN ESTUDIO e on ev.ESTUDIO_ID=e.ID and e.CLIENTE_ID={$user->getClienteID()} 
+		ORDER BY m2.FECHAINICIO DESC";											
 		
 		$data_mediciones = $em->getConnection()->executeQuery($sql)->fetchAll();	
 		
@@ -196,19 +213,19 @@ class PrecioEvolucionController extends Controller
 		
 		foreach($mediciones_id as $medicion_id)
 		{
-			$sql.="SELECT (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre, i.NOMBRE as PRODUCTO,  ni.NOMBRE as SEGMENTO, m.NOMBRE, m.FECHAINICIO FROM QUIEBRE q
-				INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID and p.MEDICION_ID={$medicion_id}	
-				INNER JOIN MEDICION m on p.MEDICION_ID=m.ID			
-				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
-				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
-				INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
-				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
-				INNER JOIN ITEM i on i.ID = ic.ITEM_ID
-				GROUP BY  ni.NOMBRE,i.NOMBRE,m.NOMBRE,m.FECHAINICIO
+			$sql.="SELECT (SUM(case when ABS(pr.PRECIO-p.POLITICAPRECIO)>pa.VALOR*p.POLITICAPRECIO/100 then 1 else 0 END)*100.0)/COUNT(pr.ID) as porc_incumplimiento, i.NOMBRE as PRODUCTO, ni.NOMBRE as SEGMENTO, m.NOMBRE, m.FECHAINICIO FROM PRECIO pr 
+				INNER JOIN PLANOGRAMAP p on p.ID = pr.PLANOGRAMAP_ID and p.MEDICION_ID={$medicion_id}	
+				INNER JOIN MEDICION m on p.MEDICION_ID=m.ID	 
+				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID AND sc.CLIENTE_ID = {$user->getClienteID()} 
+				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID 
+				INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID 
+				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID 
+				INNER JOIN PARAMETRO pa on pa.CLIENTE_ID = {$user->getClienteID()} and pa.NOMBRE='rango_precio'
+				INNER JOIN ITEM i on i.ID = ic.ITEM_ID GROUP BY ni.NOMBRE,i.NOMBRE,m.NOMBRE,m.FECHAINICIO 
 				UNION ";
 		}
 		$sql = substr($sql, 0, -6);
-		$sql.="ORDER BY ni.NOMBRE,i.NOMBRE";									
+		$sql.="ORDER BY ni.NOMBRE,i.NOMBRE";													
 		
 		$sha1 = sha1($sql);
 
@@ -258,11 +275,12 @@ class PrecioEvolucionController extends Controller
 		
 		// Obtener totales horizontales por producto
 			
-		$sql = "SELECT i.NOMBRE, ni.NOMBRE, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
-		INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID and p.MEDICION_ID IN ({$mediciones_id_str})		
+		$sql = "SELECT i.NOMBRE, ni.NOMBRE, (SUM(case when ABS(pr.PRECIO-p.POLITICAPRECIO)>pa.VALOR*p.POLITICAPRECIO/100 then 1 else 0 END)*100.0)/COUNT(pr.ID) as PRECIO FROM PRECIO pr
+		INNER JOIN PLANOGRAMAP p on p.ID = pr.PLANOGRAMAP_ID and p.MEDICION_ID IN ({$mediciones_id_str})		
 		INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
 		INNER JOIN ITEM i on i.ID = ic.ITEM_ID
 		INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
+		INNER JOIN PARAMETRO pa on pa.CLIENTE_ID = {$user->getClienteID()} and pa.NOMBRE='rango_precio'
 		GROUP BY i.NOMBRE, ni.NOMBRE
 		ORDER BY ni.NOMBRE,i.NOMBRE";					
 					
@@ -280,11 +298,12 @@ class PrecioEvolucionController extends Controller
 		
 		foreach($mediciones_id as $medicion_id)
 		{
-			$sql.="SELECT ni.NOMBRE as SEGMENTO, m.FECHAINICIO, m.NOMBRE as MEDICION, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
-				   INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID and p.MEDICION_ID={$medicion_id}
+			$sql.="SELECT ni.NOMBRE as SEGMENTO, m.FECHAINICIO, m.NOMBRE as MEDICION, (SUM(case when ABS(pr.PRECIO-p.POLITICAPRECIO)>pa.VALOR*p.POLITICAPRECIO/100 then 1 else 0 END)*100.0)/COUNT(pr.ID) as PRECIO FROM PRECIO pr
+				   INNER JOIN PLANOGRAMAP p on p.ID = pr.PLANOGRAMAP_ID and p.MEDICION_ID={$medicion_id}
 				   INNER JOIN MEDICION m on p.MEDICION_ID=m.ID	
 				   INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
 				   INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID		
+				   INNER JOIN PARAMETRO pa on pa.CLIENTE_ID = {$user->getClienteID()} and pa.NOMBRE='rango_precio'				   
 				   GROUP BY ni.NOMBRE, m.FECHAINICIO, m.NOMBRE
 				   UNION ";
 		}
@@ -302,10 +321,11 @@ class PrecioEvolucionController extends Controller
 
 		// Obtener totales horizontales por totales segmento (ultima columna de totales verticales por categoria)
 		
-		$sql =	"SELECT ni.NOMBRE as SEGMENTO, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
-		INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID and p.MEDICION_ID IN ({$mediciones_id_str})			
+		$sql =	"SELECT ni.NOMBRE as SEGMENTO, (SUM(case when ABS(pr.PRECIO-p.POLITICAPRECIO)>pa.VALOR*p.POLITICAPRECIO/100 then 1 else 0 END)*100.0)/COUNT(pr.ID) as PRECIO FROM PRECIO pr
+		INNER JOIN PLANOGRAMAP p on p.ID = pr.PLANOGRAMAP_ID and p.MEDICION_ID IN ({$mediciones_id_str})			
 		INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
 		INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
+		INNER JOIN PARAMETRO pa on pa.CLIENTE_ID = {$user->getClienteID()} and pa.NOMBRE='rango_precio'				   		
 		GROUP BY ni.NOMBRE
 		ORDER BY ni.NOMBRE";				
 			
@@ -317,9 +337,10 @@ class PrecioEvolucionController extends Controller
 		
 		foreach($mediciones_id as $medicion_id)
 		{
-			$sql.= "SELECT m.FECHAINICIO, m.NOMBRE as MEDICION, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
-					INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID and p.MEDICION_ID={$medicion_id}
+			$sql.= "SELECT m.FECHAINICIO, m.NOMBRE as MEDICION,(SUM(case when ABS(pr.PRECIO-p.POLITICAPRECIO)>pa.VALOR*p.POLITICAPRECIO/100 then 1 else 0 END)*100.0)/COUNT(pr.ID) as PRECIO FROM PRECIO pr
+					INNER JOIN PLANOGRAMAP p on p.ID = pr.PLANOGRAMAP_ID and p.MEDICION_ID={$medicion_id}
 					INNER JOIN MEDICION m on p.MEDICION_ID=m.ID	
+					INNER JOIN PARAMETRO pa on pa.CLIENTE_ID = {$user->getClienteID()} and pa.NOMBRE='rango_precio'				   							
 					GROUP BY m.FECHAINICIO, m.NOMBRE
 				    UNION ";
 		}
@@ -336,24 +357,19 @@ class PrecioEvolucionController extends Controller
 				
 		// Obtener total horizontal por totales verticales por totales categoria
 		
-		$sql = "SELECT  SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
-		INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID and p.MEDICION_ID IN ({$mediciones_id_str})";		
+		$sql = "SELECT (SUM(case when ABS(pr.PRECIO-p.POLITICAPRECIO)>pa.VALOR*p.POLITICAPRECIO/100 then 1 else 0 END)*100.0)/COUNT(pr.ID) as PRECIO FROM PRECIO pr
+		INNER JOIN PLANOGRAMAP p on p.ID = pr.PLANOGRAMAP_ID and p.MEDICION_ID IN ({$mediciones_id_str})
+		INNER JOIN PARAMETRO pa on pa.CLIENTE_ID = {$user->getClienteID()} and pa.NOMBRE='rango_precio'				   							";		
 
 		$total = $em->getConnection()->executeQuery($sql)->fetchAll();									
 
 		// Calcula el ancho máximo de la tabla	
-		$extension=count($head)*10-100;
+		$extension=count($head)*12-100;
 	
 		if($extension<0)
 			$extension=0;
 			
-		$max_width=100+$extension;
-		
-		// Obtener tag de la variable para ser desplegada en la vista
-		$estudio_variable=$estudios[0]->getEstudiovariables();	
-		
-		$id_variable=$estudio_variable[0]->getVariable()->getId();				
-		$tag_variable=$estudio_variable[0]->getVariable()->getNombre();			
+		$max_width=100+$extension;	
 		
 		// Guardamos resultado de consulta en variables de sesión para reusarlas en un action posterior
 		$session->set("mediciones",$mediciones2);
