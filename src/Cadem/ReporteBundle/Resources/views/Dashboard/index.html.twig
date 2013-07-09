@@ -16,7 +16,6 @@
 			<div class="container-fluid well" style="padding-top:0">
 				<h4>{{estudios[0].getNombre}}</h4>
 				<div class="hero-unit" style="padding:15px;margin-bottom:10px">
-					<!-- <h3>Indicadores</h3> -->
 					<div class="row-fluid">
 					{% for ev in estudios[0].getEstudiovariables %}
 						<div class="span3">
@@ -27,11 +26,11 @@
 					{% endfor %}
 					</div>
 				</div>
-				{% for ev in estudios[0].getEstudiovariables %}
+				{#% for ev in estudios[0].getEstudiovariables %#}
 				<div class="hero-unit" style="padding:15px;margin-bottom:10px">
-					<div id="evo_{{ev.getVariable.getNombre}}" style="min-width: 250px; height: 300px; margin: 0 auto"></div>
+					<div id="{% if "QUIEBRE" in variables %}evo_QUIEBRE{% else %}evo_PRESENCIA{% endif %}" style="min-width: 250px; height: 300px; margin: 0 auto"></div>
 				</div>
-				{% endfor %}
+				{#% endfor %#}
 			</div>
 			
 			
@@ -309,7 +308,7 @@ $(document).ready(function () {
 			{% if "QUIEBRE" in variables %}
 				{% set nombrevar =  "QUIEBRE" %}
 			{% else %}
-			    {% set nombrevar = "PRESENCIA" %}			    
+			    {% set nombrevar = "PRESENCIA" %}
 			{% endif %}
 			
 			
