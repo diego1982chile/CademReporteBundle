@@ -74,6 +74,8 @@ class DashboardController extends Controller
 						}
 						else $porc_quiebre = 0;
 						$indicadores[$variable] = $porc_quiebre;
+						$rango_quiebre = $this->get('cadem_reporte.helper.cliente')->getRangoQuiebre();
+						$indicadores['rango_quiebre'] = $rango_quiebre;
 						break;
 					case 'PRECIO':
 						//PRECIO INCUMPLIMIENTO ULTIMA MEDICION			
@@ -92,6 +94,9 @@ class DashboardController extends Controller
 						}
 						else $porc_incumplimiento = 0;
 						$indicadores[$variable] = $porc_incumplimiento;
+						//RANGO DE PRECIO
+						$rango_precio = $this->get('cadem_reporte.helper.cliente')->getRangoPrecio();
+						$indicadores['rango_precio'] = $rango_precio;
 						break;
 				}			
 			}			
@@ -103,10 +108,6 @@ class DashboardController extends Controller
 			WHERE n.clienteid = :idcliente and n.activo = 1')
 			->setParameter('idcliente', $id_cliente);
 		$noticias = $query->getArrayResult();
-
-		//INDICADORES
-		// $indicadores = array('QUIEBRE' => $porc_quiebre, 'PRECIO' => $porc_incumplimiento, 'PRESENCIA' => $porc_quiebre);
-		
 		
 		//RESPONSE
 		$response = $this->render('CademReporteBundle:Dashboard:index.html.twig',
