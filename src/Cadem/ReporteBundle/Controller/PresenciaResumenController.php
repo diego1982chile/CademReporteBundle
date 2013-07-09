@@ -342,7 +342,7 @@ class PresenciaResumenController extends Controller
 			'estudios' => $estudios,		
 			'header_action' => 'presencia_resumen_header',
 			'body_action' => 'presencia_resumen_body',
-			'tag_variable' => 'Presencia'			
+			'tag_variable' => 'Presencia'		
 			)
 		);		
 		//CACHE
@@ -389,7 +389,7 @@ class PresenciaResumenController extends Controller
 							INNER JOIN CADENA c on c.ID = s.CADENA_ID AND c.NOMBRE = '{$cadena}' ";
 		}
 		else{
-			$cadena_where = "";
+			$cadena_join = "";
 		}
 		
 		//SI SE NECESITA AGREGAR UN GRAFICO POR NIVEL
@@ -409,7 +409,7 @@ class PresenciaResumenController extends Controller
 
 
 		//EVOLUTIVO
-		$sql = "SELECT * FROM 
+		$sql = "SELECT TOP(12) * FROM 
 			(SELECT m.ID, m.NOMBRE, m.FECHAINICIO, m.FECHAFIN FROM MEDICION m
 			INNER JOIN ESTUDIOVARIABLE ev on ev.ID = m.ESTUDIOVARIABLE_ID
 			INNER JOIN ESTUDIO e on e.ID = ev.ESTUDIO_ID AND e.CLIENTE_ID = ?

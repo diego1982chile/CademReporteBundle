@@ -1,6 +1,10 @@
 {% extends '::base.html.twig' %}
 
-{% set url_filtros = path('quiebre_ranking_filtros') %}
+{% if variable == "quiebre" %}
+	{% set url_filtros = path('quiebre_ranking_filtros') %}
+{% else %}
+	{% set url_filtros = path('presencia_ranking_filtros') %}
+{% endif %}
 
 {% block title %}Cadem Analytics{% endblock %}
 

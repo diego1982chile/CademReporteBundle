@@ -342,7 +342,7 @@ class QuiebreResumenController extends Controller
 			'estudios' => $estudios,			
 			'header_action' => 'quiebre_resumen_header',
 			'body_action' => 'quiebre_resumen_body',	
-			'tag_variable' => 'Quiebre'			
+			'tag_variable' => 'Quiebre'
 			)
 		);		
 		//CACHE
@@ -443,8 +443,6 @@ class QuiebreResumenController extends Controller
 			$mediciones_tooltip[] = $m['NOMBRE'];
 			$porc_quiebre[] = $m['QUIEBRE'] !== null?round($m['QUIEBRE']*100,1):null;
 		}
-
-
 
 		
 		//RESPONSE
