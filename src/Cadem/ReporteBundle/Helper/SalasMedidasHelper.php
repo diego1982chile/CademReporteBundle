@@ -46,6 +46,8 @@ class SalasMedidasHelper {
 		
 			if($id_ultima_medicion !== -1){
 				$letravar = substr($variable,0,1);
+				$letravar = $variable=='PRESENCIA'?'Q':$letravar;
+				$variable = $variable=='PRESENCIA'?'QUIEBRE':$variable;
 
 				$sql .= "(SELECT s.ID FROM PLANOGRAMA{$letravar} p
 						INNER JOIN {$variable} q on p.ID = q.PLANOGRAMA{$letravar}_ID AND p.MEDICION_ID = {$id_ultima_medicion}
