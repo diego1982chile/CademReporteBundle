@@ -74,11 +74,13 @@ class DashboardController extends Controller
 						}
 						else $porc_quiebre = 0;
 						$indicadores[$variable] = $porc_quiebre;
+						$rango_quiebre = $this->get('cadem_reporte.helper.cliente')->getRangoQuiebre();
+						$indicadores['rango_quiebre'] = $rango_quiebre;
 						break;
 					case 'PRECIO':
-						//QUIEBRE ULTIMA MEDICION			
+						//PRECIO INCUMPLIMIENTO ULTIMA MEDICION			
 						$sql = "SELECT (SUM(case when ABS(pr.PRECIO-p.POLITICAPRECIO)>pa.VALOR*p.POLITICAPRECIO/100 then 1 else 0 END)*100.0)/COUNT(pr.ID) as porc_incumplimiento FROM PRECIO pr
-								INNER JOIN PLANOGRAMAP p on p.ID = pr.PLANOGRAMAP_ID
+								INNER JOIN PLANOGRAMAP p on p.ID = pr.PLANOGRAMAP_ID AND pr.PRECIO IS NOT NULL AND p.POLITICAPRECIO IS NOT NULL
 								INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
 								INNER JOIN PARAMETRO pa on pa.CLIENTE_ID = ? and pa.NOMBRE='rango_precio'
 								WHERE sc.CLIENTE_ID = ? AND p.MEDICION_ID = ?";
@@ -92,6 +94,9 @@ class DashboardController extends Controller
 						}
 						else $porc_incumplimiento = 0;
 						$indicadores[$variable] = $porc_incumplimiento;
+						//RANGO DE PRECIO
+						$rango_precio = $this->get('cadem_reporte.helper.cliente')->getRangoPrecio();
+						$indicadores['rango_precio'] = $rango_precio;
 						break;
 				}			
 			}			
@@ -103,10 +108,6 @@ class DashboardController extends Controller
 			WHERE n.clienteid = :idcliente and n.activo = 1')
 			->setParameter('idcliente', $id_cliente);
 		$noticias = $query->getArrayResult();
-
-		//INDICADORES
-		// $indicadores = array('QUIEBRE' => $porc_quiebre, 'PRECIO' => $porc_incumplimiento, 'PRESENCIA' => $porc_quiebre);
-		
 		
 		//RESPONSE
 		$response = $this->render('CademReporteBundle:Dashboard:index.html.twig',

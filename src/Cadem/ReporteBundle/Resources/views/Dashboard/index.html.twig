@@ -146,16 +146,16 @@ $(document).ready(function () {
 				},
 				plotBands: [{
 					from: 0,
-					to: 30,
+					to: {{ indicadores.rango_quiebre }},
 					innerRadius: '95%',
 					color: '#55BF3B' // green
 				}, {
-					from: 30,
-					to: 70,
-					innerRadius: '95%',
-					color: '#DDDF0D' // yellow
-				}, {
-					from: 70,
+				// 	from: 30,
+				// 	to: 70,
+				// 	innerRadius: '95%',
+				// 	color: '#DDDF0D' // yellow
+				// }, {
+					from: {{ indicadores.rango_quiebre }},
 					to: 100,
 					innerRadius: '95%',
 					color: '#DF5353' // red
@@ -257,16 +257,16 @@ $(document).ready(function () {
 				},
 				plotBands: [{
 					from: 0,
-					to: 30,
+					to: {{ indicadores.rango_precio }},
 					innerRadius: '95%',
 					color: '#55BF3B' // green
 				}, {
-					from: 30,
-					to: 70,
-					innerRadius: '95%',
-					color: '#DDDF0D' // yellow
-				}, {
-					from: 70,
+				// 	from: 30,
+				// 	to: 70,
+				// 	innerRadius: '95%',
+				// 	color: '#DDDF0D' // yellow
+				// }, {
+					from: {{ indicadores.rango_precio }},
 					to: 100,
 					innerRadius: '95%',
 					color: '#DF5353' // red

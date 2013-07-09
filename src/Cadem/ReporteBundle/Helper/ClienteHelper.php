@@ -12,6 +12,7 @@ class ClienteHelper {
 	private $cantidadniveles = null;		
 	private $variables= null;
 	private $rangoprecio= null;
+	private $rangoquiebre= null;
 
     public function __construct(EntityManager $entityManager, SecurityContext $security) {
         $this->em = $entityManager;
@@ -65,6 +66,7 @@ class ClienteHelper {
 		return $this->variables;
     }
 	
+	//OBTIENE EL RANGO DE TOLERANCIA PARA EL PRECIO Y POLITICA
 	public function getRangoPrecio() {
 		$em = $this->em;
 		if($this->user == null) $user = $this->security->getToken()->getUser();
@@ -81,12 +83,33 @@ class ClienteHelper {
 
 		$rangoprecio_q = $query->getArrayResult();
 		
-		if(count($rangoprecio_q) > 0){
-			$this->rangoprecio=0;
-			foreach($rangoprecio_q as $rangoprecioq)
-				$this->rangoprecio= $rangoprecioq['valor'];			
-		}
+		if(isset($rangoprecio_q[0])) $this->rangoprecio = intval($rangoprecio_q[0]['valor']);
+		else $this->rangoprecio = 0;
+
 		return $this->rangoprecio;
+    }
+
+    //OBTIENE EL RANGO DE TOLERANCIA PARA EL QUIEBRE
+	public function getRangoQuiebre() {
+		$em = $this->em;
+		if($this->user == null) $user = $this->security->getToken()->getUser();
+		else $user = $this->user;
+		$id_user = $user->getId();
+		$id_cliente = $user->getClienteID();
+				
+		//CLIENTE
+		$query = $em->createQuery(
+			'SELECT p.valor FROM CademReporteBundle:parametro p			
+			WHERE p.clienteid = :idcliente and p.nombre = :nombre ')
+			->setParameter('idcliente', $id_cliente)
+			->setParameter('nombre', 'rango_quiebre');
+
+		$query = $query->getArrayResult();
+		
+		if(isset($query[0])) $this->rangoquiebre = intval($query[0]['valor']);
+		else $this->rangoquiebre = 0;
+
+		return $this->rangoquiebre;
     }
 	
 
