@@ -131,6 +131,23 @@ div.DataTables_sort_wrapper {
 	background-color: rgb(253, 255, 209) !important;
 }
 
+.input_filtro{
+	width: 15em !important;
+	height: 2em !important;
+	min-height: 2em !important;
+}
+
+.dataTables_filter{
+	margin-bottom: 10px !important;
+	font-size: 14px !important;
+	height: 16px !important;
+	padding: .1em !important;
+}
+
+.dataTables_filter label{
+	margin-bottom: 0em !important;	
+}
+
 {% endblock %}
 
 {% block stylesheets %}
@@ -275,8 +292,43 @@ function construirTabla()
 			}					
 		});
 		$('div.fg-toolbar:first').append("<h5 style='float:left;margin:0em'>Tabla Evolución {{tag_variable}}: (%)</h5>");	
-		$("<div class='dataTables_filter' align='right' style='float:right'><label>buscar: <input id='buscar' /></label></div>").appendTo('#tabla_resumen_wrapper .fg-toolbar:first');				 				 
-		});	
+		// $("<div class='dataTables_filter' align='right' style='float:right'><label>buscar: <input id='buscar' /></label></div>").appendTo('#tabla_resumen_wrapper .fg-toolbar:first');				 				 
+		$("<div class='dataTables_filter input-append' align='right' style='float:right;width:60%'><input id='buscar' class='span2 input_filtro' /><button id='colorear' class='btn btn_filtro' type='button'>Colorear Celdas</button></div>").appendTo('#tabla_resumen_wrapper .fg-toolbar:first');				 				
+		$('#colorear').mousedown(function(){
+			if($(this).hasClass('btn-warning'))
+			{
+				$(this).removeClass('btn-warning');
+				colorearCeldas(false);
+			}
+			else
+			{
+				$(this).addClass('btn-warning');
+				colorearCeldas(true);
+			}
+		});			
+	});	
+}
+
+function colorearCeldas(flag){
+	
+	if(flag)
+	{
+		$("#tabla_resumen tbody tr td").heatcolor(
+			function() {			
+				return parseFloat($(this).text());
+				},
+				{ maxval: 0,
+				minval: 100,
+				colorStyle: 'greentored',
+				lightness: 0 
+				}		
+		);
+	}
+	else
+	{		
+		$("#tabla_resumen tbody tr td").removeAttr('style');
+	}
+	
 }
 
 function listenerFiltro()
@@ -468,8 +520,7 @@ function fixedColumn1()
 		}
 	});	
 	construirGrafico();
-	listenerFiltro();
-	colorearCeldas();
+	listenerFiltro();	
 }
 
 function fixedColumn2()
@@ -545,18 +596,6 @@ function colorTotales(){
 			});			
 			break;		
 	}	
-}
-
-function colorearCeldas(){
-$("#tabla_resumen tbody tr td").heatcolor(
-		function() {			
-			return parseFloat($(this).text());
-			},
-			{ maxval: 0,
-			minval: 100,
-			colorStyle: 'greentored',
-			lightness: 0 }
-		);
 }
 
 function construirGrafico()

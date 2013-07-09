@@ -124,6 +124,7 @@ legend {
 .dataTables_filter label{
 	margin-bottom: 0em !important;	
 }
+
 {% endblock %}
 
 {% block stylesheets %}
@@ -229,9 +230,21 @@ function construirTabla()
 			}			
 		//	"sDom": '<"H"Cfr>t<"F"ip>',					
 		});
+		
 		$('div.fg-toolbar:first').append("<h5 style='float:left;margin:0em'>Tabla Resumen {{estudios[0].getEstudioVariables[0].getNombrevariable}}: (%)</h5>");
-		var html='<div class="btn-group"><button class="btn dropdown-toggle" data-toggle="dropdown">Action<span class="caret"></span></button><ul class="dropdown-menu">...</ul></div>'		
-		$("<div class='dataTables_filter input-append' align='right' style='float:right;width:60%'>"+html+"</div>").appendTo('#tabla_resumen_wrapper .fg-toolbar:first');				 				
+		$("<div class='dataTables_filter input-append' align='right' style='float:right;width:60%'><button id='colorear' class='btn btn_filtro' type='button'>Colorear Celdas</button></div>").appendTo('#tabla_resumen_wrapper .fg-toolbar:first');				 				
+		$('#colorear').mousedown(function(){
+			if($(this).hasClass('btn-warning'))
+			{
+				$(this).removeClass('btn-warning');
+				colorearCeldas(false);
+			}
+			else
+			{
+				$(this).addClass('btn-warning');
+				colorearCeldas(true);
+			}
+		});		
 	});
 }
 
@@ -333,20 +346,29 @@ function fixedColumn()
 			$(nGroup).insertBefore( $('tbody tr:eq('+(0)+')', left.body)[0] );	
 			matriz_totales=[];
 		}
-	});
-	colorearCeldas();
+	});	
 }
 
-function colorearCeldas(){
-$("#tabla_resumen tbody tr td").heatcolor(
-		function() {			
-			return parseFloat($(this).text());
-			},
-			{ maxval: 0,
-			minval: 100,
-			colorStyle: 'greentored',
-			lightness: 0 }
+function colorearCeldas(flag){
+	
+	if(flag)
+	{
+		$("#tabla_resumen tbody tr td").heatcolor(
+			function() {			
+				return parseFloat($(this).text());
+				},
+				{ maxval: 0,
+				minval: 100,
+				colorStyle: 'greentored',
+				lightness: 0 
+				}		
 		);
+	}
+	else
+	{
+		$("#tabla_resumen tbody tr td").removeAttr('style');
+	}
+	
 }
 
 function colorTotales(){
