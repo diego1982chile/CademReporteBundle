@@ -58,6 +58,7 @@ class DashboardController extends Controller
 				switch($variable)
 				{
 					case 'QUIEBRE':
+					case 'PRESENCIA':
 						//QUIEBRE ULTIMA MEDICION			
 						$sql = "SELECT (SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 END)*100.0)/COUNT(q.ID) as porc_quiebre FROM QUIEBRE q
 								INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID
@@ -71,7 +72,8 @@ class DashboardController extends Controller
 							$porc_quiebre = $query[0]['porc_quiebre'];
 							$porc_quiebre = round($porc_quiebre,1);
 						}
-						else $porc_quiebre = 0;            
+						else $porc_quiebre = 0;
+						$indicadores[$variable] = $porc_quiebre;
 						break;
 					case 'PRECIO':
 						//QUIEBRE ULTIMA MEDICION			
@@ -88,9 +90,8 @@ class DashboardController extends Controller
 							$porc_incumplimiento = $query[0]['porc_incumplimiento'];
 							$porc_incumplimiento = round($porc_incumplimiento,1);
 						}
-						else $porc_incumplimiento = 0;            					
-						break;
-					case 'PRESENCIA':
+						else $porc_incumplimiento = 0;
+						$indicadores[$variable] = $porc_incumplimiento;
 						break;
 				}			
 			}			
@@ -104,7 +105,7 @@ class DashboardController extends Controller
 		$noticias = $query->getArrayResult();
 
 		//INDICADORES
-		$indicadores = array('QUIEBRE' => $porc_quiebre, 'PRECIO' => 10, 'PRESENCIA' => $porc_quiebre);
+		// $indicadores = array('QUIEBRE' => $porc_quiebre, 'PRECIO' => $porc_incumplimiento, 'PRESENCIA' => $porc_quiebre);
 		
 		
 		//RESPONSE
@@ -117,6 +118,7 @@ class DashboardController extends Controller
 			'logostyle' => $logostyle,
 			'indicadores' => $indicadores,
 			'estudios' => $estudios,
+			'variables' => $variables,
 			'noticias' => $noticias
 		));
 
@@ -137,33 +139,100 @@ class DashboardController extends Controller
 		$id_cliente = $user->getClienteID();
 
 		$start = microtime(true);
+		$evolutivo = array();
 
+		$variables = array_map('strtoupper', $this->get('cadem_reporte.helper.cliente')->getVariables());
 		//EVOLUTIVO
-		$sql = "SELECT TOP(12) (SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 END)*1.0)/COUNT(q.ID) as QUIEBRE, m.NOMBRE, m.FECHAINICIO, m.FECHAFIN, m.ID FROM QUIEBRE q
-			INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID
-			INNER JOIN MEDICION m on m.ID = p.MEDICION_ID
-			INNER JOIN ESTUDIOVARIABLE ev on ev.ID = m.ESTUDIOVARIABLE_ID
-			INNER JOIN ESTUDIO e on e.ID = ev.ESTUDIO_ID AND e.CLIENTE_ID = ?
-			
-			GROUP BY m.FECHAINICIO, m.NOMBRE, m.FECHAINICIO, m.FECHAFIN, m.ID
-			ORDER BY m.FECHAINICIO DESC";		
-		
-		$param = array($id_cliente);
-		$tipo_param = array(\PDO::PARAM_INT);
-		$mediciones_q = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
-		$mediciones_q = array_reverse($mediciones_q);
+		if(in_array("QUIEBRE", $variables) || in_array("PRESENCIA", $variables)){
+			$sql = "SELECT TOP(12) (SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 END)*1.0)/COUNT(q.ID) as QUIEBRE, m.NOMBRE, m.FECHAINICIO, m.FECHAFIN, m.ID FROM QUIEBRE q
+					INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID
+					INNER JOIN MEDICION m on m.ID = p.MEDICION_ID
+					INNER JOIN ESTUDIOVARIABLE ev on ev.ID = m.ESTUDIOVARIABLE_ID
+					INNER JOIN ESTUDIO e on e.ID = ev.ESTUDIO_ID AND e.CLIENTE_ID = ?
+					
+					GROUP BY m.FECHAINICIO, m.NOMBRE, m.FECHAINICIO, m.FECHAFIN, m.ID
+					ORDER BY m.FECHAINICIO DESC";
+			$param = array($id_cliente);
+			$tipo_param = array(\PDO::PARAM_INT);
+			$query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
+			$mediciones_q = array_reverse($query);
 
-		$mediciones_data = array();
-		$mediciones_tooltip = array();
-		$porc_quiebre = array();
-		
-		foreach($mediciones_q as $m){
-			$fi = new \DateTime($m['FECHAINICIO']);
-			$ff = new \DateTime($m['FECHAFIN']);
-			$mediciones_data[] = $fi->format('d/m').'-'.$ff->format('d/m');
-			$mediciones_tooltip[] = $m['NOMBRE'];			
-			$porc_quiebre[] = $m['QUIEBRE'] !== null?round($m['QUIEBRE']*100,1):null;			
+			$mediciones_data = array();
+			$mediciones_tooltip = array();
+			$porc_quiebre = array();
+
+			foreach($mediciones_q as $m){
+				$fi = new \DateTime($m['FECHAINICIO']);
+				$ff = new \DateTime($m['FECHAFIN']);
+				$mediciones_data[] = $fi->format('d/m').'-'.$ff->format('d/m');
+				$mediciones_tooltip[] = $m['NOMBRE'];			
+				$porc_quiebre[] = $m['QUIEBRE'] !== null?round($m['QUIEBRE']*100,1):null;			
+			}
+
+			$evolutivo['mediciones'] = $mediciones_data;
+			$evolutivo['mediciones_tooltip'] = $mediciones_tooltip;
+			$evolutivo[in_array("QUIEBRE", $variables)?'serie_quiebre':'serie_presencia'] = array(
+												'name' => in_array("QUIEBRE", $variables)?'% Quiebre':'% Presencia',
+												'color' => '#4572A7',
+												'type' => 'spline',
+												'data' => $porc_quiebre,
+												'tooltip' => array(
+													'valueSuffix' => ' %'
+												)
+											);
 		}
+
+		if(in_array("PRECIO", $variables)){
+			$sql = "SELECT TOP(12) * FROM 
+					(SELECT m.NOMBRE, m.FECHAINICIO, m.FECHAFIN FROM MEDICION m
+					INNER JOIN ESTUDIOVARIABLE ev on ev.ID = m.ESTUDIOVARIABLE_ID
+					INNER JOIN ESTUDIO e on e.ID = ev.ESTUDIO_ID AND e.CLIENTE_ID = :id_cliente
+
+					GROUP BY m.NOMBRE, m.FECHAINICIO, m.FECHAFIN) as A LEFT JOIN
+
+
+
+					(SELECT (SUM(case when ABS(pr.PRECIO-p.POLITICAPRECIO)>pa.VALOR*p.POLITICAPRECIO/100 then 1 else 0 END)*100.0)/COUNT(pr.ID) as porc_incumplimiento, m.NOMBRE as NOMBRE2 FROM PRECIO pr
+					INNER JOIN PLANOGRAMAP p on p.ID = pr.PLANOGRAMAP_ID AND pr.PRECIO IS NOT NULL AND p.POLITICAPRECIO IS NOT NULL
+					INNER JOIN MEDICION m on m.ID = p.MEDICION_ID
+					INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID AND sc.CLIENTE_ID = :id_cliente 
+					INNER JOIN PARAMETRO pa on pa.CLIENTE_ID = :id_cliente and pa.NOMBRE='rango_precio'
+					GROUP BY m.NOMBRE
+					) as B on A.NOMBRE = B.NOMBRE2 ORDER BY FECHAINICIO DESC";
+			$param = array('id_cliente' => $id_cliente);
+			$tipo_param = array(\PDO::PARAM_INT);
+			$query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
+			$mediciones_q = array_reverse($query);
+
+			$porc_precio = array();
+
+			foreach($mediciones_q as $m){
+				$fi = new \DateTime($m['FECHAINICIO']);
+				$ff = new \DateTime($m['FECHAFIN']);
+				$mediciones_data[] = $fi->format('d/m').'-'.$ff->format('d/m');
+				$mediciones_tooltip[] = $m['NOMBRE'];
+				$porc_incumplimiento[] = $m['porc_incumplimiento'] !== null?round($m['porc_incumplimiento'],1):null;	
+			}
+
+			$evolutivo['serie_precio'] = array(
+												'name' => '% Incumplimiento Precio',
+												'color' => 'red',
+												'type' => 'spline',
+												'data' => $porc_incumplimiento,
+												'tooltip' => array(
+													'valueSuffix' => ' %'
+												)
+											);
+		}
+		
+		
+		
+		
+		
+
+		
+		
+		
 
 
 		$time_taken = microtime(true) - $start;
@@ -171,37 +240,7 @@ class DashboardController extends Controller
 		
 		
 		$response = array(
-			'evolutivo' => array(
-				'mediciones' => $mediciones_data,
-				'mediciones_tooltip' => $mediciones_tooltip,
-				'serie_quiebre' => array(
-					'name' => '% Quiebre',
-					'color' => '#4572A7',
-					'type' => 'spline',
-					'data' => $porc_quiebre,
-					'tooltip' => array(
-						'valueSuffix' => ' %'
-					)
-				),
-				'serie_presencia' => array(
-					'name' => '% Presencia',
-					'color' => '#4572A7',
-					'type' => 'spline',
-					'data' => $porc_quiebre,
-					'tooltip' => array(
-						'valueSuffix' => ' %'
-					)
-				),
-				'serie_precio' => array(
-					'name' => '% Incumplimiento Precio',
-					'color' => 'red',
-					'type' => 'spline',
-					'data' => array_reverse($porc_quiebre),
-					'tooltip' => array(
-						'valueSuffix' => ' %'
-					)
-				)
-			),
+			'evolutivo' => $evolutivo,
 			'time_ms' => $time_taken*1000
 		);
 		

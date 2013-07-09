@@ -16,7 +16,6 @@
 			<div class="container-fluid well" style="padding-top:0">
 				<h4>{{estudios[0].getNombre}}</h4>
 				<div class="hero-unit" style="padding:15px;margin-bottom:10px">
-					<!-- <h3>Indicadores</h3> -->
 					<div class="row-fluid">
 					{% for ev in estudios[0].getEstudiovariables %}
 						<div class="span3">
@@ -27,11 +26,11 @@
 					{% endfor %}
 					</div>
 				</div>
-				{% for ev in estudios[0].getEstudiovariables %}
+				{#% for ev in estudios[0].getEstudiovariables %#}
 				<div class="hero-unit" style="padding:15px;margin-bottom:10px">
-					<div id="evo_{{ev.getVariable.getNombre}}" style="min-width: 250px; height: 300px; margin: 0 auto"></div>
+					<div id="{% if "QUIEBRE" in variables %}evo_QUIEBRE{% else %}evo_PRESENCIA{% endif %}" style="min-width: 250px; height: 300px; margin: 0 auto"></div>
 				</div>
-				{% endfor %}
+				{#% endfor %#}
 			</div>
 			
 			
@@ -303,16 +302,21 @@ $(document).ready(function () {
 	
 	$.get( "{{ path('dashboard_indicadores') }}", $('form#filtros').serialize(), function(data) {
 	
-		{% for ev in estudios[0].getEstudiovariables %}//COMIENZA FOR
 		
-			{% if ev.getVariable.getNombre == "QUIEBRE" or ev.getVariable.getNombre == "PRESENCIA" %}
+		
+		{% if "QUIEBRE" in variables or "PRESENCIA" in variables %}
+			{% if "QUIEBRE" in variables %}
+				{% set nombrevar =  "QUIEBRE" %}
+			{% else %}
+			    {% set nombrevar = "PRESENCIA" %}
+			{% endif %}
 			
 			
 			
-			{{"evo_"~ev.getVariable.getNombre}} = new Highcharts.Chart({
+			{{"evo_"~nombrevar}} = new Highcharts.Chart({
 				chart: {
 					zoomType: 'x',
-					renderTo: '{{"evo_"~ev.getVariable.getNombre}}'
+					renderTo: '{{"evo_"~nombrevar}}'
 				},
 				title: {
 					text: 'Evolutivo'
@@ -322,22 +326,24 @@ $(document).ready(function () {
 				},
 				yAxis: [{
 					title: {
-						text: 'Promedio {{ev.getVariable.getNombre}}',
+						text: 'Promedio {{nombrevar}}',
 						style: {
 							color: '#4572A7'
 						}
 					}
 				}
-				// ,
-				// {
-				// 	title: {
-				// 		text: 'Incumplimiento Precio',
-				// 		style: {
-				// 			color: 'red'
-				// 		}
-				// 	},
-				// 	opposite: true
-				// }
+				{% if "PRECIO" in variables %}
+				,
+				{
+					title: {
+						text: 'Incumplimiento Precio',
+						style: {
+							color: 'red'
+						}
+					},
+					opposite: true
+				}
+				{% endif %}
 				],
 				tooltip: {
 					// shared: true,
@@ -355,8 +361,11 @@ $(document).ready(function () {
 					floating: true,
 					backgroundColor: '#FFFFFF'
 				},
-				series: [data.evolutivo.serie_{{ev.getVariable.getNombre | lower }}
-				// , data.evolutivo.serie_precio
+				series: [
+				data.evolutivo.serie_{{nombrevar | lower }}
+				{% if "PRECIO" in variables %}
+				, data.evolutivo.serie_precio
+				{% endif %}
 				],
 				credits: {
 					enabled: false
@@ -365,9 +374,7 @@ $(document).ready(function () {
 			
 			
 			
-			{% endif %}
-		
-		{% endfor %}
+		{% endif %}
 		
 		
 		// evo_quiebre_precio = new Highcharts.Chart({

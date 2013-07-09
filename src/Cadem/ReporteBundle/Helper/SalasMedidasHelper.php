@@ -36,31 +36,42 @@ class SalasMedidasHelper {
 		
 		$variables = array_map('strtoupper', $this->clienteHelper->getVariables());
 				
-		
+		$sql = "SELECT COUNT(DISTINCT A.ID) as numsalas FROM (";
+
+		$haymedicion = true;
+
 		foreach($variables as $variable)
 		{							
-			
 			$id_ultima_medicion = $this->medicion->getIdUltimaMedicionPorVariable($variable);								
 		
 			if($id_ultima_medicion !== -1){
-			//SALAS MEDIDAS
-			$sql = "SELECT COUNT(p.ID) FROM PLANOGRAMA".substr($variable,0,1)." p
-					INNER JOIN ".$variable." q on p.ID = q.PLANOGRAMA".substr($variable,0,1)."_ID
-					INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
-                    WHERE sc.CLIENTE_ID = ? AND p.MEDICION_ID = ?
-                    GROUP BY sc.SALA_ID";
-            $param = array($id_cliente, $id_ultima_medicion);
-            $tipo_param = array(\PDO::PARAM_INT, \PDO::PARAM_INT);
-            $query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
-            if(isset($query[0])) $total = count($query);
-            else $total = -1;
-			// print_r($total);
-			$this->salasmedidas += $total;
-		}
-		else $this->salasmedidas = -1;//NO HAY DATOS
+				$letravar = substr($variable,0,1);
+				$letravar = $variable=='PRESENCIA'?'Q':$letravar;
+				$variable = $variable=='PRESENCIA'?'QUIEBRE':$variable;
+
+				$sql .= "(SELECT s.ID FROM PLANOGRAMA{$letravar} p
+						INNER JOIN {$variable} q on p.ID = q.PLANOGRAMA{$letravar}_ID AND p.MEDICION_ID = {$id_ultima_medicion}
+						INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID AND sc.CLIENTE_ID = {$id_cliente}
+						INNER JOIN SALA s on s.ID = sc.SALA_ID
+	                    GROUP BY s.ID) UNION ";
+			}
+			else{
+				$haymedicion = false;//NO HAY DATOS
+				break;
+			}
 
 		}
-						
+
+		if($haymedicion){
+			$sql = substr($sql, 0, -6);
+			$sql .= ") as A ";
+			$query = $em->getConnection()->executeQuery($sql)->fetchAll();
+            if(isset($query[0]) && $query[0]['numsalas'] === (string) intval($query[0]['numsalas'])) $total = intval($query[0]['numsalas']);
+            else $total = -1;
+			$this->salasmedidas = $total;
+		}
+		else $this->salasmedidas = -1;
+			
 		return $this->salasmedidas;
     }
 	

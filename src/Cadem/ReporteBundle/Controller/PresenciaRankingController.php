@@ -12,9 +12,9 @@ use Symfony\Component\HttpFoundation\Session;
 class PresenciaRankingController extends Controller
 {
     
-	public function indexAction()
+	public function indexAction($variable)
     {
-		
+		$variable_medida = $variable;
 		$user = $this->getUser();
 		$em = $this->getDoctrine()->getManager();
 		$session = $this->get("session");
@@ -275,7 +275,7 @@ class PresenciaRankingController extends Controller
 				'ranking_empleado' => $ranking_empleado,
 				'ranking_item' => $ranking_item,
 				'estudios' => $estudios,
-				
+				'variable' => strtolower($variable_medida),
 			)
 		);
 
