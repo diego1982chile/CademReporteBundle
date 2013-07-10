@@ -257,6 +257,7 @@ class PresenciaRankingController extends Controller
 		$param = array('id_cliente' => $id_cliente, 'id_medicion_actual' => $id_medicion_actual, 'id_medicion_anterior' => $id_medicion_anterior);
 		$ranking_empleado = $em->getConnection()->executeQuery($sql,$param)->fetchAll();
 		
+		$muestrarankingempleado = $this->get('cadem_reporte.helper.cliente')->MuestraRankingEmpleado();
 		
 		
 		//RESPONSE
@@ -276,6 +277,7 @@ class PresenciaRankingController extends Controller
 				'ranking_item' => $ranking_item,
 				'estudios' => $estudios,
 				'variable' => strtolower($variable_medida),
+				'muestrarankingempleado' => $muestrarankingempleado,
 			)
 		);
 
