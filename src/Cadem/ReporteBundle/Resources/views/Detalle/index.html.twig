@@ -1,8 +1,11 @@
 {% extends '::base.html.twig' %}
 
+
+{% if tag_variable|upper  == "QUIEBRE" %}
 {% set url_excel = path('quiebre_detalle_excel') %}
-{#% set url_body = path('quiebre_detalle_body') %#}
-{#% set url_header = path('quiebre_detalle_header') %#}
+{% else %}
+{% set url_excel = path('presencia_detalle_excel') %}
+{% endif %}
 {% set url_body_action = path(body_action) %}
 {% set url_header_action = path(header_action) %}
 
@@ -82,10 +85,13 @@
 								<div style='background:grey;height:1.9em'>
 								</div>
 							</th>
-							</th>							
+							</th>
+							{% if tag_variable|upper  in ["QUIEBRE","PRESENCIA"] %}
 							<th width='10%'>
 								<a target="_blank" href="{{ url_excel }}"><label>Bajar Excel</label></a>
 							</th>
+							{% endif %}
+							
 						</tr>
 					</thead>
 				</table>		
