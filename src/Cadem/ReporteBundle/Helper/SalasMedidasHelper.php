@@ -22,12 +22,17 @@ class SalasMedidasHelper {
 		$this->security = $security;
 		$this->medicion = $medicion;
 		$this->clienteHelper = $clienteHelper;
-		// $this->session = $session;
 
 		if($security->getToken() != null) $this->user = $security->getToken()->getUser();
 		else $this->user = null;
 		$this->total_salas_name = $total_salas_name;
     }
+
+    //MUESTRA INDICADOR DE SALAS MEDIDAS
+    //POR DEFECTO NO SE MUESTRA
+	public function MuestraSalasMedidas() {
+		return $this->clienteHelper->MuestraSalasMedidas();
+	}
 
     private function getSalasmedidas_() {
 		$em = $this->em;
