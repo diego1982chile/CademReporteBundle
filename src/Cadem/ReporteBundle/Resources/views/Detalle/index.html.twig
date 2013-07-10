@@ -1,16 +1,14 @@
 {% extends '::base.html.twig' %}
 
-{% if tag_variable|lower == "quiebre" %}
-	{% set url_body = path('quiebre_resumen_body') %}
-    {% set url_evolutivo = path('quiebre_resumen_evolutivo') %}
-    {% set url_header = path('quiebre_resumen_header') %}
+{% if tag_variable|lower == "quiebre" %}	
+    {% set url_evolutivo = path('quiebre_resumen_evolutivo') %}    
     {% set url_excel = path('quiebre_detalle_excel') %}
-{% else %}
-	{% set url_body = path('presencia_resumen_body') %}
-    {% set url_evolutivo = path('presencia_resumen_evolutivo') %}
-    {% set url_header = path('presencia_resumen_header') %}
+{% else %}	
+    {% set url_evolutivo = path('presencia_resumen_evolutivo') %}    
     {% set url_excel = path('presencia_detalle_excel') %}
 {% endif %}
+{% set url_body_action = path(body_action) %}
+{% set url_header_action = path(header_action) %}
 
 {% block title %}Cadem Analytics{% endblock %}
 
@@ -767,10 +765,10 @@ function colorTotales(){
 			$('.DTFC_Cloned tbody tr:first td').css('background-color',color_fondo);
 			$('.table:not(.DTFC_Cloned) tbody tr:first td').css('background-color',color_fondo);
 			$('.table:not(.DTFC_Cloned) tbody tr td:last-of-type:not(.group)').css('background-color',color_fondo);
-			$('.DTFC_Cloned tbody tr td:first-of-type:not(.group)').css({
-				'background-color':'rgb(238, 236, 255)',
-				'color': 'black',
-			});
+			// $('.DTFC_Cloned tbody tr td:first-of-type:not(.group)').css({
+				// 'background-color':'rgb(238, 236, 255)',
+				// 'color': 'black',
+			// });
 			break;
 		case 2:						
 			// $('.DTFC_Cloned tbody tr td:first-of-type:not(.group)').css({

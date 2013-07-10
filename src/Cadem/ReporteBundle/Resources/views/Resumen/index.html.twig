@@ -1,14 +1,10 @@
 {% extends '::base.html.twig' %}
 
 
-{% if tag_variable|lower == "quiebre" %}
-	{% set url_body = path('quiebre_resumen_body') %}
-    {% set url_evolutivo = path('quiebre_resumen_evolutivo') %}
-    {% set url_header = path('quiebre_resumen_header') %}
-{% else %}
-	{% set url_body = path('presencia_resumen_body') %}
-    {% set url_evolutivo = path('presencia_resumen_evolutivo') %}
-    {% set url_header = path('presencia_resumen_header') %}
+{% if tag_variable|lower == "quiebre" %}	
+    {% set url_evolutivo = path('quiebre_resumen_evolutivo') %}    
+{% else %}	
+    {% set url_evolutivo = path('presencia_resumen_evolutivo') %}    
 {% endif %}
 {% set url_body_action = path(body_action) %}
 {% set url_header_action = path(header_action) %}

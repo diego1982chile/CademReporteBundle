@@ -1,13 +1,9 @@
 {% extends '::base.html.twig' %}
 
-{% if tag_variable|lower == "quiebre" %}
-	{% set url_body = path('quiebre_resumen_body') %}
-    {% set url_evolutivo = path('quiebre_resumen_evolutivo') %}
-    {% set url_header = path('quiebre_resumen_header') %}
-{% else %}
-	{% set url_body = path('presencia_resumen_body') %}
-    {% set url_evolutivo = path('presencia_resumen_evolutivo') %}
-    {% set url_header = path('presencia_resumen_header') %}
+{% if tag_variable|lower == "quiebre" %}	
+    {% set url_evolutivo = path('quiebre_resumen_evolutivo') %}    
+{% else %}	
+    {% set url_evolutivo = path('presencia_resumen_evolutivo') %}    
 {% endif %}
 {% set url_body_action = path(body_action) %}
 {% set url_header_action = path(header_action) %}
@@ -149,6 +145,7 @@ div.DataTables_sort_wrapper {
 	font-size: 14px !important;
 	height: 16px !important;
 	padding: .1em !important;
+	line-height: 20px !important;
 }
 
 .dataTables_filter label{
@@ -300,8 +297,13 @@ function construirTabla()
 			}					
 		});
 		$('div.fg-toolbar:first').append("<h5 style='float:left;margin:0em'>Tabla Evolución {{tag_variable}}: (%)</h5>");	
-		// $("<div class='dataTables_filter' align='right' style='float:right'><label>buscar: <input id='buscar' /></label></div>").appendTo('#tabla_resumen_wrapper .fg-toolbar:first');				 				 
-		$("<form class='form-horizontal'><div class='dataTables_filter 'control-group' align='right' style='float:right;width:50%'><label class='control-label' for='buscar'>buscar SKU:</label><input id='buscar' class='span2 input_filtro' /><button id='colorear' class='btn btn_filtro' type='button'>Colorear Celdas</button></div></form>").appendTo('#tabla_resumen_wrapper .fg-toolbar:first');				 				
+		// $("<div class='dataTables_filter' align='right' style='float:right'><label>buscar: <input id='buscar' /></label></div>").appendTo('#tabla_resumen_wrapper .fg-toolbar:first');				 				 		
+		$("<form id='control' class='form-horizontal'><div class='dataTables_filter input-append' align='right' style='float:right;width:56%'><label class='control-label' style='float:left' for='buscar'>buscar SKU:</label><input id='buscar' class='span2 input_filtro' /><button id='colorear' class='btn btn_filtro' type='button'>Colorear Celdas</button></div></form>").appendTo('#tabla_resumen_wrapper .fg-toolbar:first');				 				
+		$("form#control").bind("keypress", function (e) {
+			if (e.keyCode == 13) {
+				return false;
+			}
+		});		
 		$('#colorear').mousedown(function(){
 			if($(this).hasClass('btn-warning'))
 			{
@@ -593,10 +595,10 @@ function colorTotales(){
 			$('.DTFC_Cloned tbody tr:first td').css('background-color',color_fondo);
 			$('.table:not(.DTFC_Cloned) tbody tr:first td').css('background-color',color_fondo);
 			$('.table:not(.DTFC_Cloned) tbody tr td:last-of-type:not(.group)').css('background-color',color_fondo);
-			$('.DTFC_Cloned tbody tr td:first-of-type:not(.group)').css({
-				'background-color':'rgb(238, 236, 255)',
-				'color': 'black',
-			});	
+			// $('.DTFC_Cloned tbody tr td:first-of-type:not(.group)').css({
+				// 'background-color':'rgb(238, 236, 255)',
+				// 'color': 'black',
+			// });	
 			break;
 		case 2:					
 			$('.DTFC_Cloned tbody tr td:first-of-type:not(.group)').css({
