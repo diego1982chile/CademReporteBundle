@@ -437,14 +437,14 @@ class PresenciaResumenController extends Controller
 
 		//EVOLUTIVO
 		$sql = "SELECT TOP(12) * FROM 
-			(SELECT m.ID, m.NOMBRE, m.FECHAINICIO, m.FECHAFIN FROM MEDICION m
+			(SELECT m.NOMBRE, m.FECHAINICIO, m.FECHAFIN FROM MEDICION m
 			INNER JOIN ESTUDIOVARIABLE ev on ev.ID = m.ESTUDIOVARIABLE_ID
 			INNER JOIN ESTUDIO e on e.ID = ev.ESTUDIO_ID AND e.CLIENTE_ID = ?
 
-			GROUP BY m.ID, m.NOMBRE, m.FECHAINICIO, m.FECHAFIN) as A LEFT JOIN
+			GROUP BY m.NOMBRE, m.FECHAINICIO, m.FECHAFIN) as A LEFT JOIN
 
 
-			(SELECT (SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 END)*1.0)/COUNT(q.ID) as QUIEBRE, m.ID as ID2 FROM MEDICION m
+			(SELECT (SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 END)*1.0)/COUNT(q.ID) as QUIEBRE, m.NOMBRE as NOMBRE2 FROM MEDICION m
 			INNER JOIN PLANOGRAMAQ p on m.ID = p.MEDICION_ID
 			INNER JOIN QUIEBRE q on q.PLANOGRAMAQ_ID = p.ID
 			INNER JOIN ESTUDIOVARIABLE ev on ev.ID = m.ESTUDIOVARIABLE_ID
@@ -452,8 +452,8 @@ class PresenciaResumenController extends Controller
 			{$cadena_join}
 			{$nivel_join}
 			
-			GROUP BY m.ID
-			) as B on A.ID = B.ID2 ORDER BY FECHAINICIO DESC";
+			GROUP BY m.NOMBRE
+			) as B on A.NOMBRE = B.NOMBRE2 ORDER BY FECHAINICIO DESC";
 		$param = array($id_cliente,$id_cliente);
 		$tipo_param = array(\PDO::PARAM_INT, \PDO::PARAM_INT);
 		$mediciones_q = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();

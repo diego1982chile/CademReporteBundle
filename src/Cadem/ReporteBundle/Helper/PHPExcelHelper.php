@@ -41,7 +41,7 @@ class PHPExcelHelper {
 		ic.CODIGOITEM1 as COD_PRODUCTO,
 		i.NOMBRE as NOM_PRODUCTO,
 		ni.NOMBRE as SEGMENTO,
-		sc.CODIGOSALA as COD_SALA,
+		sc.ID as SC_ID,
 		s.CALLE as CALLE_SALA,
 		s.NUMEROCALLE as NUMCALLE_SALA,
 		cad.NOMBRE as CAD_SALA,
@@ -79,9 +79,9 @@ class PHPExcelHelper {
 
 		//EXTRAE DATOS
 		foreach ($detalle_quiebre as $d) {
-			$header[$d['COD_SALA']] = $d['CAD_SALA'].' '.$d['COM_SALA'].' '.$d['CALLE_SALA'];
+			$header[$d['SC_ID']] = $d['CAD_SALA'].' '.$d['COM_SALA'].' '.$d['CALLE_SALA'];
 			$producto[$d['COD_PRODUCTO']] = array($d['NOM_PRODUCTO'], $d['SEGMENTO']);
-			$quiebre[$d['COD_SALA']][$d['COD_PRODUCTO']] = intval($d['quiebre']);
+			$quiebre[$d['SC_ID']][$d['COD_PRODUCTO']] = intval($d['quiebre']);
 		}
 
 		//ORDENAR LAS SALAS SI HAY DATOS, SI NO RETORNAR ERROR

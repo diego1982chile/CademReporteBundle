@@ -54,6 +54,7 @@ class MedicionHelper {
 		$id_cliente = $user->getClienteID();
 		$request = $this->container->get('request');
 		$variable = $request->attributes->get('variable');
+		$variable = strtoupper($variable);
 		
 		//ULTIMA MEDICION
 		$query = $em->createQuery(
