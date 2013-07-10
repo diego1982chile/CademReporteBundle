@@ -12,7 +12,7 @@ use Symfony\Component\HttpFoundation\Session;
 class QuiebreEvolucionController extends Controller
 {
     
-	public function indexAction()
+	public function indexAction($variable)
     {
 		$start = microtime(true);
 		$session = $this->get("session");
@@ -404,7 +404,7 @@ class QuiebreEvolucionController extends Controller
 			'body_action' => 'quiebre_evolucion_body',	
 			'aoColumnDefs' => json_encode($aoColumnDefs),
 			'columnas_reservadas' => 2,
-			'tag_variable' => 'QUIEBRE'
+			'tag_variable' => $variable
 			)
 		);
 		//CACHE

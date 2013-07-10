@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\Session;
 
 class PresenciaDetalleController extends Controller
 {    	
-	public function indexAction()
+	public function indexAction($variable)
     {
 		$start = microtime(true);
 		$session = $this->get("session");
@@ -392,7 +392,7 @@ class PresenciaDetalleController extends Controller
 			'body_action' => 'presencia_detalle_body',	
 			'aoColumnDefs' => json_encode($aoColumnDefs),
 			'columnas_reservadas' => 2,
-			'tag_variable' => 'Presencia'				
+			'tag_variable' => $variable			
 			)
 		);
 		$time_taken = microtime(true) - $start;
@@ -447,12 +447,12 @@ class PresenciaDetalleController extends Controller
 		switch($variable)
 		{
 			case 1: // Si el tag de la variable es quiebre 
-				$color_positivo='green';
-				$color_negativo='red';
+				$color_positivo='rgb(174, 247, 81)';
+				$color_negativo='rgb(234, 57, 21)';
 				break;
 			case 5: // Si el tag de la variable es presencia invertimos los colores
-				$color_positivo='red';
-				$color_negativo='green';
+				$color_positivo='rgb(234, 57, 21)';
+				$color_negativo='rgb(174, 247, 81)';
 				break;				
 		}
 	

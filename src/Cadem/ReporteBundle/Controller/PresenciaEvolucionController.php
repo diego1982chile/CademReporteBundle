@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\Session;
 
 class PresenciaEvolucionController extends Controller
 {    
-	public function indexAction()
+	public function indexAction($variable)
     {
 		$start = microtime(true);
 		$session = $this->get("session");
@@ -400,7 +400,7 @@ class PresenciaEvolucionController extends Controller
 			'body_action' => 'presencia_evolucion_body',	
 			'aoColumnDefs' => json_encode($aoColumnDefs),
 			'columnas_reservadas' => 2,
-			'tag_variable' => 'Presencia'
+			'tag_variable' => $variable
 			)
 		);
 		//CACHE

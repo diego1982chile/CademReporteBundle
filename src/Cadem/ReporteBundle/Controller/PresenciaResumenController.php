@@ -13,7 +13,7 @@ use Symfony\Component\HttpFoundation\Session;
 class PresenciaResumenController extends Controller
 {		
 	
-	public function indexAction()
+	public function indexAction($variable)
     {
 		$session = $this->get("session");
 	
@@ -369,7 +369,7 @@ class PresenciaResumenController extends Controller
 			'estudios' => $estudios,		
 			'header_action' => 'presencia_resumen_header',
 			'body_action' => 'presencia_resumen_body',
-			'tag_variable' => 'Presencia'		
+			'tag_variable' => $variable		
 			)
 		);		
 		//CACHE
