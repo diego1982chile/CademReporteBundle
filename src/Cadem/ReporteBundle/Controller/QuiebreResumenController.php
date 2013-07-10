@@ -262,7 +262,7 @@ class QuiebreResumenController extends Controller
 		GROUP BY ni.NOMBRE, c.NOMBRE
 		ORDER BY CATEGORIA,CADENA";
 	
-		$totales_categoria = $em->getConnection()->executeQuery($sql)->fetchAll();	
+		$totales_categoria = $em->getConnection()->executeQuery($sql)->fetchAll();
 				
 		
 		// Obtener totales horizontales por totales segmento (ultima columna de totales verticales por categoria)
@@ -274,7 +274,7 @@ class QuiebreResumenController extends Controller
 				GROUP BY ni.NOMBRE
 				ORDER BY CATEGORIA";
 			
-		$totales_horizontales_categoria = $em->getConnection()->executeQuery($sql)->fetchAll();				
+		$totales_horizontales_categoria = $em->getConnection()->executeQuery($sql)->fetchAll();
 		
 		// Obtener totales verticales por totales categoria
 		
@@ -286,24 +286,24 @@ class QuiebreResumenController extends Controller
 		GROUP BY c.NOMBRE
 		ORDER BY CADENA";
 		
-		$totales_verticales_categoria = $em->getConnection()->executeQuery($sql)->fetchAll();				
+		$totales_verticales_categoria = $em->getConnection()->executeQuery($sql)->fetchAll();
 		
 		// Obtener total horizontal por totales verticales por totales categoria
 		
 		$sql = "SELECT SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
 		INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID AND p.MEDICION_ID = {$id_ultima_medicion}";			
 
-		$total = $em->getConnection()->executeQuery($sql)->fetchAll();											
+		$total = $em->getConnection()->executeQuery($sql)->fetchAll();
 				
 		
 		// Guardamos resultado de consulta en variable de sesión para reusarlas en un action posterior
-		$session->set("cadenas",$cadenas);		
-		$session->set("resumen_quiebre",$resumen_quiebre);		
-		$session->set("totales_segmento",$totales_segmento);		
-		$session->set("totales_categoria",$totales_categoria);	
-		$session->set("totales_horizontales_categoria",$totales_horizontales_categoria);	
-		$session->set("totales_verticales_categoria",$totales_verticales_categoria);	
-		$session->set("total",$total);			
+		$session->set("cadenas",$cadenas);
+		$session->set("resumen_quiebre",$resumen_quiebre);
+		$session->set("totales_segmento",$totales_segmento);
+		$session->set("totales_categoria",$totales_categoria);
+		$session->set("totales_horizontales_categoria",$totales_horizontales_categoria);
+		$session->set("totales_verticales_categoria",$totales_verticales_categoria);
+		$session->set("total",$total);
 						
 		// Calcula el ancho máximo de la tabla	
 		$extension=count($head)*10-100;
