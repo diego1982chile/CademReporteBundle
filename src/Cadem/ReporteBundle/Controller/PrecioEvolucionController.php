@@ -214,7 +214,7 @@ class PrecioEvolucionController extends Controller
 		foreach($mediciones_id as $medicion_id)
 		{
 			$sql.="SELECT AVG(pr.PRECIO) as PRECIO, i.NOMBRE as PRODUCTO, ni.NOMBRE as SEGMENTO, m.NOMBRE, m.FECHAINICIO FROM PRECIO pr 
-				INNER JOIN PLANOGRAMAP p on p.ID = pr.PLANOGRAMAP_ID and p.MEDICION_ID={$medicion_id}	
+				INNER JOIN PLANOGRAMAP p on p.ID = pr.PLANOGRAMAP_ID and p.MEDICION_ID={$medicion_id} and pr.PRECIO is not null and p.POLITICAPRECIO is not null
 				INNER JOIN MEDICION m on p.MEDICION_ID=m.ID	 
 				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID AND sc.CLIENTE_ID = {$user->getClienteID()} 
 				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID 
@@ -584,7 +584,7 @@ class PrecioEvolucionController extends Controller
 		foreach($mediciones_id as $medicion_id)
 		{			
 			$sql.="SELECT (SUM(case when ABS(pr.PRECIO-p.POLITICAPRECIO)>pa.VALOR*p.POLITICAPRECIO/100 then 1 else 0 END)*100.0)/COUNT(pr.ID) as PRECIO, i.NOMBRE as PRODUCTO, ni.NOMBRE as SEGMENTO, m.NOMBRE, m.FECHAINICIO FROM PRECIO pr 
-				INNER JOIN PLANOGRAMAP p on p.ID = pr.PLANOGRAMAP_ID and p.MEDICION_ID={$medicion_id}	
+				INNER JOIN PLANOGRAMAP p on p.ID = pr.PLANOGRAMAP_ID and p.MEDICION_ID={$medicion_id} and pr.PRECIO is not null and p.POLITICAPRECIO is not null
 				INNER JOIN MEDICION m on p.MEDICION_ID=m.ID	 
 				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID AND sc.CLIENTE_ID = {$user->getClienteID()} 
 				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in ( {$comunas} ) and s.CADENA_ID in ({$cadenas})
@@ -632,7 +632,7 @@ class PrecioEvolucionController extends Controller
 		foreach($mediciones_id as $medicion_id)
 		{							
 			$sql.="SELECT ni.NOMBRE as SEGMENTO, m.FECHAINICIO, m.NOMBRE as MEDICION, (SUM(case when ABS(pr.PRECIO-p.POLITICAPRECIO)>pa.VALOR*p.POLITICAPRECIO/100 then 1 else 0 END)*100.0)/COUNT(pr.ID) as PRECIO FROM PRECIO pr
-				   INNER JOIN PLANOGRAMAP p on p.ID = pr.PLANOGRAMAP_ID and p.MEDICION_ID={$medicion_id}
+				   INNER JOIN PLANOGRAMAP p on p.ID = pr.PLANOGRAMAP_ID and p.MEDICION_ID={$medicion_id} and pr.PRECIO is not null and p.POLITICAPRECIO is not null
 				   INNER JOIN MEDICION m on p.MEDICION_ID=m.ID	
 				   INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
 				   INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} ) and s.CADENA_ID in ({$cadenas})				   
@@ -655,7 +655,7 @@ class PrecioEvolucionController extends Controller
 		// Obtener totales horizontales por totales segmento (ultima columna de totales verticales por categoria)
 		
 		$sql =	"SELECT ni.NOMBRE as SEGMENTO, (SUM(case when ABS(pr.PRECIO-p.POLITICAPRECIO)>pa.VALOR*p.POLITICAPRECIO/100 then 1 else 0 END)*100.0)/COUNT(pr.ID) as PRECIO FROM PRECIO pr
-		INNER JOIN PLANOGRAMAP p on p.ID = pr.PLANOGRAMAP_ID and p.MEDICION_ID IN ({$mediciones_id_str})		
+		INNER JOIN PLANOGRAMAP p on p.ID = pr.PLANOGRAMAP_ID and p.MEDICION_ID IN ({$mediciones_id_str}) and pr.PRECIO is not null and p.POLITICAPRECIO is not null
 		INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
 		INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} ) and s.CADENA_ID in ({$cadenas})		
 		INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID

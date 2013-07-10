@@ -13,7 +13,7 @@ use Symfony\Component\HttpFoundation\Session;
 class PrecioResumenController extends Controller
 {		
 	
-	public function indexAction()
+	public function indexAction($variable)
     {
 		$session = $this->get("session");
 	
@@ -160,21 +160,22 @@ class PrecioResumenController extends Controller
 		
 		//CONSULTA
 		
-		$sql = "SELECT (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre, ni.NOMBRE as SEGMENTO, ni2.NOMBRE as CATEGORIA, cad.NOMBRE as CADENA FROM QUIEBRE q
-			INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID
-			INNER JOIN MEDICION m on m.ID = p.MEDICION_ID and m.ID = {$id_ultima_medicion}
+		$sql = "SELECT (SUM(case when ABS(pr.PRECIO-p.POLITICAPRECIO)>pa.VALOR*p.POLITICAPRECIO/100 then 1 else 0 END)*100.0)/COUNT(pr.ID) as PRECIO, ni.NOMBRE as SEGMENTO, ni2.NOMBRE as CATEGORIA, cad.NOMBRE as CADENA FROM PRECIO pr
+			INNER JOIN PLANOGRAMAP p on p.ID = pr.PLANOGRAMAP_ID and pr.PRECIO is not null and p.POLITICAPRECIO is not null
+			INNER JOIN MEDICION m on m.ID = p.MEDICION_ID and m.ID = {$id_ultima_medicion} 
 			INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
 			INNER JOIN SALA s on s.ID = sc.SALA_ID
 			INNER JOIN CADENA cad on cad.ID = s.CADENA_ID
 			INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID AND ic.CLIENTE_ID = {$id_cliente}
 			INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
-			INNER JOIN NIVELITEM ni2 on ni2.ID = ic.NIVELITEM_ID2			
+			INNER JOIN NIVELITEM ni2 on ni2.ID = ic.NIVELITEM_ID2	
+			INNER JOIN PARAMETRO pa on pa.CLIENTE_ID = {$user->getClienteID()} and pa.NOMBRE='rango_precio'			
 			GROUP BY ni2.NOMBRE, ni.NOMBRE, cad.NOMBRE
 			ORDER BY categoria, segmento";
 		
 		// print_r($sql);		
 		
-		$resumen_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();
+		$resumen_precio = $em->getConnection()->executeQuery($sql)->fetchAll();
 		$niveles=2;
 		
 		$head=array();
@@ -182,7 +183,7 @@ class PrecioResumenController extends Controller
 		$cadenas_aux=array();		
 		
 		// Generamos el head de la tabla, y las cadenas
-		foreach($resumen_quiebre as $registro)
+		foreach($resumen_precio as $registro)
 		{
 			if(!in_array($registro['CADENA'],$head))
 			{
@@ -201,11 +202,37 @@ class PrecioResumenController extends Controller
 		
 		$head=array();		
 		
+		// Oonstruir inicialización de columnas
+		$aoColumnDefs=array();
+		
+		$fila=array();
+		$fila['aTargets']=array(0);
+		$fila['sClass']="tag";
+		$fila['sWidth']="160px";
+		array_push($aoColumnDefs,$fila);
+		
+		$fila=array();
+		$fila['aTargets']=array(1);
+		$fila['bVisible']=false;		
+		array_push($aoColumnDefs,$fila);		
+		
+		$cont=2;		
+		
 		foreach($cadenas_aux as $cadena)
 		{
 			array_push($cadenas,$cadena);
 			array_push($head,$cadena);					
+			$fila=array();
+			$fila['sWidth']="100px";
+			$fila['aTargets']=array($cont);	
+			array_push($aoColumnDefs,$fila);
+			$cont++;			
 		}		
+		
+		$fila=array();
+		$fila['aTargets']=array($cont);		
+		// $fila['sWidth']="2%";	
+		array_push($aoColumnDefs,$fila);				
 		
 		foreach(array_reverse($prefixes) as $prefix)		
 			array_unshift($head,$prefix);		
@@ -213,14 +240,15 @@ class PrecioResumenController extends Controller
 		
 		// Obtener totales horizontales por segmento
 			
-		$sql =	"SELECT ni.NOMBRE as segmento, ni2.NOMBRE as categoria, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as quiebre FROM QUIEBRE q
-		INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID AND p.MEDICION_ID = {$id_ultima_medicion}
+		$sql =	"SELECT ni.NOMBRE as segmento, ni2.NOMBRE as categoria, (SUM(case when ABS(pr.PRECIO-p.POLITICAPRECIO)>pa.VALOR*p.POLITICAPRECIO/100 then 1 else 0 END)*100.0)/COUNT(pr.ID) as PRECIO FROM PRECIO pr
+		INNER JOIN PLANOGRAMAP p on p.ID = pr.PLANOGRAMAP_ID AND p.MEDICION_ID = {$id_ultima_medicion} and pr.PRECIO is not null and p.POLITICAPRECIO is not null
 		INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
 		INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
 		INNER JOIN NIVELITEM ni2 on ni2.ID = ic.NIVELITEM_ID2
 		INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
 		INNER JOIN SALA s on s.ID = sc.SALA_ID
 		INNER JOIN CADENA c on c.ID = s.CADENA_ID
+		INNER JOIN PARAMETRO pa on pa.CLIENTE_ID = {$user->getClienteID()} and pa.NOMBRE='rango_precio'			
 		GROUP BY ni.NOMBRE, ni2.NOMBRE
 		ORDER BY categoria, segmento";
 	
@@ -229,13 +257,14 @@ class PrecioResumenController extends Controller
 
 		// Obtener totales verticales por categoria
 					
-		$sql =	"SELECT ni.NOMBRE as CATEGORIA, c.NOMBRE as CADENA, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
-		INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID AND p.MEDICION_ID = {$id_ultima_medicion}
+		$sql =	"SELECT ni.NOMBRE as CATEGORIA, c.NOMBRE as CADENA, (SUM(case when ABS(pr.PRECIO-p.POLITICAPRECIO)>pa.VALOR*p.POLITICAPRECIO/100 then 1 else 0 END)*100.0)/COUNT(pr.ID) as PRECIO FROM PRECIO pr
+		INNER JOIN PLANOGRAMAP p on p.ID = pr.PLANOGRAMAP_ID AND p.MEDICION_ID = {$id_ultima_medicion} and pr.PRECIO is not null and p.POLITICAPRECIO is not null
 		INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
 		INNER JOIN SALA s on s.ID = sc.SALA_ID
 		INNER JOIN CADENA c on c.ID = s.CADENA_ID
 		INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
 		INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID2
+		INNER JOIN PARAMETRO pa on pa.CLIENTE_ID = {$user->getClienteID()} and pa.NOMBRE='rango_precio'			
 		GROUP BY ni.NOMBRE, c.NOMBRE
 		ORDER BY CATEGORIA,CADENA";
 	
@@ -244,10 +273,11 @@ class PrecioResumenController extends Controller
 		
 		// Obtener totales horizontales por totales segmento (ultima columna de totales verticales por categoria)
 		
-		$sql =	"SELECT ni.NOMBRE as CATEGORIA, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
-				INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID AND p.MEDICION_ID = {$id_ultima_medicion}
+		$sql =	"SELECT ni.NOMBRE as CATEGORIA, (SUM(case when ABS(pr.PRECIO-p.POLITICAPRECIO)>pa.VALOR*p.POLITICAPRECIO/100 then 1 else 0 END)*100.0)/COUNT(pr.ID) as PRECIO FROM PRECIO pr
+				INNER JOIN PLANOGRAMAP p on p.ID = pr.PLANOGRAMAP_ID AND p.MEDICION_ID = {$id_ultima_medicion} and pr.PRECIO is not null and p.POLITICAPRECIO is not null
 				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
 				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID2
+				INNER JOIN PARAMETRO pa on pa.CLIENTE_ID = {$user->getClienteID()} and pa.NOMBRE='rango_precio'			
 				GROUP BY ni.NOMBRE
 				ORDER BY CATEGORIA";
 			
@@ -255,11 +285,12 @@ class PrecioResumenController extends Controller
 		
 		// Obtener totales verticales por totales categoria
 		
-		$sql = "SELECT  c.NOMBRE as CADENA, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
-		INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID AND p.MEDICION_ID = {$id_ultima_medicion}
+		$sql = "SELECT  c.NOMBRE as CADENA, (SUM(case when ABS(pr.PRECIO-p.POLITICAPRECIO)>pa.VALOR*p.POLITICAPRECIO/100 then 1 else 0 END)*100.0)/COUNT(pr.ID) as PRECIO FROM PRECIO pr
+		INNER JOIN PLANOGRAMAP p on p.ID = pr.PLANOGRAMAP_ID AND p.MEDICION_ID = {$id_ultima_medicion} and pr.PRECIO is not null and p.POLITICAPRECIO is not null
 		INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
 		INNER JOIN SALA s on s.ID = sc.SALA_ID
 		INNER JOIN CADENA c on c.ID = s.CADENA_ID
+		INNER JOIN PARAMETRO pa on pa.CLIENTE_ID = {$user->getClienteID()} and pa.NOMBRE='rango_precio'			
 		GROUP BY c.NOMBRE
 		ORDER BY CADENA";
 		
@@ -267,15 +298,16 @@ class PrecioResumenController extends Controller
 		
 		// Obtener total horizontal por totales verticales por totales categoria
 		
-		$sql = "SELECT SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
-		INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID AND p.MEDICION_ID = {$id_ultima_medicion}";			
+		$sql = "SELECT (SUM(case when ABS(pr.PRECIO-p.POLITICAPRECIO)>pa.VALOR*p.POLITICAPRECIO/100 then 1 else 0 END)*100.0)/COUNT(pr.ID) as PRECIO FROM PRECIO pr
+		INNER JOIN PLANOGRAMAP p on p.ID = pr.PLANOGRAMAP_ID AND p.MEDICION_ID = {$id_ultima_medicion} and pr.PRECIO is not null and p.POLITICAPRECIO is not null
+		INNER JOIN PARAMETRO pa on pa.CLIENTE_ID = {$user->getClienteID()} and pa.NOMBRE='rango_precio'";			
 
 		$total = $em->getConnection()->executeQuery($sql)->fetchAll();											
 				
 		
 		// Guardamos resultado de consulta en variable de sesión para reusarlas en un action posterior
 		$session->set("cadenas",$cadenas);		
-		$session->set("resumen_quiebre",$resumen_quiebre);		
+		$session->set("resumen_precio",$resumen_precio);		
 		$session->set("totales_segmento",$totales_segmento);		
 		$session->set("totales_categoria",$totales_categoria);	
 		$session->set("totales_horizontales_categoria",$totales_horizontales_categoria);	
@@ -348,7 +380,11 @@ class PrecioResumenController extends Controller
 			'logostyle' => $logostyle,
 			'evolutivo' => json_encode($evolutivo),
 			'periodos' => json_encode($periodos),	
-			'estudios' => $estudios,			
+			'estudios' => $estudios,	
+			'aoColumnDefs' => json_encode($aoColumnDefs),			
+			'header_action' => 'precio_resumen_header',
+			'body_action' => 'precio_resumen_body',	
+			'tag_variable' => $variable			
 			)
 		);		
 		//CACHE
@@ -471,7 +507,7 @@ class PrecioResumenController extends Controller
 	{	
 		// Recuperar el usuario, parámetros y datos de sesión
 		$session=$this->get("session");			
-		$resumen_quiebre=$session->get("resumen_quiebre");
+		$resumen_precio=$session->get("resumen_precio");
 		$cadenas=$session->get("cadenas");		
 		$totales_segmento=$session->get("totales_segmento");		
 		$totales_categoria=$session->get("totales_categoria");	
@@ -481,7 +517,7 @@ class PrecioResumenController extends Controller
 				
 		$body=array();		
 		$matriz_totales=array();		
-		$num_regs=count($resumen_quiebre);		
+		$num_regs=count($resumen_precio);		
 		$cont_cads=0;
 		$cont_regs=0;		
 		$num_cads=count($cadenas);			
@@ -493,42 +529,40 @@ class PrecioResumenController extends Controller
 		if($num_regs>0)
 		{					
 			// Para llevar los cambios del 1er nivel de agregacion
-			$nivel1=$resumen_quiebre[$cont_regs]['SEGMENTO'];			
+			$nivel1=$resumen_precio[$cont_regs]['SEGMENTO'];			
 			// Lleno la fila con vacios, le agrego 3 posiciones, correspondientes a los niveles de agregación y al total															
 			$fila=array_fill(0,$num_cads+3,'-');																														
 			
 			while($cont_regs<$num_regs)
 			{	
-				$columna_quiebre=array_search($resumen_quiebre[$cont_regs]['CADENA'],$cadenas);	
+				$columna_precio=array_search($resumen_precio[$cont_regs]['CADENA'],$cadenas);	
 		
-				if($nivel1==$resumen_quiebre[$cont_regs]['SEGMENTO'])
+				if($nivel1==$resumen_precio[$cont_regs]['SEGMENTO'])
 				{ // Mientras no cambie el 1er nivel asignamos los valores de quiebre a las columnas correspondientes				
-					$fila[0]=$resumen_quiebre[$cont_regs]['SEGMENTO'];					
-					$fila[1]=$resumen_quiebre[$cont_regs]['CATEGORIA'];												
-					$fila[$columna_quiebre+2]=round($resumen_quiebre[$cont_regs]['quiebre'],1);											
+					$fila[0]=$resumen_precio[$cont_regs]['SEGMENTO'];					
+					$fila[1]=$resumen_precio[$cont_regs]['CATEGORIA'];												
+					$fila[$columna_precio+2]=round($resumen_precio[$cont_regs]['PRECIO'],1);											
 					$cont_regs++;
 					$cont_cads++;
 				}	
 				else
 				{ // Si el primer nivel de agregacion cambió, lo actualizo, agrego la fila al body y reseteo el contador de cadenas
-					$fila[$num_cads+2]=round($totales_segmento[$cont_totales_segmento]['quiebre']*100,1);					
+					$fila[$num_cads+2]=round($totales_segmento[$cont_totales_segmento]['PRECIO'],1);					
 					$cont_totales_segmento++;
 					$cont_cads=0;					
-					$nivel1=$resumen_quiebre[$cont_regs]['SEGMENTO'];
+					$nivel1=$resumen_precio[$cont_regs]['SEGMENTO'];
 					array_push($body,(object)$fila);
 					$fila=array_fill(0,$num_cads+3,'-');					
 				}
 				if($cont_regs==$num_regs)		
 				{					
-					$columna_quiebre=array_search($resumen_quiebre[$cont_regs-1]['CADENA'],$cadenas);
-					$fila[$columna_quiebre+2]=round($resumen_quiebre[$cont_regs-1]['quiebre'],1);					
-					$fila[$num_cads+2]=round($totales_segmento[$cont_totales_segmento]['quiebre']*100,1);					
+					$columna_precio=array_search($resumen_precio[$cont_regs-1]['CADENA'],$cadenas);
+					$fila[$columna_precio+2]=round($resumen_precio[$cont_regs-1]['PRECIO'],1);					
+					$fila[$num_cads+2]=round($totales_segmento[$cont_totales_segmento]['PRECIO'],1);					
 					array_push($body,(object)$fila);		
 					$cont_regs++;					
 				}
-			}
-
-								
+			}								
 			// Calculo de totales
 			$fila=array_fill(0,$num_cads+1,"-");	
 			$num_regs=count($totales_categoria);
@@ -538,25 +572,25 @@ class PrecioResumenController extends Controller
 			
 			while($cont_regs<$num_regs)
 			{				
-				$columna_quiebre=array_search($totales_categoria[$cont_regs]['CADENA'],$cadenas);					
+				$columna_precio=array_search($totales_categoria[$cont_regs]['CADENA'],$cadenas);					
 				// Mientras no cambie la categoria
 				if($num_regs==1)		
 				{						
-					$columna_quiebre=array_search($totales_categoria[$cont_regs]['CADENA'],$cadenas);
-					$fila[$columna_quiebre]=round($totales_categoria[$cont_regs]['QUIEBRE']*100,1);										
-					$fila[$num_cads]=round($totales_horizontales_categoria[$cont_totales_horizontales_categoria]['QUIEBRE']*100,1);					
+					$columna_precio=array_search($totales_categoria[$cont_regs]['CADENA'],$cadenas);
+					$fila[$columna_precio]=round($totales_categoria[$cont_regs]['PRECIO'],1);										
+					$fila[$num_cads]=round($totales_horizontales_categoria[$cont_totales_horizontales_categoria]['PRECIO'],1);					
 					array_push($matriz_totales,(object)$fila);		
 					$cont_regs++;
 					break;
 				}
 				if($nivel2==$totales_categoria[$cont_regs]['CATEGORIA'])
 				{					
-					$fila[$columna_quiebre]=round($totales_categoria[$cont_regs]['QUIEBRE']*100,1);					
+					$fila[$columna_precio]=round($totales_categoria[$cont_regs]['PRECIO'],1);					
 					$cont_regs++;
 				}
 				else
 				{
-					$fila[$num_cads]=round($totales_horizontales_categoria[$cont_totales_horizontales_categoria]['QUIEBRE']*100,1);
+					$fila[$num_cads]=round($totales_horizontales_categoria[$cont_totales_horizontales_categoria]['PRECIO'],1);
 					$cont_totales_horizontales_categoria++;
 					array_push($matriz_totales,$fila);
 					$fila=array_fill(0,$num_cads,"-");
@@ -564,9 +598,9 @@ class PrecioResumenController extends Controller
 				}
 				if($cont_regs==$num_regs)		
 				{						
-					$columna_quiebre=array_search($totales_categoria[$cont_regs-1]['CADENA'],$cadenas);
-					$fila[$columna_quiebre]=round($totales_categoria[$cont_regs-1]['QUIEBRE']*100,1);										
-					$fila[$num_cads]=round($totales_horizontales_categoria[$cont_totales_horizontales_categoria]['QUIEBRE']*100,1);					
+					$columna_precio=array_search($totales_categoria[$cont_regs-1]['CADENA'],$cadenas);
+					$fila[$columna_precio]=round($totales_categoria[$cont_regs-1]['PRECIO'],1);										
+					$fila[$num_cads]=round($totales_horizontales_categoria[$cont_totales_horizontales_categoria]['PRECIO'],1);					
 					array_push($matriz_totales,(object)$fila);		
 					$cont_regs++;					
 				}				
@@ -578,13 +612,13 @@ class PrecioResumenController extends Controller
 			
 			while($cont_regs<$num_regs)
 			{
-				$columna_quiebre=array_search($totales_verticales_categoria[$cont_regs]['CADENA'],$cadenas);					
+				$columna_precio=array_search($totales_verticales_categoria[$cont_regs]['CADENA'],$cadenas);					
 				// Mientras no cambie la cadena  
-				$fila[$columna_quiebre]=round($totales_verticales_categoria[$cont_regs]['QUIEBRE']*100,1);					
+				$fila[$columna_precio]=round($totales_verticales_categoria[$cont_regs]['PRECIO'],1);					
 				$cont_regs++;
 			}	
 			
-			$fila[$num_cads]=round($total[0]['QUIEBRE']*100,1);
+			$fila[$num_cads]=round($total[0]['PRECIO'],1);
 			
 			// print_r($fila);
 			
