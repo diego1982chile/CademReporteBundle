@@ -121,9 +121,11 @@
 								<div style='background:red;height:1.9em'>
 								</div>
 							</th>
+							{% if tag_variable|upper  in ["QUIEBRE","PRESENCIA"] %}
 							<th width='10%'>
 								<a target="_blank" href="{{ url_excel }}"><label>Bajar Excel</label></a>
 							</th>
+							{% endif %}
 						</tr>
 					</thead>
 				</table>
