@@ -200,7 +200,7 @@ class PrecioDetalleController extends Controller
 		//CONSULTA
 				
 		$sql = "SELECT precio as precio, p.POLITICAPRECIO as politica, ic.CODIGOITEM1 as COD_PRODUCTO,i.NOMBRE as NOM_PRODUCTO,ni.NOMBRE as SEGMENTO, ISNULL(sc.CODIGOSALA, UPPER(cad.NOMBRE+' '+com.NOMBRE+' '+s.CALLE+' '+s.NUMEROCALLE)) as ID_SALA, ISNULL(sc.CODIGOSALA,'-') as COD_SALA, UPPER(cad.NOMBRE+' '+com.NOMBRE+' '+s.CALLE+' '+s.NUMEROCALLE) as NOM_SALA FROM PRECIO pr
-		INNER JOIN PLANOGRAMAP p on p.ID = pr.PLANOGRAMAP_ID and p.MEDICION_ID = {$id_ultima_medicion}
+		INNER JOIN PLANOGRAMAP p on p.ID = pr.PLANOGRAMAP_ID and p.MEDICION_ID = {$id_ultima_medicion} and pr.PRECIO is not null and p.POLITICAPRECIO is not null
 		INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
 		INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in ({$comunas})
 		INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
