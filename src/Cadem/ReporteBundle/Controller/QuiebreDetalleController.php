@@ -191,9 +191,9 @@ class QuiebreDetalleController extends Controller
 		// Obtener id de la variable
 		$estudio_variable=$estudios[0]->getEstudiovariables();	
 		
-		$variable=$estudio_variable[0]->getVariable()->getId();				
+		$id_variable=$estudio_variable[0]->getVariable()->getId();				
 				
-		$session->set("variable",$variable);					
+		$session->set("variable",$id_variable);					
 		
 		//ULTIMA MEDICION
 		$id_ultima_medicion = $this->get('cadem_reporte.helper.medicion')->getIdUltimaMedicion();
@@ -369,7 +369,7 @@ class QuiebreDetalleController extends Controller
 		if($extension<0)
 			$extension=0;
 			
-		$max_width=100+$extension;			
+		$max_width=100+$extension;						
 				
 		//RESPONSE
 		$response = $this->render('CademReporteBundle:Detalle:index.html.twig',
