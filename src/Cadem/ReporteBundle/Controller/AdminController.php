@@ -1513,7 +1513,7 @@ class AdminController extends Controller
 
                         //PRECIO PROMEDIO
                         $sql = "SELECT i.CODIGO as codigo, SUM(pr.PRECIO) as suma, COUNT(pr.ID) as count FROM PLANOGRAMAP p
-                                INNER JOIN PRECIO pr on p.ID = pr.PLANOGRAMAP_ID
+                                INNER JOIN PRECIO pr on p.ID = pr.PLANOGRAMAP_ID AND pr.PRECIO IS NOT NULL
                                 INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID AND ic.CLIENTE_ID = ?
                                 INNER JOIN ITEM i on i.ID = ic.ITEM_ID AND i.CODIGO IN ( ? )
                                 GROUP BY i.CODIGO";
