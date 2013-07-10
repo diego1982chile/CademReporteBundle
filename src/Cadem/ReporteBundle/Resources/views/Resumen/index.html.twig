@@ -730,7 +730,7 @@ $(document).ready(function () {
 	
 	function recargarTabla()
 	{		
-		$.get("{{ url_header }}",DatosAdicionales,function(data){
+		$.get("{{ url_header_action }}",DatosAdicionales,function(data){
 		
 			maxWidth=parseInt(data.max_width);
 			// Primero destruimos la tabla si existe (la removemos del DOM)	
