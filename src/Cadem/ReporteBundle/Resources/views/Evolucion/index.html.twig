@@ -294,7 +294,7 @@ function construirTabla()
 		});
 		$('div.fg-toolbar:first').append("<h5 style='float:left;margin:0em'>Tabla Evolución {{tag_variable}}: (%)</h5>");	
 		// $("<div class='dataTables_filter' align='right' style='float:right'><label>buscar: <input id='buscar' /></label></div>").appendTo('#tabla_resumen_wrapper .fg-toolbar:first');				 				 
-		$("<div class='dataTables_filter input-append' align='right' style='float:right;width:60%'><input id='buscar' class='span2 input_filtro' /><button id='colorear' class='btn btn_filtro' type='button'>Colorear Celdas</button></div>").appendTo('#tabla_resumen_wrapper .fg-toolbar:first');				 				
+		$("<form class='form-horizontal'><div class='dataTables_filter 'control-group' align='right' style='float:right;width:50%'><label class='control-label' for='buscar'>buscar SKU:</label><input id='buscar' class='span2 input_filtro' /><button id='colorear' class='btn btn_filtro' type='button'>Colorear Celdas</button></div></form>").appendTo('#tabla_resumen_wrapper .fg-toolbar:first');				 				
 		$('#colorear').mousedown(function(){
 			if($(this).hasClass('btn-warning'))
 			{

@@ -157,7 +157,11 @@ class QuiebreEvolucionController extends Controller
 			->getForm();		
 		
 		//CONSULTA SACAR ULTIMAS 12 MEDICIONES
-		$sql = "SELECT TOP(12) m2.ID as ID, m2.NOMBRE as NOMBRE, m2.FECHAINICIO as FECHAINICIO FROM MEDICION m2 INNER JOIN ESTUDIOVARIABLE ev on m2.ESTUDIOVARIABLE_ID=ev.ID INNER JOIN ESTUDIO e on ev.ESTUDIO_ID=e.ID and e.CLIENTE_ID={$user->getClienteID()} ORDER BY m2.FECHAINICIO DESC";											
+		$sql = "SELECT TOP(12) m2.ID as ID, m2.NOMBRE as NOMBRE, m2.FECHAINICIO as FECHAINICIO FROM MEDICION m2 
+		INNER JOIN ESTUDIOVARIABLE ev on m2.ESTUDIOVARIABLE_ID=ev.ID
+		INNER JOIN VARIABLE v on v.ID=ev.VARIABLE_ID and v.NOMBRE='{$variable}'
+		INNER JOIN ESTUDIO e on ev.ESTUDIO_ID=e.ID and e.CLIENTE_ID={$user->getClienteID()} 
+		ORDER BY m2.FECHAINICIO DESC";											
 		
 		$data_mediciones = $em->getConnection()->executeQuery($sql)->fetchAll();				
 				
@@ -188,7 +192,7 @@ class QuiebreEvolucionController extends Controller
 		// CONSTRUIR EL ENCABEZADO DE LA TABLA
 		
 		// Construir consulta mediante UNION con los ID de las últimas 12 mediciones, obtenidos previamente
-		$sql="";
+		$sql="";				
 		
 		// TIME 2500MS
 		foreach($mediciones_id as $medicion_id)

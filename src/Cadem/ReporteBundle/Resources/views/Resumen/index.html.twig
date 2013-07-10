@@ -1,7 +1,7 @@
 {% extends '::base.html.twig' %}
 
 
-{% if tag_variable == "Quiebre" %}
+{% if tag_variable|lower == "quiebre" %}
 	{% set url_body = path('quiebre_resumen_body') %}
     {% set url_evolutivo = path('quiebre_resumen_evolutivo') %}
     {% set url_header = path('quiebre_resumen_header') %}
