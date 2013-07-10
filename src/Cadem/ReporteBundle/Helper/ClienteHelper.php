@@ -13,6 +13,8 @@ class ClienteHelper {
 	private $variables= null;
 	private $rangoprecio= null;
 	private $rangoquiebre= null;
+	private $muestrarankingempleado = null;
+	private $muestrasalasmedidas = null;
 
     public function __construct(EntityManager $entityManager, SecurityContext $security) {
         $this->em = $entityManager;
@@ -110,6 +112,54 @@ class ClienteHelper {
 		else $this->rangoquiebre = 0;
 
 		return $this->rangoquiebre;
+    }
+
+    //RETORNA SI SE MUESTRA EL RANKING DE EMPLEADO PARA EL CLIENTE ACTUAL
+    //POR DEFECTO SE MUESTRA
+	public function MuestraRankingEmpleado() {
+		$em = $this->em;
+		if($this->user == null) $user = $this->security->getToken()->getUser();
+		else $user = $this->user;
+		$id_user = $user->getId();
+		$id_cliente = $user->getClienteID();
+				
+		//CLIENTE
+		$query = $em->createQuery(
+			'SELECT p.valor FROM CademReporteBundle:parametro p			
+			WHERE p.clienteid = :idcliente and p.nombre = :nombre ')
+			->setParameter('idcliente', $id_cliente)
+			->setParameter('nombre', 'muestra_ranking_empleado');
+
+		$query = $query->getArrayResult();
+		
+		if(isset($query[0])) $this->muestrarankingempleado = $query[0]['valor'] === 'true'?true:false;
+		else $this->muestrarankingempleado = true;
+
+		return $this->muestrarankingempleado;
+    }
+
+    //MUESTRA INDICADOR DE SALAS MEDIDAS
+    //POR DEFECTO NO SE MUESTRA
+	public function MuestraSalasMedidas() {
+		$em = $this->em;
+		if($this->user == null) $user = $this->security->getToken()->getUser();
+		else $user = $this->user;
+		$id_user = $user->getId();
+		$id_cliente = $user->getClienteID();
+				
+		//CLIENTE
+		$query = $em->createQuery(
+			'SELECT p.valor FROM CademReporteBundle:parametro p			
+			WHERE p.clienteid = :idcliente and p.nombre = :nombre ')
+			->setParameter('idcliente', $id_cliente)
+			->setParameter('nombre', 'muestra_salas_medidas');
+
+		$query = $query->getArrayResult();
+		
+		if(isset($query[0])) $this->muestrasalasmedidas = $query[0]['valor'] === 'true'?true:false;
+		else $this->muestrasalasmedidas = false;
+
+		return $this->muestrasalasmedidas;
     }
 	
 

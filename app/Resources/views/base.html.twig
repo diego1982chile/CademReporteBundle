@@ -169,10 +169,14 @@
 			                	{% endif %}
 								  
 								</ul>
-			                </li>						
-							<li class="divider-vertical"></li>
+			                </li>
+			                {% if service_salasmedidas.MuestraSalasMedidas %}
+			                <li class="divider-vertical"></li>
 							<li><div style="width:auto;height:auto;margin-top:10px;margin-left:10px">Salas Medidas (<b>{{ service_salasmedidas.getSalasmedidas }}/{{ service_salasmedidas.getTotalsalas }}</b>)</div></li>
 							<li><div id="progressbar" style="width:100px;height:15px;margin-top:12px;margin-left:5px"><div class="progress-label"></div></div></li>
+			                    
+			                {% endif %}
+							
 							
 						</ul>
 					</div><!--/.nav-collapse -->
