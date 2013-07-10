@@ -13,7 +13,7 @@ use Symfony\Component\HttpFoundation\Session;
 class QuiebreResumenController extends Controller
 {		
 	
-	public function indexAction()
+	public function indexAction($variable)
     {
 		$session = $this->get("session");
 	
@@ -346,7 +346,7 @@ class QuiebreResumenController extends Controller
 			'tooltip' => $mediciones_tooltip,
 			'data' => $mediciones_data,
 		);
-		$evolutivo= $porc_quiebre;
+		$evolutivo= $porc_quiebre;				
 			
 		//RESPONSE
 		$response = $this->render('CademReporteBundle:Resumen:index.html.twig',
@@ -368,7 +368,7 @@ class QuiebreResumenController extends Controller
 			'aoColumnDefs' => json_encode($aoColumnDefs),			
 			'header_action' => 'quiebre_resumen_header',
 			'body_action' => 'quiebre_resumen_body',	
-			'tag_variable' => 'Quiebre'
+			'tag_variable' => $variable
 			)
 		);		
 		//CACHE

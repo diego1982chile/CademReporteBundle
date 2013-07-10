@@ -321,13 +321,15 @@ function colorearCeldas(flag){
 				{ maxval: 0,
 				minval: 100,
 				colorStyle: 'greentored',
-				lightness: 0 
+				lightness: 0,
+				reverseOrder: {% if tag_variable in ['presencia']%} true {% else %}	false {% endif %}				
 				}		
 		);
 	}
 	else
 	{		
 		$("#tabla_resumen tbody tr td").removeAttr('style');
+		colorTotales();
 	}
 	
 }
@@ -583,7 +585,11 @@ function colorTotales(){
 			var color_fondo = 'rgb(255, 235, 158)';
 			$('.DTFC_Cloned tbody tr:first td').css('background-color',color_fondo);
 			$('.table:not(.DTFC_Cloned) tbody tr:first td').css('background-color',color_fondo);
-			// $('.table:not(.DTFC_Cloned) tbody tr td:last-of-type:not(.group)').css('background-color',color_fondo);		
+			$('.table:not(.DTFC_Cloned) tbody tr td:last-of-type:not(.group)').css('background-color',color_fondo);
+			$('.DTFC_Cloned tbody tr td:first-of-type:not(.group)').css({
+				'background-color':'rgb(238, 236, 255)',
+				'color': 'black',
+			});	
 			break;
 		case 2:					
 			$('.DTFC_Cloned tbody tr td:first-of-type:not(.group)').css({

@@ -361,33 +361,28 @@ function colorearCeldas(flag){
 				minval: 100,
 				colorStyle: 'greentored',
 				lightness: 0,
-				reverseOrder: false				
+				reverseOrder: {% if tag_variable in ['presencia']%} true {% else %}	false {% endif %}
 				}		
 		);
 	}
 	else
 	{
 		$("#tabla_resumen tbody tr td").removeAttr('style');
+		colorTotales();
 	}
 	
 }
 
 function colorTotales(){
-	// var color_fondo = 'rgb(255, 235, 158)';
-	// $('.DTFC_Cloned tbody tr:first td').css('background-color',color_fondo);
-	// $('.table:not(.DTFC_Cloned) tbody tr:first td').css('background-color',color_fondo);
-	// $('.table:not(.DTFC_Cloned) tbody tr td:last-of-type:not(.group)').css('background-color',color_fondo);
-	// $('.DTFC_Cloned tbody tr td:first-of-type:not(.group)').css({
-		// 'background-color':'rgb(238, 236, 255)',
-		// 'color': 'black',
-		// });
 	var color_fondo = 'rgb(255, 235, 158)';
 	$('.DTFC_Cloned tbody tr:first td').css('background-color',color_fondo);
-	// $('.table:not(.DTFC_Cloned) tbody tr:first td').css('background-color',color_fondo);		
-	$('.DTFC_Cloned tbody tr:not(:first) td:first-of-type').css('cursor','pointer');
+	$('.table:not(.DTFC_Cloned) tbody tr:first td').css('background-color',color_fondo);
+	$('.table:not(.DTFC_Cloned) tbody tr td:last-of-type:not(.group)').css('background-color',color_fondo);
+	$('.DTFC_Cloned tbody tr td:first-of-type:not(.group)').css({
+		'background-color':'rgb(238, 236, 255)',
+		'color': 'black',
+	});	
 }
-
-
 
 $(document).ready(function () {
 	
@@ -697,8 +692,6 @@ $(document).ready(function () {
 				
 });
 		
-	
-	
 	//LOGICA DEL SUBMIT DEL FORMULARIO, SE DEBERIA OCUPAR AJAX
 	function procesarform(){
 		//SE CLONA FORM Y SE ARREGLA LOS ITEM SELECCIONADOS POR USUARIO
@@ -797,9 +790,6 @@ $(document).ready(function () {
 		});	
 	}		
 	
-	
-
-
 	function alerta(strong,text){
 		var alerttipo = '<div class="alert alert-info">' +
 		  '<button type="button" class="close" data-dismiss="alert">×</button>'+

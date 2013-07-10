@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\Session;
 
 class QuiebreDetalleController extends Controller
 {    	
-	public function indexAction(Request $request)
+	public function indexAction($variable)
     {
 		$start = microtime(true);
 		$session = $this->get("session");
@@ -392,7 +392,7 @@ class QuiebreDetalleController extends Controller
 			'body_action' => 'quiebre_detalle_body',	
 			'aoColumnDefs' => json_encode($aoColumnDefs),
 			'columnas_reservadas' => 2,
-			'tag_variable' => 'QUIEBRE'				
+			'tag_variable' => $variable	
 			)
 		);
 		$time_taken = microtime(true) - $start;
