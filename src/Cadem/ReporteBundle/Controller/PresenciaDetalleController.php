@@ -367,9 +367,9 @@ class PresenciaDetalleController extends Controller
 		// Obtener id de la variable
 		$estudio_variable=$estudios[0]->getEstudiovariables();	
 		
-		$variable=$estudio_variable[0]->getVariable()->getId();				
+		$id_variable=$estudio_variable[0]->getVariable()->getId();				
 				
-		$session->set("variable",$variable);			
+		$session->set("variable",$id_variable);			
 				
 		//RESPONSE
 		$response = $this->render('CademReporteBundle:Detalle:index.html.twig',

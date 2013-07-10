@@ -1,13 +1,16 @@
 {% extends '::base.html.twig' %}
 
-
-{% if tag_variable|upper  == "QUIEBRE" %}
-{% set url_excel = path('quiebre_detalle_excel') %}
+{% if tag_variable|lower == "quiebre" %}
+	{% set url_body = path('quiebre_resumen_body') %}
+    {% set url_evolutivo = path('quiebre_resumen_evolutivo') %}
+    {% set url_header = path('quiebre_resumen_header') %}
+    {% set url_excel = path('quiebre_detalle_excel') %}
 {% else %}
-{% set url_excel = path('presencia_detalle_excel') %}
+	{% set url_body = path('presencia_resumen_body') %}
+    {% set url_evolutivo = path('presencia_resumen_evolutivo') %}
+    {% set url_header = path('presencia_resumen_header') %}
+    {% set url_excel = path('presencia_detalle_excel') %}
 {% endif %}
-{% set url_body_action = path(body_action) %}
-{% set url_header_action = path(header_action) %}
 
 {% block title %}Cadem Analytics{% endblock %}
 
@@ -386,7 +389,7 @@ function construirTabla()
 							break;
 						case 2:							
 							fixedColumn2();
-							$('#colorear').hide();							
+							$('#colorear').attr('disabled',true);							
 							break;							
 					}								  
 				},	
