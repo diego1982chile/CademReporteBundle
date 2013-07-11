@@ -459,8 +459,8 @@ class PrecioResumenController extends Controller
 		}
 		
 		//DATOS DEL EJE Y EN EVOLUTIVO
-		$sql = "SELECT TOP(12) (SUM(case when ABS(pr.PRECIO-p.POLITICAPRECIO)>pa.VALOR*p.POLITICAPRECIO/100 then 1 else 0 END)*100.0)/COUNT(pr.ID) as QUIEBRE FROM QUIEBRE q
-			INNER JOIN PLANOGRAMAP p on p.ID = q.PLANOGRAMAP_ID and pr.PRECIO is not null and p.POLITICAPRECIO is not null
+		$sql = "SELECT TOP(12) (SUM(case when ABS(pr.PRECIO-p.POLITICAPRECIO)>pa.VALOR*p.POLITICAPRECIO/100 then 1 else 0 END)*100.0)/COUNT(pr.ID) as QUIEBRE FROM PRECIO pr
+			INNER JOIN PLANOGRAMAP p on p.ID = pr.PLANOGRAMAP_ID and pr.PRECIO is not null and p.POLITICAPRECIO is not null
 			INNER JOIN MEDICION m on m.ID = p.MEDICION_ID
 			INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
 			INNER JOIN SALA s on s.ID = sc.SALA_ID
