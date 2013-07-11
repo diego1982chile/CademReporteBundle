@@ -407,8 +407,9 @@ class QuiebreEvolucionController extends Controller
 			'header_action' => 'quiebre_evolucion_header',
 			'body_action' => 'quiebre_evolucion_body',	
 			'aoColumnDefs' => json_encode($aoColumnDefs),
-			'columnas_reservadas' => 2,
-			'tag_variable' => $variable
+			'columnas_reservadas' => 2,			
+			'tag_variable' => ucwords($variable),
+			'tag_cliente' => $cliente->getNombrefantasia()			
 			)
 		);
 		//CACHE

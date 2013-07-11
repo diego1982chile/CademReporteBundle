@@ -369,7 +369,8 @@ class PresenciaResumenController extends Controller
 			'estudios' => $estudios,		
 			'header_action' => 'presencia_resumen_header',
 			'body_action' => 'presencia_resumen_body',
-			'tag_variable' => $variable		
+			'tag_variable' => ucwords($variable),
+			'tag_cliente' => $cliente->getNombrefantasia()
 			)
 		);		
 		//CACHE

@@ -12,7 +12,7 @@ use Symfony\Component\HttpFoundation\Session;
 class PrecioEvolucionController extends Controller
 {
     
-	public function indexAction()
+	public function indexAction($variable)
     {
 		
 		$session = $this->get("session");
@@ -409,7 +409,8 @@ class PrecioEvolucionController extends Controller
 			'body_action' => 'precio_evolucion_body',	
 			'aoColumnDefs' => json_encode($aoColumnDefs),
 			'columnas_reservadas' => 2,
-			'tag_variable' => 'PRECIO'				
+			'tag_variable' => ucwords($variable),
+			'tag_cliente' => $cliente->getNombrefantasia()			
 			)
 		);
 		//CACHE
