@@ -135,7 +135,7 @@ div.DataTables_sort_wrapper {
 }
 
 .input_filtro{
-	width: 15em !important;
+	width: 12em !important;
 	height: 2em !important;
 	min-height: 2em !important;
 }
@@ -298,7 +298,13 @@ function construirTabla()
 		});
 		$('div.fg-toolbar:first').append("<h5 style='float:left;margin:0em'>Tabla Evolución {{tag_variable}}: {% if tag_variable|lower in ['quiebre','presencia'] %} (%) {%else%} ($) {%endif%}</h5>");	
 		// $("<div class='dataTables_filter' align='right' style='float:right'><label>buscar: <input id='buscar' /></label></div>").appendTo('#tabla_resumen_wrapper .fg-toolbar:first');				 				 		
-		$("<form id='control' class='form-horizontal'><div class='dataTables_filter input-append' align='right' style='float:right;width:56%'><label class='control-label' style='float:left' for='buscar'>buscar SKU:</label><input id='buscar' class='span2 input_filtro' /><button id='colorear' class='btn btn_filtro' type='button'>Colorear Celdas</button></div></form>").appendTo('#tabla_resumen_wrapper .fg-toolbar:first');				 				
+		$("<form id='control' class='form-horizontal'><div class='dataTables_filter input-append' align='right' style='float:right;width:46%'><label class='control-label' style='float:left' for='buscar'>buscar SKU:</label><input id='buscar' class='span2 input_filtro' /><button id='boton_buscar' class='btn' type='button' title='BUSCAR'><i class='icon-search'></i></button><button id='colorear' class='btn' type='button' title='COLOREAR CELDAS'><i class='icon-flag'></i></button></div></form>").appendTo('#tabla_resumen_wrapper .fg-toolbar:first');				 				
+		
+		$('#boton_buscar').mousedown(function(){			
+			var e = jQuery.Event("keydown");
+			e.keyCode = 13; // # Some key code value
+			$('#buscar').trigger(e);
+		});
 		$("form#control").bind("keypress", function (e) {
 			if (e.keyCode == 13) {
 				return false;

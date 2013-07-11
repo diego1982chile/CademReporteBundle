@@ -190,13 +190,6 @@ table.DTFC_Cloned tfoot {
     vertical-align: middle !important;
 }
 
-.dataTables_filter label input{
-	margin-bottom: 0em !important;
-	font-size: 14px !important;
-	height: 16px !important;
-	padding: .1em !important;
-}
-
 .dataTables_filter label{
 	margin-bottom: 0em !important;	
 }
@@ -236,12 +229,11 @@ div.DataTables_sort_wrapper {
 }
 
 .btn_filtro{
-	width: 10em !important;	
-	
+	width: 5em !important;		
 }
 
 .input_filtro{
-	width: 15em !important;
+	width: 12em !important;
 	height: 2em !important;
 	min-height: 2em !important;
 }
@@ -348,7 +340,7 @@ function construirTabla()
 										var col=0;
 										break;
 									case 2:
-										var col=1;
+										var col=1;										
 										break;										
 								}
 								if(aData[0].length>14)
@@ -385,8 +377,7 @@ function construirTabla()
 							fixedColumn1();
 							break;
 						case 2:							
-							fixedColumn2();
-							$('#colorear').attr('disabled',true);							
+							fixedColumn2();							
 							break;							
 					}								  
 				},	
@@ -397,9 +388,16 @@ function construirTabla()
 					quitarloader();
 				}
 		});
-		$('div.fg-toolbar:first').append("<div align='left' style='float:left;width:30%'><h5 style='float:left;margin:0em'>Tabla Detalle {{tag_variable}}: {% if tag_variable in ['quiebre'] %} (%) {%else%} ($) {%endif%}</h5><div>");	
+		
+		$('div.fg-toolbar:first').append("<div align='left' style='float:left;width:30%'><h5 style='float:left;margin:0em'>Tabla Detalle {{tag_variable}}: {% if tag_variable|lower in ['quiebre','presencia'] %} (%) {%else%} ($) {%endif%}</h5><div>");	
 		// $("<div class='dataTables_filter' align='right' style='float:center;width:50%'><label>SALA: <input id='buscarsala' /></label></div>").appendTo('#tabla_resumen_wrapper .fg-toolbar:first');				 		
-		$("<div class='dataTables_filter input-append' align='right' style='float:right;width:70%'><button id='filtro_sku' class='btn btn_filtro btn-warning' type='button'>buscar por SKU</button><button id='filtro_sala' class='btn btn_filtro' type='button'>buscar por SALA</button><input id='filtro' class='span2 input_filtro' /><button id='colorear' class='btn' type='button'>Colorear</button></div>").appendTo('#tabla_resumen_wrapper .fg-toolbar:first');				 				
+		$("<div class='dataTables_filter input-append' align='right' style='float:right;width:70%'><button id='filtro_sku' title='FILTRO ACTIVO POR SKU' class='btn btn_filtro btn-warning' type='button'><i class='icon-filter'></i> SKU</button><button id='filtro_sala' class='btn btn_filtro' type='button' title='FILTRO ACTIVO POR SALA'><i class='icon-filter'></i> SALA</button><input id='filtro' class='span2 input_filtro' /><button id='boton_buscar' class='btn' type='button' title='BUSCAR'><i class='icon-search'></i></button>{% if tag_variable|lower not in ['precio'] %}<button id='colorear' title='COLOREAR CELDAS' class='btn' type='button'><i class='icon-flag'></i></button>{%endif%}</div>").appendTo('#tabla_resumen_wrapper .fg-toolbar:first');				 				
+		
+		$('#boton_buscar').mousedown(function(){			
+			var e = jQuery.Event("keydown");
+			e.keyCode = 13; // # Some key code value
+			$('#filtro').trigger(e);
+		});
 		
 		$('.btn_filtro').mousedown(function(){
 			$('.input-append button.btn_filtro').removeClass('btn-warning');
@@ -413,6 +411,7 @@ function construirTabla()
 				filtrar_por='sala';				
 			}
 		});
+		
 		$('#colorear').mousedown(function(){
 			if($(this).hasClass('btn-warning'))
 			{
@@ -440,7 +439,7 @@ function colorearCeldas(flag){
 				minval: 100,
 				colorStyle: 'greentored',
 				lightness: 0.4, 
-				reverseOrder: {% if tag_variable in ['presencia']%} true {% else %}	false {% endif %}
+				reverseOrder: {% if tag_variable|lower in ['presencia']%} true {% else %}	false {% endif %}
 				}		
 		);
 	}
@@ -583,7 +582,7 @@ function listenerFiltro()
 						{											
 							offset=($('.btn-success').parent().index())*delta;																							
 							
-							if($('th div.btn-warning').length==1)
+							if($('th div.btn-warning').length<=1)
 								filtrado=false;					
 							$('th div.btn-success').removeClass('btn-success');	
 							$('th div.btn-warning:first').addClass('btn-success');
@@ -962,6 +961,7 @@ $(document).ready(function () {
 				{					
 					tableHeading.innerHTML = value;
 					tableHeading.setAttribute('rowspan',2);				
+					tableHeading.setAttribute('title',value);		
 					tableHeading.setAttribute('style',"vertical-align:middle");	
 				}
 				else

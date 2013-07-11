@@ -223,7 +223,7 @@ function construirTabla()
 		});
 		
 		$('div.fg-toolbar:first').append("<h5 style='float:left;margin:0em'>Tabla Resumen {{tag_variable}}: (%)</h5>");
-		$("<div class='dataTables_filter input-append' align='right' style='float:right;width:60%'><button id='colorear' class='btn btn_filtro' type='button'>Colorear Celdas</button></div>").appendTo('#tabla_resumen_wrapper .fg-toolbar:first');				 				
+		$("<div class='dataTables_filter input-append' align='right' style='float:right;width:60%'><button id='colorear' class='btn btn_filtro' type='button'><i class='icon-flag' title='COLOREAR CELDAS'></i></button></div>").appendTo('#tabla_resumen_wrapper .fg-toolbar:first');				 				
 		$('#colorear').mousedown(function(){
 			if($(this).hasClass('btn-warning'))
 			{
