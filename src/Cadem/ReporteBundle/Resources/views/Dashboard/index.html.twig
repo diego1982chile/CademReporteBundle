@@ -31,11 +31,7 @@
 					<div id="{% if "QUIEBRE" in variables %}evo_QUIEBRE{% else %}evo_PRESENCIA{% endif %}" style="min-width: 250px; height: 300px; margin: 0 auto"></div>
 				</div>
 				{#% endfor %#}
-			</div>
-			
-			
-			
-			
+			</div>												
 			<div class="row-fluid">
 		{% for n in noticias %}
 			<div class="span6 well">
@@ -320,9 +316,7 @@ $(document).ready(function () {
 			{% else %}
 			    {% set nombrevar = "PRESENCIA" %}
 			{% endif %}
-			
-			
-			
+									
 			{{"evo_"~nombrevar}} = new Highcharts.Chart({
 				chart: {
 					zoomType: 'x',
@@ -336,7 +330,7 @@ $(document).ready(function () {
 				},
 				yAxis: [{
 					title: {
-						text: 'Promedio {{nombrevar}}',
+						text: 'Promedio {{nombrevar|lower}}',
 						style: {
 							color: '#4572A7'
 						}
