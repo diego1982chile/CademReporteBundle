@@ -384,7 +384,8 @@ class PrecioResumenController extends Controller
 			'aoColumnDefs' => json_encode($aoColumnDefs),			
 			'header_action' => 'precio_resumen_header',
 			'body_action' => 'precio_resumen_body',	
-			'tag_variable' => $variable			
+			'tag_variable' => $variable
+			'tag_cliente' => $cliente->getNombre();
 			)
 		);		
 		//CACHE
