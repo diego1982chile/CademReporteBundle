@@ -1,11 +1,6 @@
 {% extends '::base.html.twig' %}
 
-
-{% if tag_variable|lower == "quiebre" %}	
-    {% set url_evolutivo = path('quiebre_resumen_evolutivo') %}    
-{% else %}	
-    {% set url_evolutivo = path('presencia_resumen_evolutivo') %}    
-{% endif %}
+{% set url_evolutivo = path(tag_variable|lower~'_resumen_evolutivo') %}    
 {% set url_body_action = path(body_action) %}
 {% set url_header_action = path(header_action) %}
 
@@ -23,7 +18,7 @@
 {% block body %}
     <div class="span9">
 		<div class="container-fluid well" style="padding-top:0">
-			<h4>Resumen de {{estudios[0].getEstudioVariables[0].getNombrevariable}}</h4>
+			<h4>Resumen {{tag_variable}} {{tag_cliente}} </h4>
 				<div class="hero-unit" style="padding:15px;margin-bottom:10px">
 					<div id='container' class="row-fluid">
 							<table id="tabla_resumen" class="table table-bordered display" cellpadding="0" cellspacing="0" border="0" width='100%'>                      
@@ -356,7 +351,7 @@ function colorearCeldas(flag){
 				{ maxval: 0,
 				minval: 100,
 				colorStyle: 'greentored',
-				lightness: 0,
+				lightness: 0.4,
 				reverseOrder: {% if tag_variable in ['presencia']%} true {% else %}	false {% endif %}
 				}		
 		);
@@ -753,7 +748,10 @@ $(document).ready(function () {
 				att=document.createAttribute("tag");
 				att.value=value;
 				tableHeading.setAttributeNode(att);
-				tableHeading.innerHTML = value;														
+				if(value.length>8)									
+					tableHeading.innerHTML = value.substring(0,8)+'...';									
+				else																				
+					tableHeading.innerHTML = value;									
 				tableHead.appendChild( tableHeading );				
 			});						
 			table.appendChild( tableHead );	
