@@ -534,7 +534,8 @@ function listenerFiltro()
 					
 					case 'sala':
 						var needle=$('#filtro').val().toUpperCase();					
-						var delta=$('#tabla_resumen tbody tr td').width();												
+						var delta=$('#tabla_resumen tbody tr:first td').eq(-2).width();
+						delta = delta*0.92;										
 						var oSettings = oTable.fnSettings();
 						var ventana= 1000;									
 						var posicion;
@@ -568,13 +569,8 @@ function listenerFiltro()
 							});					
 							if(hit)
 							{											
-								// if(offset<=ventana)
-									// offset=0;
-								// else
-									// offset=offset-4*ventana/3;		
-								// offset=($('.btn-success').parent().index())*6.5*delta/10-ventana/2;									
-								// posicion=$('.btn-success').parent().position();
-								offset=($('.btn-success').parent().index())*3*delta/6;									
+								offset=($('.btn-success').parent().index())*delta;
+								
 								$('.dataTables_scrollBody').animate({ scrollLeft: offset });		
 							}
 							else
@@ -586,8 +582,7 @@ function listenerFiltro()
 						}
 						else
 						{											
-							offset=($('.btn-success').parent().index())*3*delta/6;	
-							// posicion=$('.btn-success').parent().position();																								
+							offset=($('.btn-success').parent().index())*delta;																							
 							
 							if($('th div.btn-warning').length==1)
 								filtrado=false;					
