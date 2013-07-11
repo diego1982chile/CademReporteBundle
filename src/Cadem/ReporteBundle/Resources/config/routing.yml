@@ -55,6 +55,11 @@ precio_resumen_index:
     defaults: { _controller: CademReporteBundle:PrecioResumen:index, variable: precio }
     requirements:
         variable:  precio
+precio_resumen_evolutivo:
+    pattern: /{variable}/resumen/evolutivo
+    defaults: { _controller: CademReporteBundle:PrecioResumen:evolutivo, variable: precio }
+    requirements:
+        variable: precio
 precio_resumen_header:
     pattern:  /{variable}/resumen/header
     defaults: { _controller: CademReporteBundle:PrecioResumen:header, variable: precio }

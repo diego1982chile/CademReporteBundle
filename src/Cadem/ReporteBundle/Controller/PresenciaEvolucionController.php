@@ -400,7 +400,8 @@ class PresenciaEvolucionController extends Controller
 			'body_action' => 'presencia_evolucion_body',	
 			'aoColumnDefs' => json_encode($aoColumnDefs),
 			'columnas_reservadas' => 2,
-			'tag_variable' => $variable
+			'tag_variable' => ucwords($variable),
+			'tag_cliente' => $cliente->getNombrefantasia()			
 			)
 		);
 		//CACHE

@@ -442,17 +442,17 @@ class PresenciaDetalleController extends Controller
 		$num_salas=count($salas);			
 		$matriz_totales=array();		
 
-		$variable=$session->get("variable");						
+		$variable=$session->get("variable");										
 		
 		switch($variable)
 		{
 			case 1: // Si el tag de la variable es quiebre 
-				$color_positivo='rgb(174, 247, 81)';
-				$color_negativo='rgb(234, 57, 21)';
+				$color_positivo='rgb(206, 250, 151)';
+				$color_negativo='rgb(242, 136, 115)';
 				break;
 			case 5: // Si el tag de la variable es presencia invertimos los colores
-				$color_positivo='rgb(234, 57, 21)';
-				$color_negativo='rgb(174, 247, 81)';
+				$color_positivo='rgb(242, 136, 115)';
+				$color_negativo='rgb(206, 250, 151)';
 				break;				
 		}
 	

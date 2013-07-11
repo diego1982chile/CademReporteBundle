@@ -35,8 +35,7 @@ class QuiebreResumenController extends Controller
 		foreach($estudios as $e)
 		{
 			$choices_estudio[$e->getId()] = strtoupper($e->getNombre());
-		}
-		
+		}		
 		$logofilename = $cliente->getLogofilename();
 		$logostyle = $cliente->getLogostyle();
 		
@@ -107,8 +106,7 @@ class QuiebreResumenController extends Controller
 		
 		if(count($mediciones) > 0) $ultima_medicion = current(array_keys($mediciones));
 		else $ultima_medicion = null;
-		
-		
+				
 		$form_estudio = $this->get('form.factory')->createNamedBuilder('f_estudio', 'form')
 			->add('Estudio', 'choice', array(
 				'choices'   => $choices_estudio,
@@ -249,7 +247,6 @@ class QuiebreResumenController extends Controller
 	
 		$totales_segmento = $em->getConnection()->executeQuery($sql)->fetchAll();
 
-
 		// Obtener totales verticales por categoria
 					
 		$sql =	"SELECT ni.NOMBRE as CATEGORIA, c.NOMBRE as CADENA, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
@@ -263,8 +260,7 @@ class QuiebreResumenController extends Controller
 		ORDER BY CATEGORIA,CADENA";
 	
 		$totales_categoria = $em->getConnection()->executeQuery($sql)->fetchAll();
-				
-		
+						
 		// Obtener totales horizontales por totales segmento (ultima columna de totales verticales por categoria)
 		
 		$sql =	"SELECT ni.NOMBRE as CATEGORIA, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
@@ -294,8 +290,7 @@ class QuiebreResumenController extends Controller
 		INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID AND p.MEDICION_ID = {$id_ultima_medicion}";			
 
 		$total = $em->getConnection()->executeQuery($sql)->fetchAll();
-				
-		
+						
 		// Guardamos resultado de consulta en variable de sesión para reusarlas en un action posterior
 		$session->set("cadenas",$cadenas);
 		$session->set("resumen_quiebre",$resumen_quiebre);
@@ -312,7 +307,6 @@ class QuiebreResumenController extends Controller
 			$extension=0;
 			
 		$max_width=100+$extension;
-
 
 		//EVOLUTIVO
 		$sql = "SELECT TOP(12) (SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 END)*1.0)/COUNT(q.ID) as QUIEBRE, m.NOMBRE, m.FECHAINICIO, m.FECHAFIN, m.ID FROM QUIEBRE q
@@ -339,8 +333,6 @@ class QuiebreResumenController extends Controller
 			$mediciones_tooltip[] = $m['NOMBRE'];
 			$porc_quiebre[] = round($m['QUIEBRE']*100,1);
 		}
-
-
 		
 		$periodos= array(
 			'tooltip' => $mediciones_tooltip,
@@ -368,7 +360,8 @@ class QuiebreResumenController extends Controller
 			'aoColumnDefs' => json_encode($aoColumnDefs),			
 			'header_action' => 'quiebre_resumen_header',
 			'body_action' => 'quiebre_resumen_body',	
-			'tag_variable' => $variable
+			'tag_variable' => ucwords($variable),
+			'tag_cliente' => $cliente->getNombrefantasia()
 			)
 		);		
 		//CACHE

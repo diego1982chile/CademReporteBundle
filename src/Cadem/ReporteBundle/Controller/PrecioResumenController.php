@@ -322,41 +322,31 @@ class PrecioResumenController extends Controller
 			
 		$max_width=100+$extension;
 		
-		
-		//DATOS DEL EJE X EN EVOLUTIVO
-		$sql = "SELECT TOP(12) m.NOMBRE, m.FECHAINICIO, m.FECHAFIN FROM MEDICION m
-			INNER JOIN PLANOGRAMAQ p on p.MEDICION_ID = m.ID
+		//DATOS DEL EJE Y EN EVOLUTIVO
+		$sql = "SELECT TOP(12) (SUM(case when ABS(pr.PRECIO-p.POLITICAPRECIO)>pa.VALOR*p.POLITICAPRECIO/100 then 1 else 0 END)*100.0)/COUNT(pr.ID) as QUIEBRE,m.NOMBRE, m.FECHAINICIO, m.FECHAFIN, m.ID FROM PRECIO pr
+			INNER JOIN PLANOGRAMAP p on p.ID = pr.PLANOGRAMAP_ID and pr.PRECIO is not null and p.POLITICAPRECIO is not null
+			INNER JOIN MEDICION m on m.ID = p.MEDICION_ID
 			INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID AND sc.CLIENTE_ID = ?
-			
-			GROUP BY m.NOMBRE, m.FECHAINICIO, m.FECHAFIN
-			ORDER BY m.FECHAINICIO DESC";
-		$param = array($id_cliente);
-		$tipo_param = array(\PDO::PARAM_INT);
+			INNER JOIN PARAMETRO pa on pa.CLIENTE_ID = ? and pa.NOMBRE='rango_precio'						
+			GROUP BY m.FECHAINICIO, m.NOMBRE, m.FECHAINICIO, m.FECHAFIN, m.ID
+			ORDER BY m.FECHAINICIO DESC";		
+				
+		$param = array($id_cliente,$id_cliente);
+		$tipo_param = array(\PDO::PARAM_INT,\PDO::PARAM_INT);
 		$mediciones_q = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
 		$mediciones_q = array_reverse($mediciones_q);
+		
+		$mediciones_data = array();
+		$mediciones_tooltip = array();
+		$porc_quiebre = array();
 		
 		foreach($mediciones_q as $m){
 			$fi = new \DateTime($m['FECHAINICIO']);
 			$ff = new \DateTime($m['FECHAFIN']);
 			$mediciones_data[] = $fi->format('d/m').'-'.$ff->format('d/m');
 			$mediciones_tooltip[] = $m['NOMBRE'];
-		}
-		
-		//DATOS DEL EJE Y EN EVOLUTIVO
-		$sql = "SELECT TOP(12) (SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 END)*1.0)/COUNT(q.ID) as QUIEBRE FROM QUIEBRE q
-			INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID
-			INNER JOIN MEDICION m on m.ID = p.MEDICION_ID
-			INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID AND sc.CLIENTE_ID = ?
-			INNER JOIN SALA s on s.ID = sc.SALA_ID
-			
-			GROUP BY m.FECHAINICIO
-			ORDER BY m.FECHAINICIO DESC";
-		$param = array($id_cliente);
-		$tipo_param = array(\PDO::PARAM_INT);
-		$quiebres_q = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
-		$quiebres_q = array_reverse($quiebres_q);
-		
-		foreach ($quiebres_q as $q) $porc_quiebre[] = round($q['QUIEBRE']*100,1);
+			$porc_quiebre[] = round($m['QUIEBRE'],1);			
+		}		
 		
 		$periodos= array(
 			'tooltip' => $mediciones_tooltip,
@@ -384,8 +374,8 @@ class PrecioResumenController extends Controller
 			'aoColumnDefs' => json_encode($aoColumnDefs),			
 			'header_action' => 'precio_resumen_header',
 			'body_action' => 'precio_resumen_body',	
-			'tag_variable' => $variable
-			'tag_cliente' => $cliente->getNombre();
+			'tag_variable' => ucwords($variable),
+			'tag_cliente' => $cliente->getNombrefantasia()
 			)
 		);		
 		//CACHE
@@ -469,19 +459,19 @@ class PrecioResumenController extends Controller
 		}
 		
 		//DATOS DEL EJE Y EN EVOLUTIVO
-		$sql = "SELECT TOP(12) (SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 END)*1.0)/COUNT(q.ID) as QUIEBRE FROM QUIEBRE q
-			INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID
+		$sql = "SELECT TOP(12) (SUM(case when ABS(pr.PRECIO-p.POLITICAPRECIO)>pa.VALOR*p.POLITICAPRECIO/100 then 1 else 0 END)*100.0)/COUNT(pr.ID) as QUIEBRE FROM QUIEBRE q
+			INNER JOIN PLANOGRAMAP p on p.ID = q.PLANOGRAMAP_ID and pr.PRECIO is not null and p.POLITICAPRECIO is not null
 			INNER JOIN MEDICION m on m.ID = p.MEDICION_ID
 			INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
 			INNER JOIN SALA s on s.ID = sc.SALA_ID
+			INNER JOIN PARAMETRO pa on pa.CLIENTE_ID = ? and pa.NOMBRE='rango_precio'
 			{$cadena_join}
-			{$nivel_join}
-			
+			{$nivel_join}			
 			WHERE sc.CLIENTE_ID = ? AND s.COMUNA_ID IN ( ? ) {$cadena_where} {$nivel_where}
 			GROUP BY m.FECHAINICIO
 			ORDER BY m.FECHAINICIO DESC";
-		$param = array($id_cliente, $array_comuna);
-		$tipo_param = array(\PDO::PARAM_INT, \Doctrine\DBAL\Connection::PARAM_INT_ARRAY);
+		$param = array($id_cliente,$id_cliente, $array_comuna);
+		$tipo_param = array(\PDO::PARAM_INT, \PDO::PARAM_INT, \Doctrine\DBAL\Connection::PARAM_INT_ARRAY);
 		$quiebres_q = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
 		$quiebres_q = array_reverse($quiebres_q);
 		
@@ -500,8 +490,7 @@ class PrecioResumenController extends Controller
 		$response->setPrivate();
 		$response->setMaxAge(1);
 
-		return $response;
-		
+		return $response;		
 	}
 	
 	public function bodyAction(Request $request)
@@ -653,23 +642,22 @@ class PrecioResumenController extends Controller
 		$comunas='';
 		foreach($parametros['f_comuna']['Comuna'] as $comuna)
 			$comunas.=$comuna.',';	
-		$comunas = trim($comunas, ',');											
-
-		$sql = "SELECT (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre, ni.NOMBRE as SEGMENTO, ni2.NOMBRE as CATEGORIA, cad.NOMBRE as CADENA FROM QUIEBRE q
-			INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID
+		$comunas = trim($comunas, ',');													
+			
+		$sql = "SELECT (SUM(case when ABS(pr.PRECIO-p.POLITICAPRECIO)>pa.VALOR*p.POLITICAPRECIO/100 then 1 else 0 END)*100.0)/COUNT(pr.ID) as PRECIO, ni.NOMBRE as SEGMENTO, ni2.NOMBRE as CATEGORIA, cad.NOMBRE as CADENA FROM PRECIO pr
+			INNER JOIN PLANOGRAMAP p on p.ID = pr.PLANOGRAMAP_ID and pr.PRECIO is not null and p.POLITICAPRECIO is not null
 			INNER JOIN MEDICION m on m.ID = p.MEDICION_ID and m.ID = {$medicion}
 			INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
 			INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )
 			INNER JOIN CADENA cad on cad.ID = s.CADENA_ID
-			INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
-			INNER JOIN USUARIO u on u.cliente_id=c.id and u.id=".$user->getId()."
-			INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID AND ic.CLIENTE_ID = c.ID
+			INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID AND ic.CLIENTE_ID = {$user->getClienteID()}
 			INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
-			INNER JOIN NIVELITEM ni2 on ni2.ID = ic.NIVELITEM_ID2				
+			INNER JOIN NIVELITEM ni2 on ni2.ID = ic.NIVELITEM_ID2	
+			INNER JOIN PARAMETRO pa on pa.CLIENTE_ID = {$user->getClienteID()} and pa.NOMBRE='rango_precio'			
 			GROUP BY ni2.NOMBRE, ni.NOMBRE, cad.NOMBRE
 			ORDER BY categoria, segmento";			
 				
-		$resumen_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();						
+		$resumen_precio = $em->getConnection()->executeQuery($sql)->fetchAll();						
 		
 		// Variable para saber cuantos niveles de agregacion define el cliente, esto debe ser parametrizado en una etapa posterior
 		$niveles=2;										
@@ -679,7 +667,7 @@ class PrecioResumenController extends Controller
 		$cadenas_aux=array();		
 		
 		// Generamos el head de la tabla, y las cadenas
-		foreach($resumen_quiebre as $registro)
+		foreach($resumen_precio as $registro)
 		{
 			// print_r($resumen_quiebre);
 			if(!in_array($registro['CADENA'],$head))
@@ -710,16 +698,17 @@ class PrecioResumenController extends Controller
 			array_unshift($head,$prefix);		
 		array_push($head,'TOTAL');				
 				
-		// Obtener totales horizontales por segmento
-			
-		$sql =	"SELECT ni.NOMBRE as segmento, ni2.NOMBRE as categoria, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as quiebre FROM QUIEBRE q
-		INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID AND p.MEDICION_ID = {$medicion}
+		// Obtener totales horizontales por segmento					
+		
+		$sql =	"SELECT ni.NOMBRE as segmento, ni2.NOMBRE as categoria, (SUM(case when ABS(pr.PRECIO-p.POLITICAPRECIO)>pa.VALOR*p.POLITICAPRECIO/100 then 1 else 0 END)*100.0)/COUNT(pr.ID) as PRECIO FROM PRECIO pr
+		INNER JOIN PLANOGRAMAP p on p.ID = pr.PLANOGRAMAP_ID AND p.MEDICION_ID = {$medicion} and pr.PRECIO is not null and p.POLITICAPRECIO is not null
 		INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
 		INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
 		INNER JOIN NIVELITEM ni2 on ni2.ID = ic.NIVELITEM_ID2
 		INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
 		INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )
 		INNER JOIN CADENA c on c.ID = s.CADENA_ID
+		INNER JOIN PARAMETRO pa on pa.CLIENTE_ID = {$user->getClienteID()} and pa.NOMBRE='rango_precio'			
 		GROUP BY ni.NOMBRE, ni2.NOMBRE
 		ORDER BY categoria, segmento";
 	
@@ -727,56 +716,59 @@ class PrecioResumenController extends Controller
 
 		// Obtener totales verticales por categoria
 					
-		$sql =	"SELECT ni.NOMBRE as CATEGORIA, c.NOMBRE as CADENA, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
-		INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID AND p.MEDICION_ID = {$medicion}
+		$sql =	"SELECT ni.NOMBRE as CATEGORIA, c.NOMBRE as CADENA, (SUM(case when ABS(pr.PRECIO-p.POLITICAPRECIO)>pa.VALOR*p.POLITICAPRECIO/100 then 1 else 0 END)*100.0)/COUNT(pr.ID) as PRECIO FROM PRECIO pr
+		INNER JOIN PLANOGRAMAP p on p.ID = pr.PLANOGRAMAP_ID AND p.MEDICION_ID = {$medicion} and pr.PRECIO is not null and p.POLITICAPRECIO is not null
 		INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
 		INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )
 		INNER JOIN CADENA c on c.ID = s.CADENA_ID
 		INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
 		INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID2
+		INNER JOIN PARAMETRO pa on pa.CLIENTE_ID = {$user->getClienteID()} and pa.NOMBRE='rango_precio'			
 		GROUP BY ni.NOMBRE, c.NOMBRE
 		ORDER BY CATEGORIA,CADENA";
 	
 		$totales_categoria = $em->getConnection()->executeQuery($sql)->fetchAll();
+						
+		// Obtener totales horizontales por totales segmento (ultima columna de totales verticales por categoria)				
 				
-		
-		// Obtener totales horizontales por totales segmento (ultima columna de totales verticales por categoria)
-		
-		$sql =	"SELECT ni.NOMBRE as CATEGORIA, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
-				INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID AND p.MEDICION_ID = {$medicion}
+		$sql =	"SELECT ni.NOMBRE as CATEGORIA, (SUM(case when ABS(pr.PRECIO-p.POLITICAPRECIO)>pa.VALOR*p.POLITICAPRECIO/100 then 1 else 0 END)*100.0)/COUNT(pr.ID) as PRECIO FROM PRECIO pr
+				INNER JOIN PLANOGRAMAP p on p.ID = pr.PLANOGRAMAP_ID AND p.MEDICION_ID = {$medicion} and pr.PRECIO is not null and p.POLITICAPRECIO is not null
 				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
 				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )
 				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
 				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID2
+				INNER JOIN PARAMETRO pa on pa.CLIENTE_ID = {$user->getClienteID()} and pa.NOMBRE='rango_precio'			
 				GROUP BY ni.NOMBRE
-				ORDER BY CATEGORIA";
+				ORDER BY CATEGORIA";				
 			
 		$totales_horizontales_categoria = $em->getConnection()->executeQuery($sql)->fetchAll();	
 		
-		// Obtener totales verticales por totales categoria
+		// Obtener totales verticales por totales categoria				
 		
-		$sql = "SELECT  c.NOMBRE as CADENA, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
-		INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID AND p.MEDICION_ID = {$medicion}
+		$sql = "SELECT  c.NOMBRE as CADENA, (SUM(case when ABS(pr.PRECIO-p.POLITICAPRECIO)>pa.VALOR*p.POLITICAPRECIO/100 then 1 else 0 END)*100.0)/COUNT(pr.ID) as PRECIO FROM PRECIO pr
+		INNER JOIN PLANOGRAMAP p on p.ID = pr.PLANOGRAMAP_ID AND p.MEDICION_ID = {$medicion} and pr.PRECIO is not null and p.POLITICAPRECIO is not null
 		INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
 		INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )
 		INNER JOIN CADENA c on c.ID = s.CADENA_ID
+		INNER JOIN PARAMETRO pa on pa.CLIENTE_ID = {$user->getClienteID()} and pa.NOMBRE='rango_precio'			
 		GROUP BY c.NOMBRE
-		ORDER BY CADENA";
+		ORDER BY CADENA";		
 		
 		$totales_verticales_categoria = $em->getConnection()->executeQuery($sql)->fetchAll();							
 		
-		// Obtener total horizontal por totales verticales por totales categoria
+		// Obtener total horizontal por totales verticales por totales categoria				
 		
-		$sql = "SELECT SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
-		INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID AND p.MEDICION_ID = {$medicion}
+		$sql = "SELECT (SUM(case when ABS(pr.PRECIO-p.POLITICAPRECIO)>pa.VALOR*p.POLITICAPRECIO/100 then 1 else 0 END)*100.0)/COUNT(pr.ID) as PRECIO FROM PRECIO pr
+		INNER JOIN PLANOGRAMAP p on p.ID = pr.PLANOGRAMAP_ID AND p.MEDICION_ID = {$medicion} and pr.PRECIO is not null and p.POLITICAPRECIO is not null
 		INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
-		INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )";			
+		INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in( {$comunas} )
+		INNER JOIN PARAMETRO pa on pa.CLIENTE_ID = {$user->getClienteID()} and pa.NOMBRE='rango_precio'";					
 
 		$total = $em->getConnection()->executeQuery($sql)->fetchAll();									
 		
 		// Guardamos resultado de consulta en variables de sesión para reusarlas en un action posterior
 		$session->set("cadenas",$cadenas);		
-		$session->set("resumen_quiebre",$resumen_quiebre);	
+		$session->set("resumen_precio",$resumen_precio);	
 		$session->set("totales_segmento",$totales_segmento);		
 		$session->set("totales_categoria",$totales_categoria);	
 		$session->set("totales_horizontales_categoria",$totales_horizontales_categoria);	
