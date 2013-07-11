@@ -17,7 +17,7 @@ class AdminController extends Controller
         $this->uploadDIR = __DIR__.'/../../../../web/uploads/';
     }
 
-    public function cargaregistroplanoAction(Request $request, $plano)
+    public function cargaregistroAction(Request $request, $variable)
     {
         $em = $this->getDoctrine()->getManager();
         $clientemedicion = $request->query->get('f_medicion');
@@ -29,23 +29,32 @@ class AdminController extends Controller
             ));
         }
         
-        switch ($plano) {
+        switch ($variable) {
             case 'planoquiebre':
-                $planograma = 'PLANOGRAMAQ';
-                break;
             case 'planoprecio':
-                $planograma = 'PLANOGRAMAP';
+                $planograma = $variable==='planoquiebre'?'PLANOGRAMAQ':'PLANOGRAMAP';
+                $sql = "SELECT COUNT(p.ID) as c FROM {$planograma} p
+                        INNER JOIN MEDICION m on m.ID = p.MEDICION_ID AND m.ID = {$id_medicion}
+                        INNER JOIN ESTUDIOVARIABLE ev on ev.ID = m.ESTUDIOVARIABLE_ID
+                        INNER JOIN ESTUDIO e on e.ID = ev.ESTUDIO_ID AND e.CLIENTE_ID = {$id_cliente}
+                        ";
+                break;
+            case 'itemcliente':
+                $sql = "SELECT COUNT(ic.ID) as c FROM ITEMCLIENTE ic
+                        WHERE ic.MEDICION_ID = {$id_medicion} AND ic.CLIENTE_ID = {$id_cliente}
+                        ";
+                break;
+            case 'salacliente':
+                $sql = "SELECT COUNT(sc.ID) as c FROM SALACLIENTE sc
+                        WHERE sc.MEDICION_ID = {$id_medicion} AND sc.CLIENTE_ID = {$id_cliente}
+                        ";
                 break;
             
             default:
                 //ERROR
                 break;
         }
-        $sql = "SELECT COUNT(p.ID) as c FROM {$planograma} p
-                INNER JOIN MEDICION m on m.ID = p.MEDICION_ID AND m.ID = {$id_medicion}
-                INNER JOIN ESTUDIOVARIABLE ev on ev.ID = m.ESTUDIOVARIABLE_ID
-                INNER JOIN ESTUDIO e on e.ID = ev.ESTUDIO_ID AND e.CLIENTE_ID = {$id_cliente}
-                ";
+        
         $query = $em->getConnection()->executeQuery($sql)->fetchAll();
         $registros = isset($query[0])?intval($query[0]['c']):-1;
         if($registros === -1){
@@ -62,7 +71,7 @@ class AdminController extends Controller
     }
 
 
-    public function cargaborrarregistroplanoAction(Request $request, $plano)
+    public function cargaborrarregistroAction(Request $request, $variable)
     {
         $em = $this->getDoctrine()->getManager();
         $clientemedicion = $request->request->get('f_medicion');
@@ -74,12 +83,23 @@ class AdminController extends Controller
             ));
         }
 
-        switch ($plano) {
+        switch ($variable) {
             case 'planoquiebre':
-                $planograma = 'PLANOGRAMAQ';
-                break;
             case 'planoprecio':
-                $planograma = 'PLANOGRAMAP';
+                $planograma = $variable==='planoquiebre'?'PLANOGRAMAQ':'PLANOGRAMAP';
+                $sql = "DELETE FROM {$planograma}
+                        WHERE MEDICION_ID = ?
+                        ";
+                break;
+            case 'itemcliente':
+                $sql = "DELETE FROM ITEMCLIENTE
+                        WHERE MEDICION_ID = ?
+                        ";
+                break;
+            case 'salacliente':
+               $sql = "DELETE FROM SALACLIENTE
+                        WHERE MEDICION_ID = ?
+                        ";
                 break;
             
             default:
@@ -87,9 +107,7 @@ class AdminController extends Controller
                 break;
         }
 
-        $sql = "DELETE FROM {$planograma}
-                WHERE MEDICION_ID = ?
-                ";
+        
         $param = array($id_medicion);
         $row_affected = $em->getConnection()->executeUpdate($sql,$param);
         if(!is_int($row_affected)){
@@ -150,8 +168,12 @@ class AdminController extends Controller
                 ORDER BY c.NOMBREFANTASIA, v.NOMBRE, m.NOMBRE";
         $query = $em->getConnection()->executeQuery($sql)->fetchAll();
         $choices_medicion = array();
-        foreach($query as $r)
+        foreach($query as $k => $r)
         {
+            if($k === 0){
+                $id_cliente = intval($r['idc']);
+                $id_medicion = intval($r['idm']);
+            }
             $choices_medicion[$r['idc'].'-'.$r['idm']] = strtoupper($r['nombre'].'['.$r['variable'].'] '.$r['medicion']);
         }
 
@@ -163,10 +185,22 @@ class AdminController extends Controller
             ))
             ->getForm();
 
+        if(isset($id_cliente) && isset($id_medicion)){
+            $sql = "SELECT COUNT(ic.ID) as c FROM ITEMCLIENTE ic
+                        WHERE ic.MEDICION_ID = {$id_medicion} AND ic.CLIENTE_ID = {$id_cliente}
+                    ";
+            $query = $em->getConnection()->executeQuery($sql)->fetchAll();
+            $registros = isset($query[0])?intval($query[0]['c']):0;
+        }
+        else $registros = 0;
+
 
         //RESPONSE
         $response = $this->render('CademReporteBundle:Admin:cargaitemcliente.html.twig',
-        array('form_medicion' => $form_medicion->createView())
+        array(
+            'form_medicion' => $form_medicion->createView(),
+            'registros' => $registros,
+            )
         );
 
         //CACHE
@@ -188,8 +222,12 @@ class AdminController extends Controller
                 ORDER BY c.NOMBREFANTASIA, v.NOMBRE, m.NOMBRE";
         $query = $em->getConnection()->executeQuery($sql)->fetchAll();
         $choices_medicion = array();
-        foreach($query as $r)
+        foreach($query as $k => $r)
         {
+            if($k === 0){
+                $id_cliente = intval($r['idc']);
+                $id_medicion = intval($r['idm']);
+            }
             $choices_medicion[$r['idc'].'-'.$r['idm']] = strtoupper($r['nombre'].'['.$r['variable'].'] '.$r['medicion']);
         }
 
@@ -201,10 +239,22 @@ class AdminController extends Controller
             ))
             ->getForm();
 
+        if(isset($id_cliente) && isset($id_medicion)){
+            $sql = "SELECT COUNT(sc.ID) as c FROM SALACLIENTE sc
+                        WHERE sc.MEDICION_ID = {$id_medicion} AND sc.CLIENTE_ID = {$id_cliente}
+                    ";
+            $query = $em->getConnection()->executeQuery($sql)->fetchAll();
+            $registros = isset($query[0])?intval($query[0]['c']):0;
+        }
+        else $registros = 0;
+
 
         //RESPONSE
         $response = $this->render('CademReporteBundle:Admin:cargasalacliente.html.twig',
-        array('form_medicion' => $form_medicion->createView())
+        array(
+            'form_medicion' => $form_medicion->createView(),
+            'registros' => $registros,
+            )
         );
 
         //CACHE

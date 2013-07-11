@@ -32,16 +32,16 @@ admin_filevalid:
 admin_fileprocess:
     pattern:  /admin/admin_fileprocess
     defaults: { _controller: CademReporteBundle:Admin:fileprocess }
-admin_carga_registros_plano:
-    pattern:  /admin/carga/registros/{plano}
-    defaults: { _controller: CademReporteBundle:Admin:cargaregistroplano }
+admin_carga_registros:
+    pattern:  /admin/carga/registros/{variable}
+    defaults: { _controller: CademReporteBundle:Admin:cargaregistro }
     requirements:
-        plano:  planoquiebre|planoprecio
-admin_carga_borrarregistros_plano:
-    pattern:  /admin/carga/borrarregistros/{plano}
-    defaults: { _controller: CademReporteBundle:Admin:cargaborrarregistroplano }
+        variable:  planoquiebre|planoprecio|itemcliente|salacliente
+admin_carga_borrarregistros:
+    pattern:  /admin/carga/borrarregistros/{variable}
+    defaults: { _controller: CademReporteBundle:Admin:cargaborrarregistro }
     requirements:
-        plano:  planoquiebre|planoprecio
+        variable:  planoquiebre|planoprecio|itemcliente|salacliente
 #DASHBOARD
 dashboard_index:
     pattern:  /dashboard
