@@ -598,7 +598,7 @@ function listenerFiltro()
 				filtrado=false;				
 			break;
 		}
-	});	
+	});
 }
 
 function fixedColumn1()
@@ -702,7 +702,9 @@ function fixedColumn1()
 			$('.DTFC_LeftFootWrapper').hide();
 		}		
 	});	
-	listenerFiltro();		
+	listenerFiltro();
+	//FIX PARA CHROME
+	$('.DTFC_LeftWrapper:first').css('height', ($('.DTFC_LeftWrapper:first').height()-15) + 'px'  );		
 }
 
 function fixedColumn2()
@@ -748,7 +750,9 @@ function fixedColumn2()
 		"iLeftColumns": 3,
 	});	
 	calcular_incumplimiento();
-	listenerFiltro();	
+	listenerFiltro();
+	//FIX PARA CHROME
+	$('.DTFC_LeftWrapper:first').css('height', ($('.DTFC_LeftWrapper:first').height()-15) + 'px'  );	
 }
 
 function colorTotales(){
@@ -989,7 +993,7 @@ $(document).ready(function () {
 			// Luego recalculamos el ancho maximo en base a la cardinalidad del head
 			preInitTabla();			
 			// Luego volvemos a construir la tabla con dataTables
-			construirTabla();			
+			construirTabla();
 		},"json")
 		.done(function() {  })
 		.fail(function() {  })

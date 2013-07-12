@@ -337,7 +337,9 @@ function fixedColumn()
 			$(nGroup).insertBefore( $('tbody tr:eq('+(0)+')', left.body)[0] );	
 			matriz_totales=[];
 		}
-	});	
+	});
+	//FIX PARA CHROME
+	$('.DTFC_LeftWrapper:first').css('height', ($('.DTFC_LeftWrapper:first').height()-15) + 'px'  );
 }
 
 function colorearCeldas(flag){

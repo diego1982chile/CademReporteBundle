@@ -350,7 +350,7 @@ function colorearCeldas(flag){
 }
 
 function listenerFiltro()
-{	
+{
 	var filtrado= false;
 	var indice=0;
 
@@ -430,7 +430,7 @@ function listenerFiltro()
 				filtrado=false;
 				break;
 		}		
-	});	
+	});
 }
 
 function setFocus(id)
@@ -538,7 +538,9 @@ function fixedColumn1()
 		}
 	});	
 	construirGrafico();
-	listenerFiltro();	
+	listenerFiltro();
+	//FIX PARA CHROME
+	$('.DTFC_LeftWrapper:first').css('height', ($('.DTFC_LeftWrapper:first').height()-15) + 'px'  );
 }
 
 function fixedColumn2()
@@ -576,7 +578,7 @@ function fixedColumn2()
 			$('tbody tr td', left.body).each( function ( i ) {
 				that.fnSetRowHeight( this.parentNode, heights[ i ] );
 			} );
-		}		
+		}
 	});
 	
 	new FixedColumns( oTable, {
@@ -586,6 +588,8 @@ function fixedColumn2()
 		
 	construirGrafico();		
 	listenerFiltro();
+	//FIX PARA CHROME
+	$('.DTFC_LeftWrapper:first').css('height', ($('.DTFC_LeftWrapper:first').height()-15) + 'px'  );
 }
 
 function colorTotales(){
