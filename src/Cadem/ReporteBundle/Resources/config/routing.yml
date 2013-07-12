@@ -243,7 +243,7 @@ helper_filtro_provincia:
     methods:  [GET]
 #ESTATICAS
 privacidad:
-    pattern: /privacidad
+    pattern: /static/privacidad
     defaults:
         _controller: FrameworkBundle:Template:template
         template: 'CademReporteBundle:Estaticas:privacidad.html.twig'
@@ -251,7 +251,7 @@ privacidad:
         sharedMaxAge: 86400
         private: false
 navegadores_soportados:
-    pattern: /navegadores-soportados
+    pattern: /static/navegadores-soportados
     defaults:
         _controller: FrameworkBundle:Template:template
         template: 'CademReporteBundle:Estaticas:navegadores.html.twig'

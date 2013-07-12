@@ -3,10 +3,33 @@
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-        <title>Privacidad</title>
+        <title>Navegadores Soportados</title>
         <link href="/bundles/framework/css/structure.css" rel="stylesheet" type="text/css" media="all" />
         <link href="/bundles/framework/css/body.css" rel="stylesheet" type="text/css" media="all" />
         <link href="/bundles/framework/css/exception.css" rel="stylesheet" type="text/css" media="all" />
+        <style type="text/css">
+        ol {
+            counter-reset: li;
+        }
+
+        li {
+            font-size: 1.2em;
+            list-style: none !important;
+        }
+
+        li:before {
+            content: counter(li) '.';
+            font-size: 2em;
+            counter-increment: li;
+            padding-right: 5px;
+        }
+        h1{
+            font-size: 3em !important;
+        }
+        h3{
+            font-size: 2em !important;
+        }
+        </style>
     </head>
     <body>
         <div id="content">
@@ -28,13 +51,21 @@
 
             <div style="text-align: justify">
                 <p>Analytics está diseñado para funcionar con los últimos navegadores.</p>
-                <p>Recomendamos el uso de Google Chrome para un óptimo desempeño, ya que es rápido y se apega a la mayoría de los estándares de la WEB. Además para una mayor compatibilidad, también se soporta el uso de IE9+.</p>
+                <p>Recomendamos el uso de Google Chrome para un óptimo desempeño, ya que es rápido, se mantiene actualizado y se apega a la mayoría de los estándares de la WEB. Además, para una mayor compatibilidad, también se soporta Microsoft IE9+.</p>
 
                 <h2 style="padding-bottom: 10px;">Vista de compatibilidad de IE</h2>
-                <p>Solo se soporta el uso de IE en "modo de compatibilidad estándar". Si se ven errores extraños en las páginas es posible que se esté ejecutando IE en "Vista de Compatibilidad". Si es así, debe apagar este modo lo cual debería hacer que la aplicación web se muestre correctamente.</p>
-                <ol>
-                    <li>A</li>
-                    <li>B</li>
+                <p>Solo se soporta el uso de IE en "modo de compatibilidad estándar". Si se ven errores extraños en las páginas es posible que se esté ejecutando IE en "Vista de Compatibilidad". Si es así, debe apagar este modo, lo cual debería hacer que la aplicación web se muestre correctamente.</p>
+                <h3>IE9</h3>
+                <ol style="width:80%">
+                    <li>Ir a analytics.cademsmart.cl</li>
+                    <li>Click en el botón "Vista de Compatibilidad" en la barra de dirección <img style="float:right" src="https://github-images.s3.amazonaws.com/help/ie9-compat-mode.jpeg" alt="Vista de Compatibilidad"></li>
+                    <li>Refrescar la página (ctrl + F5)</li>
+                </ol>
+                <h3>IE10</h3>
+                <ol style="width:80%">
+                    <li>Presionar F12 para abrir la herramienta de desarrollador</li>
+                    <li>Configurar el mode a "Internet Explorer 10" <img style="height: 80px;float:right" src="https://github-images.s3.amazonaws.com/help/IE10_document_mode.png" alt="Vista de Compatibilidad"></li>
+                    <li>Configurar el modo de documento a "Estándar"</li>
                 </ol>
             </div>
             
