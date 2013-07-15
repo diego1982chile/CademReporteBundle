@@ -210,7 +210,7 @@ function construirTabla()
 				// $(nRow).attr("data-tt-parent-id",aData[1]);
 			// },		
 			"aaSortingFixed": [[ 1, 'asc' ]],
-			"fnInitComplete": function() {										
+			"fnInitComplete": function() {															
 					fixedColumn();
 				},	
 			"oLanguage": {
@@ -337,7 +337,7 @@ function fixedColumn()
 			$(nGroup).insertBefore( $('tbody tr:eq('+(0)+')', left.body)[0] );	
 			matriz_totales=[];
 		}
-	});	
+	});		
 }
 
 function colorearCeldas(flag){
@@ -352,7 +352,7 @@ function colorearCeldas(flag){
 				minval: 100,
 				colorStyle: 'greentored',
 				lightness: 0.4,
-				reverseOrder: {% if tag_variable in ['presencia']%} true {% else %}	false {% endif %}
+				reverseOrder: {% if tag_variable|lower in ['presencia']%} true {% else %}	false {% endif %}
 				}		
 		);
 	}
