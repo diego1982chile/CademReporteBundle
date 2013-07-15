@@ -11,7 +11,15 @@
 
         <form id="f1" action="{{ path('admin_fileupload') }}" method="POST" enctype="multipart/form-data" encoding="multipart/form-data">
 
-          {{ form_widget(form_medicion) }}
+          <div id="f_medicion">
+            <div>
+                {{ form_label(form_medicion.Cliente_Medicion) }}
+                {{ form_errors(form_medicion.Cliente_Medicion) }}
+                {{ form_widget(form_medicion.Cliente_Medicion) }}
+                (<span id="registros">{{ registros }}</span> REGISTROS)
+                <button id="btn-borraric" style="margin-bottom:10px;margin-left:20px" class="btn btn-danger">BORRAR ITEMCLIENTE</button>
+            </div>
+          </div>
           <label class="required">CSV</label>
           <div id="fileupload1" class="fileupload fileupload-new" data-provides="fileupload">
             <div class="input-append">
@@ -37,6 +45,46 @@
 <script>
 $(document).ready(function () {
 
+  if($('#registros').text() == 0) $('#btn-borraric').addClass('disabled');
+
+  $('#btn-borraric').click(function(){
+    if($('#btn-borraric').hasClass('disabled')) return false;
+    var datos = $('#f_medicion_Cliente_Medicion').serializeArray();
+    if (confirm("¿Desea eliminar el itemcliente de esta medición?")){
+      $.post("{{ path('admin_carga_borrarregistros', {'variable': 'itemcliente'}) }}", datos, function(data){
+        if(data.status == true){
+          $('#registros').text(0);
+          alert('SE ELIMINARON TODOS LOS REGISTROS');
+        }
+        else{
+          alert("ERROR AL ELIMINAR LOS REGISTROS. E1: " + data.mensaje);
+        }
+      }, "json")
+      .fail(function() { alert("ERROR AL ELIMINAR LOS REGISTROS. E2"); });
+    }
+    return false;
+  });
+
+
+   $('#f_medicion_Cliente_Medicion').change(function(){
+    $('#btn-borraric').addClass('disabled');
+
+    var datos = $(this).serializeArray();
+    $.get("{{ path('admin_carga_registros', {'variable': 'itemcliente'}) }}", datos, function(data){
+      if(data.status == true){
+        $('#registros').text(data.registros);
+        if($('#registros').text() == 0) $('#btn-borraric').addClass('disabled');
+        else $('#btn-borraric').removeClass('disabled');
+      }
+      else{
+        alert("ERROR AL CARGAR LOS REGISTROS. E1: " + data.mensaje);
+      }
+    }, "json")
+    .fail(function() { alert("ERROR AL CARGAR LOS REGISTROS. E2"); });
+    return false;
+  });
+
+
 
   $('#f1').ajaxForm({
     success: function(data) {
@@ -56,7 +104,10 @@ $(document).ready(function () {
               alert('SE PRODUJO UN ERROR EN LA CARGA DEL ARCHIVO: ' + data3.mensaje);
               return;
             }
-            else alert('PROCESO DE CARGA EXITOSO ('+data3.time_taken+ 'MS). REGISTROS GUARDADOS: ' + data3.row_affected);
+            else{
+              $('#f_medicion_Cliente_Medicion').trigger('change');
+              alert('PROCESO DE CARGA EXITOSO ('+data3.time_taken+ 'MS). REGISTROS GUARDADOS: ' + data3.row_affected);
+            }
           } ).fail(function() { alert("ERROR AL PROCESAR"); });
           alert('VALIDADO EXITOSO ('+data2.time_taken+ ' MS). COMENZO CARGA A LA BD.');
         })

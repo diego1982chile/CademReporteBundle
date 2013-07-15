@@ -343,13 +343,12 @@ function listenerFiltro()
 	var indice=0;
 
 	$('#buscar').keydown(function(e){				
-		setTimeout("setFocus('buscar')", 0);	
+		setTimeout("setFocus('buscar')", 0);			
 		switch(e.keyCode)
 		{			
-			case 13:	
+			case 13:					
 				var needle=$('#buscar').val().toUpperCase();	
-				var delta=$('table.DTFC_Cloned tbody tr').height();
-				delta=0.92*delta				
+				var delta=$('table.DTFC_Cloned tbody tr').height();				
 				var offset=delta;
 				var oSettings = oTable.fnSettings();
 				var ventana= maxHeight;					
@@ -417,7 +416,7 @@ function listenerFiltro()
 				filtrado=false;
 				break;
 		}		
-	});	
+	});
 }
 
 function setFocus(id)
@@ -525,7 +524,9 @@ function fixedColumn1()
 		}
 	});	
 	construirGrafico();
-	listenerFiltro();	
+	listenerFiltro();
+	//FIX PARA CHROME
+	$('.DTFC_LeftWrapper:first').css('height', ($('.DTFC_LeftWrapper:first').height()-15) + 'px'  );
 }
 
 function fixedColumn2()
@@ -632,9 +633,11 @@ function fixedColumn2()
 			$('.DTFC_LeftFootWrapper').hide();
 		}		
 	});	
-	// calcular_incumplimiento();
-	construirGrafico();
-	listenerFiltro();	
+	// calcular_incumplimiento();			
+	construirGrafico();		
+	listenerFiltro();
+	//FIX PARA CHROME
+	$('.DTFC_LeftWrapper:first').css('height', ($('.DTFC_LeftWrapper:first').height()-15) + 'px'  );
 }
 
 function colorTotales(){

@@ -22,7 +22,7 @@ security:
 
     firewalls:
         dev:
-            pattern:  ^/(_(profiler|wdt)|css|images|js)/
+            pattern:  ^/(_(profiler|wdt)|css|images|js|static)/
             security: false
 
         main:
@@ -62,5 +62,6 @@ security:
         - { path: ^/resetting, role: IS_AUTHENTICATED_ANONYMOUSLY }
         - { path: ^/privacidad$, role: IS_AUTHENTICATED_ANONYMOUSLY }
         - { path: ^/admin(.)*, role: ROLE_ADMIN }
+        # - { path: ^/navegadores-soportados$, role: IS_AUTHENTICATED_ANONYMOUSLY }
         - { path: ^/, role: ROLE_USER }
         #- { path: ^/login, roles: IS_AUTHENTICATED_ANONYMOUSLY, requires_channel: https }
