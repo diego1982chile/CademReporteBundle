@@ -68,6 +68,11 @@ td{
 th{
 	font-size: .55em !important;
 	text-align: center !important;
+	padding: 0em !important;
+}
+
+.head{
+	text-align: left !important;
 }
 
 .tag{
@@ -116,6 +121,10 @@ legend {
 	margin-bottom: 0em !important;	
 }
 
+div.DataTables_sort_wrapper{
+	padding-right: 0em !important;
+}
+
 {% endblock %}
 
 {% block stylesheets %}
@@ -138,6 +147,10 @@ var maxWidth={{max_width}};
 var DatosAdicionales = [];
 var matriz_totales = [];
 var aoColumnDefs = {{aoColumnDefs|raw}};
+var clase='btn-info';
+var grupo='group';
+var suffix='';
+var variable="{{tag_variable|lower}}";
 
 function calcularAnchoMaximo()
 {
@@ -210,8 +223,15 @@ function construirTabla()
 				// $(nRow).attr("data-tt-parent-id",aData[1]);
 			// },		
 			"aaSortingFixed": [[ 1, 'asc' ]],
-			"fnInitComplete": function() {															
-					fixedColumn();
+			"fnInitComplete": function() {		
+					
+					switch(variable)
+					{						
+						case 'precio':							
+							suffix='.'+grupo;							
+							break;							
+					}
+					fixedColumn();							
 				},	
 			"oLanguage": {
 			  "sProcessing": "<b>Procesando...</b>"
@@ -223,7 +243,7 @@ function construirTabla()
 		});
 		
 		$('div.fg-toolbar:first').append("<h5 style='float:left;margin:0em'>Tabla Resumen {{tag_variable}}: (%)</h5>");
-		$("<div class='dataTables_filter input-append' align='right' style='float:right;width:60%'><button id='colorear' class='btn btn_filtro' type='button'><i class='icon-flag' title='COLOREAR CELDAS'></i></button></div>").appendTo('#tabla_resumen_wrapper .fg-toolbar:first');				 				
+		$("<div class='dataTables_filter input-append' align='right' style='float:right;width:60%'><button id='detalle' class='btn' type='button'><i class='icon-zoom-in' title='VER DETALLE'></i></button><button id='colorear' class='btn' type='button'><i class='icon-flag' title='COLOREAR CELDAS'></i></button></div>").appendTo('#tabla_resumen_wrapper .fg-toolbar:first');				 				
 		$('#colorear').mousedown(function(){
 			if($(this).hasClass('btn-warning'))
 			{
@@ -235,6 +255,9 @@ function construirTabla()
 				$(this).addClass('btn-warning');
 				colorearCeldas(true);
 			}
+		});		
+		$('#detalle').mousedown(function(){			
+			cargarDetalle();			
 		});		
 	});
 }
@@ -268,14 +291,14 @@ function fixedColumn()
 					// Se agrgega una columna correspondiente a la columna oculta					
 					var nCell;
 					nCell = document.createElement( 'td' );						 
-					nCell.className = "group";																									
+					nCell.className = grupo;																									
 					nCell.innerHTML = sGroup;															
 					nGroup.appendChild( nCell ); 					
 					
                     for(var j=0 ; j< cols ; ++j)
 					{
 						nCell = document.createElement( 'td' );						 
-						nCell.className = "group";																				
+						nCell.className = grupo;																				
 						// alert(matriz_totales[row][j]);
 						nCell.innerHTML = matriz_totales[row][j];																
 						nGroup.appendChild( nCell );						 
@@ -292,7 +315,7 @@ function fixedColumn()
 					
                     nGroup = document.createElement( 'tr' );
 					nCell = document.createElement( 'td' );
-					nCell.className = "group tag";
+					nCell.className = grupo+" tag";
 					nCell.innerHTML = sGroup;
 					nGroup.appendChild( nCell );
                     // Se añade fila de agregacion para tabla fija
@@ -306,14 +329,14 @@ function fixedColumn()
 			// Se agrgega una columna correspondiente a la columna oculta			
 			var nCell;
 			nCell = document.createElement( 'td' );						 
-			nCell.className = "group";																									
+			nCell.className = grupo;																									
 			nCell.innerHTML = 0;															
 			nGroup.appendChild( nCell ); 											
 			
 			for(var j=0 ; j< cols ; ++j)
 			{
 				nCell = document.createElement( 'td' );						 
-				nCell.className = "group";																				
+				nCell.className = grupo;																				
 				// alert(matriz_totales[row][j]);
 				nCell.innerHTML = matriz_totales[row][j];																
 				nGroup.appendChild( nCell );						 
@@ -330,7 +353,7 @@ function fixedColumn()
 			
 			nGroup = document.createElement( 'tr' );
 			nCell = document.createElement( 'td' );
-			nCell.className = "group tag";
+			nCell.className = grupo+" tag";
 			nCell.innerHTML = "TOTAL GENERAL";
 			nGroup.appendChild( nCell );
 			// Se añade fila de agregacion para tabla fija			
@@ -370,7 +393,7 @@ function colorTotales(){
 	var color_fondo = 'rgb(255, 235, 158)';
 	$('.DTFC_Cloned tbody tr:first td').css('background-color',color_fondo);
 	$('.table:not(.DTFC_Cloned) tbody tr:first td').css('background-color',color_fondo);
-	$('.table:not(.DTFC_Cloned) tbody tr td:last-of-type:not(.group)').css('background-color',color_fondo);
+	$('.table:not(.DTFC_Cloned) tbody tr td:last-of-type:not(.'+grupo+')').css('background-color',color_fondo);
 	$('.DTFC_Cloned tbody tr td:first-of-type:not(.group)').css({
 		'background-color':'rgb(238, 236, 255)',
 		'color': 'black',
@@ -398,8 +421,8 @@ $(document).ready(function () {
 			plotBackgroundColor: null,
 			plotBorderWidth: null,
 			plotShadow: false,
-			width: 900,
-			height: 350
+			// width: 900,
+			// height: 350
 		},
 		title: {
 			text: 'Evolución {{estudios[0].getEstudioVariables[0].getNombrevariable}}'
@@ -490,12 +513,13 @@ $(document).ready(function () {
 	var intento_fil = false;
 	var label_col = "";
 	var label_fil = "";
-	var cat_fil = "";
+	var cat_fil = "";	
 	//GRAFICAR COLUMNAS
 	$(document).on('click', 'thead th', function(e) {
 		var label= $(this).attr('tag');
 		if (e.ctrlKey){//AGREGAR OTRA LINEA
-			$(this).addClass("ui-state-active");
+			// $(this).addClass("ui-state-active");
+			$(this).children().addClass(clase);
 			intento_col = false;
 			//GET
 			//SE CLONA FORM Y SE ARREGLA LOS ITEM SELECCIONADOS POR USUARIO
@@ -505,7 +529,7 @@ $(document).ready(function () {
 			originform.each(function(i) {
 				if($(this).is(':selected')) cform.find('option').eq(i).attr("selected", true);
 			});
-			//SE QUITA REGION Y COMUNA
+			//SE QUITA REGION Y PROVINCIA
 			cform.find('#f_region').remove();
 			cform.find('#f_provincia').remove();
 			cform.find('input').remove();
@@ -545,8 +569,8 @@ $(document).ready(function () {
 			intento_col = true;
 			intento_fil = false;
 			label_col = label;
-			$(".ui-state-active").removeClass("ui-state-active");
-			$(this).addClass("ui-state-active");
+			$('.'+clase).removeClass(clase);
+			$(this).children().addClass(clase);
 			//GET
 			//SE CLONA FORM Y SE ARREGLA LOS ITEM SELECCIONADOS POR USUARIO
 			var cform = $('form#filtros').clone();
@@ -593,7 +617,8 @@ $(document).ready(function () {
 		var label= $(this).text();
 		if (e.ctrlKey){//AGREGAR OTRA LINEA
 			intento_fil = false;
-			$(this).addClass("ui-state-active");
+			// $(this).addClass("ui-state-active");
+			$(this).addClass(clase);
 			//GET
 			//SE CLONA FORM Y SE ARREGLA LOS ITEM SELECCIONADOS POR USUARIO
 			var cform = $('form#filtros').clone();
@@ -644,8 +669,8 @@ $(document).ready(function () {
 			intento_col = false;
 			label_fil = label;
 			cat_fil = categoria;
-			$(".ui-state-active").removeClass("ui-state-active");
-			$(this).addClass("ui-state-active");
+			$('.'+clase).removeClass(clase);
+			$(this).addClass(clase);
 			//GET
 			//SE CLONA FORM Y SE ARREGLA LOS ITEM SELECCIONADOS POR USUARIO
 			var cform = $('form#filtros').clone();
@@ -768,6 +793,45 @@ $(document).ready(function () {
 		.done(function() {  })
 		.fail(function() {  })
 		.always(function() { quitarloader('#tabla-loader'); });
+	}
+	
+	function cargarDetalle(){
+
+		// 1o Obtener las comunas
+		var cform = $('form#filtros').clone();
+		cform.find('option').removeAttr("selected");
+		var originform = $('form#filtros option');
+		originform.each(function(i) {
+			if($(this).is(':selected')) cform.find('option').eq(i).attr("selected", true);
+		});
+		//SE QUITA REGION Y PROVINCIA
+		cform.find('#f_region').remove();
+		cform.find('#f_provincia').remove();
+		cform.find('input').remove();
+		
+		var dataform = cform.serialize();
+						
+		// Luego obtener los grupos (categorías o segmentos)
+		var categorias= new Array();
+		var segmentos= new Array();
+		var cadenas= new Array();
+		
+		$('td.'+clase).each(function(){			
+			if($(this).hasClass(grupo))
+				categorias.push($(this).text())			
+			else
+				segmentos.push($(this).text())			
+		});
+		
+		$('th div.'+clase).each(function(){						
+			cadenas.push($(this).parent().attr('tag'))						
+		});
+		
+		dataform+='&categorias='+JSON.stringify(categorias)+'&segmentos'+JSON.stringify(segmentos)+'&cadenas'+JSON.stringify(cadenas);
+		
+		DatosAdicionales = dataform;
+	
+		alert(DatosAdicionales);
 	}
 	
 	function quitarloader(id_){
