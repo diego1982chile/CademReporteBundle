@@ -269,7 +269,7 @@ class PrecioEvolucionController extends Controller
 		// $fila['bVisible']=false;	
 		// $fila['sClass']="medicion";
 		array_push($aoColumnDefs,$fila);		
-		// $fila['sWidth']="2%";	
+		$fila['sWidth']="100px";	
 		array_push($head,'TOTAL');
 		
 		// Obtener totales horizontales por producto

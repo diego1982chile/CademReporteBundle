@@ -341,7 +341,7 @@ class PresenciaDetalleController extends Controller
 		}		
 		$fila=array();
 		$fila['aTargets']=array($cont);		
-		// $fila['sWidth']="2%";	
+		$fila['sWidth']="80px";	
 		array_push($aoColumnDefs,$fila);		
 		foreach(array_reverse($prefixes) as $prefix)		
 			array_unshift($head,$prefix);		

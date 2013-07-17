@@ -99,6 +99,10 @@ span.indenter{
 	margin-bottom: 0;
 }
 
+.ui-state-active{
+	border: 0px !important;
+}
+
 .total {
 	background-color:'#F7FE2E' !important;
 }
@@ -125,6 +129,7 @@ div.DataTables_sort_wrapper{
 	padding-right: 0em !important;
 }
 
+
 {% endblock %}
 
 {% block stylesheets %}
@@ -147,7 +152,7 @@ var maxWidth={{max_width}};
 var DatosAdicionales = [];
 var matriz_totales = [];
 var aoColumnDefs = {{aoColumnDefs|raw}};
-var clase='btn-info';
+var clase='ui-state-active';
 var grupo='group';
 var suffix='';
 var variable="{{tag_variable|lower}}";
@@ -243,7 +248,7 @@ function construirTabla()
 		});
 		
 		$('div.fg-toolbar:first').append("<h5 style='float:left;margin:0em'>Tabla Resumen {{tag_variable}}: (%)</h5>");
-		$("<div class='dataTables_filter input-append' align='right' style='float:right;width:60%'><button id='detalle' class='btn' type='button'><i class='icon-zoom-in' title='VER DETALLE'></i></button><button id='colorear' class='btn' type='button'><i class='icon-flag' title='COLOREAR CELDAS'></i></button></div>").appendTo('#tabla_resumen_wrapper .fg-toolbar:first');				 				
+		$("<div class='dataTables_filter input-append' align='right' style='float:right;width:60%'><button id='detalle' class='btn' type='button'><i class='icon-zoom-in' title='VER DETALLE'></i></button><button id='colorear' class='btn' type='button'><i class='icon-flag' title='TERMOGRAMA'></i></button></div>").appendTo('#tabla_resumen_wrapper .fg-toolbar:first');				 				
 		$('#colorear').mousedown(function(){
 			if($(this).hasClass('btn-warning'))
 			{
@@ -394,9 +399,10 @@ function colorTotales(){
 	$('.DTFC_Cloned tbody tr:first td').css('background-color',color_fondo);
 	$('.table:not(.DTFC_Cloned) tbody tr:first td').css('background-color',color_fondo);
 	$('.table:not(.DTFC_Cloned) tbody tr td:last-of-type:not(.'+grupo+')').css('background-color',color_fondo);
-	$('.DTFC_Cloned tbody tr td:first-of-type:not(.group)').css({
-		'background-color':'rgb(238, 236, 255)',
+	$('.DTFC_Cloned tbody tr td:first-of-type:not(.'+grupo+')').css({
+		// 'background-color':'rgb(238, 236, 255)',
 		'color': 'black',
+		'cursor': 'pointer'
 	});	
 }
 
@@ -569,7 +575,7 @@ $(document).ready(function () {
 			intento_col = true;
 			intento_fil = false;
 			label_col = label;
-			$('.'+clase).removeClass(clase);
+			$('th div.'+clase).removeClass(clase);
 			$(this).children().addClass(clase);
 			//GET
 			//SE CLONA FORM Y SE ARREGLA LOS ITEM SELECCIONADOS POR USUARIO
@@ -669,7 +675,7 @@ $(document).ready(function () {
 			intento_col = false;
 			label_fil = label;
 			cat_fil = categoria;
-			$('.'+clase).removeClass(clase);
+			$('td.'+clase).removeClass(clase);			
 			$(this).addClass(clase);
 			//GET
 			//SE CLONA FORM Y SE ARREGLA LOS ITEM SELECCIONADOS POR USUARIO
