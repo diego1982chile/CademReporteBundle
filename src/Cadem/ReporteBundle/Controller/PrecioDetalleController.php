@@ -289,7 +289,7 @@ class PrecioDetalleController extends Controller
 		$fila=array();
 		$fila['aTargets']=array($cont);	
 		// $fila['bVisible']=false;	
-		// $fila['sWidth']="2%";
+		$fila['sWidth']="80px";
 		array_push($aoColumnDefs,$fila);		
 		foreach(array_reverse($prefixes) as $prefix)		
 			array_unshift($head,$prefix);		
@@ -297,7 +297,7 @@ class PrecioDetalleController extends Controller
 		
 		// Guardamos resultado de consulta en variable de sesión para reusarlas en un action posterior
 		$session->set("salas",$salas);				
-		$session->set("detalle_precio",$detalle_precio);	
+		$session->set("detalle_precio",$detalle_precio);			
 		// $session->set("totales_producto",$totales_producto);		
 		// $session->set("totales_segmento",$totales_segmento);		
 		// $session->set("totales_horizontales_segmento",$totales_horizontales_segmento);	

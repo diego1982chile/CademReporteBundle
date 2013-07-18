@@ -100,6 +100,16 @@ precio_detalle_body:
     defaults: { _controller: CademReporteBundle:PrecioDetalle:body, variable: precio }
     requirements:
         variable:  precio
+precio_resumen_detalle_header:
+    pattern: /{variable}/resumen/detalle_header
+    defaults: { _controller: CademReporteBundle:PrecioResumen:detalleheader, variable: precio }
+    requirements:
+        variable:  precio
+precio_resumen_detalle_body:
+    pattern: /{variable}/resumen/detalle_body
+    defaults: { _controller: CademReporteBundle:PrecioResumen:detallebody, variable: precio }
+    requirements:
+        variable:  precio		
 #QUIEBRE
 quiebre_resumen_index:
     pattern: /{variable}/resumen
@@ -119,6 +129,16 @@ quiebre_resumen_header:
 quiebre_resumen_body:
     pattern: /{variable}/resumen/body
     defaults: { _controller: CademReporteBundle:QuiebreResumen:body, variable: quiebre }
+    requirements:
+        variable:  quiebre
+quiebre_resumen_detalle_header:
+    pattern: /{variable}/resumen/detalle_header
+    defaults: { _controller: CademReporteBundle:QuiebreResumen:detalleheader, variable: quiebre }
+    requirements:
+        variable:  quiebre
+quiebre_resumen_detalle_body:
+    pattern: /{variable}/resumen/detalle_body
+    defaults: { _controller: CademReporteBundle:QuiebreResumen:detallebody, variable: quiebre }
     requirements:
         variable:  quiebre
 quiebre_ranking_index:
@@ -172,6 +192,16 @@ presencia_resumen_index:
     defaults: { _controller: CademReporteBundle:PresenciaResumen:index, variable: presencia }
     requirements:
         variable: presencia
+presencia_resumen_detalle_header:
+    pattern: /{variable}/resumen/detalle_header
+    defaults: { _controller: CademReporteBundle:PresenciaResumen:detalleheader, variable: presencia }
+    requirements:
+        variable:  presencia
+presencia_resumen_detalle_body:
+    pattern: /{variable}/resumen/detalle_body
+    defaults: { _controller: CademReporteBundle:PresenciaResumen:detallebody, variable: presencia }
+    requirements:
+        variable:  presencia
 presencia_resumen_evolutivo:
     pattern: /{variable}/resumen/evolutivo
     defaults: { _controller: CademReporteBundle:PresenciaResumen:evolutivo, variable: presencia }
