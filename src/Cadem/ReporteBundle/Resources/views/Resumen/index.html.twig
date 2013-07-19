@@ -194,7 +194,24 @@ span.indenter{
 }
 
 .ui-state-active{
-	border: 0px !important;
+	border: none !important;
+}
+
+.ui-state-hover{
+	border: none !important;
+}
+
+.ui-state-focus{
+	border: none !important;
+}
+
+.ui-state-highlight{
+	border: none !important;
+}
+
+.group{
+	border-bottom: 0px !important;
+	border-top: 0px !important;
 }
 
 .total {
@@ -209,7 +226,7 @@ legend {
 }
 
 .dataTables_filter{
-	margin-bottom: 10px !important;
+	margin-bottom: 5px !important;
 	font-size: 14px !important;
 	height: 16px !important;
 	padding: .1em !important;
@@ -225,12 +242,26 @@ div.DataTables_sort_wrapper{
 
 div.dataTables_wrapper { 
 min-height: 130px !important; 
-
 }
 
 .fueraRango{
 	background:red;
 	color:white;
+}
+
+.btn_filtro{
+	padding: .1em !important;
+	width: 5em !important;		
+}
+
+.btn_accion{
+	padding-bottom: .1em !important;	
+	padding-top: .1em !important;	
+}
+
+#filtro{
+	width: 10em !important;
+	min-height: 25px !important;
 }
 
 {% endblock %}
@@ -257,11 +288,12 @@ var DatosAdicionales = [];
 var matriz_totales = [];
 var matriz_totales_det = [];
 var aoColumnDefs = {{aoColumnDefs|raw}};
-var clase='ui-state-active';
+var clase='ui-state-highlight';
 var grupo='group';
 var suffix='';
 var variable="{{tag_variable|lower}}";
 var columnas_reservadas = parseInt({{columnas_reservadas}});
+var filtrar_por='sku';
 
 function calcularAnchoMaximo(id_tabla)
 {
@@ -350,17 +382,7 @@ function construirTabla()
 							break;							
 					}
 					fixedColumn();							
-					$("#tabla_resumen tbody tr td").mouseenter(function(e){						
-						var target=$(e.target);
-						$(document).keydown(function(e){							
-							if(e.keyCode==17)	
-								$(target).css('cursor','pointer');								
-						});
-						$(document).keyup(function(e){														
-							if(e.keyCode==17)															
-								$(target).css('cursor','default');															
-						});
-					});
+					listenerCelda();					
 				},	
 			"oLanguage": {
 			  "sProcessing": "<b>Procesando...</b>"
@@ -372,7 +394,7 @@ function construirTabla()
 		});
 		
 		$('div.fg-toolbar:first').append("<h5 style='float:left;margin:0em'>Tabla Resumen {{tag_variable}}: (%)</h5>");
-		$("<div class='dataTables_filter input-append' align='right' style='float:right;width:60%'><button id='detalle' class='btn' type='button'><i class='icon-zoom-in' title='VER DETALLE'></i></button><button id='colorear_resumen' class='btn' type='button'><i class='icon-flag' title='TERMOGRAMA'></i></button></div>").appendTo('#tabla_resumen_wrapper .fg-toolbar:first');				 				
+		$("<div class='dataTables_filter input-append' align='right' style='float:right;width:60%'><button id='detalle' class='btn btn_accion' type='button'><i class='icon-zoom-in' title='VER DETALLE'></i></button><button id='colorear_resumen' class='btn btn_accion' type='button'><i class='icon-flag' title='TERMOGRAMA'></i></button></div>").appendTo('#tabla_resumen_wrapper .fg-toolbar:first');				 				
 		$('#colorear_resumen').mousedown(function(){
 			if($(this).hasClass('btn-warning'))
 			{
@@ -466,7 +488,29 @@ function construirTablaDetalle()
 		});
 		
 		$('#tabla_detalle_wrapper div.fg-toolbar:first').append("<h5 style='float:left;margin:0em'>Tabla Detalle {{tag_variable}} (%)</h5>");
-		$("<div class='dataTables_filter input-append' align='right' style='float:right;width:60%'><button id='colorear_detalle' class='btn' type='button'><i class='icon-flag' title='TERMOGRAMA'></i></button></div>").appendTo('#tabla_detalle_wrapper .fg-toolbar:first');				 				
+		$("<div class='dataTables_filter input-append' align='right' style='float:right;width:60%'><button id='filtro_sku' title='FILTRO ACTIVO POR SKU' class='btn btn_filtro btn-warning' type='button'><i class='icon-filter'></i> SKU</button><button id='filtro_sala' class='btn btn_filtro' type='button' title='FILTRO ACTIVO POR SALA'><i class='icon-filter'></i> SALA</button><input id='filtro' class='span2 input_filtro' /><button id='boton_buscar' class='btn btn_accion' type='button' title='BUSCAR'><i class='icon-search'></i></button><button id='colorear_detalle' class='btn btn_accion' type='button'><i class='icon-flag' title='TERMOGRAMA'></i></button></div>").appendTo('#tabla_detalle_wrapper .fg-toolbar:first');				 				
+		
+		$('#boton_buscar').mousedown(function(){			
+			var e = jQuery.Event("keydown");
+			e.keyCode = 13; // # Some key code value
+			$('#filtro').trigger(e);
+		});
+		
+		$('.btn_filtro').mousedown(function(){
+			$('.input-append button.btn_filtro').removeClass('btn-warning');
+			$(this).addClass('btn-warning');			
+			if($(this).attr('id')=='filtro_sku')
+			{
+				filtrar_por='sku';
+			}
+			else
+			{
+				filtrar_por='sala';				
+			}
+		});
+		
+		listenerFiltro();
+		
 		$('#colorear_detalle').mousedown(function(){
 			if($(this).hasClass('btn-warning'))
 			{
@@ -628,6 +672,7 @@ function fixedColumnDetQ()
 						nGroup.appendChild( nCell );						 
 					}
 					++row;
+					nGroup.setAttribute('title',sGroup);				
                     nTrs[i].parentNode.insertBefore( nGroup, nTrs[i] );
 					// Se crea atributo que asocie la fila de agregacion con sus filas hijas
 					var att=document.createAttribute("data-tt-id");
@@ -641,7 +686,9 @@ function fixedColumnDetQ()
 					nCell = document.createElement( 'td' );
 					nCell.className = grupo+" tag";
 					nCell.innerHTML = sGroup;
+					nCell.setAttribute('title',sGroup);				
 					nGroup.appendChild( nCell );
+					nGroup.setAttribute('title',sGroup);				
                     // Se añade fila de agregacion para tabla fija
 					$(nGroup).insertBefore( $('tbody:first tr:eq('+(i+iCorrector)+')', left.body)[0] );
 					
@@ -665,7 +712,7 @@ function fixedColumnDetQ()
 				nCell.innerHTML = matriz_totales_det[row][j];																
 				nGroup.appendChild( nCell );						 
 			}						
-			
+			nGroup.setAttribute('title',"TOTAL GENERAL");										
 			$(nGroup).insertBefore( $('#tabla_detalle.DTFC_Cloned tbody tr:eq('+(0)+')', right.body)[0] );
 			// Se crea atributo que asocie la fila de agregacion con sus filas hijas
 			var att=document.createAttribute("data-tt-id");
@@ -678,8 +725,8 @@ function fixedColumnDetQ()
 			nGroup = document.createElement( 'tr' );
 			nCell = document.createElement( 'td' );
 			nCell.className = grupo+" tag";
-			nCell.innerHTML = "TOTAL GENERAL";
-			nGroup.appendChild( nCell )			
+			nCell.innerHTML = "TOTAL GENERAL";			
+			nGroup.appendChild( nCell );			
 			// Se añade fila de agregacion para tabla fija			
 			$(nGroup).insertBefore( $('#tabla_detalle.DTFC_Cloned tbody tr:eq('+(0)+')', left.body)[0] );	
 			matriz_totales_det=[];
@@ -778,6 +825,7 @@ function fixedColumnDetP()
 				nCell.innerHTML = matriz_totales_det[row][j];																
 				nGroup.appendChild( nCell );						 
 			}					
+			nGroup.setAttribute('title',"TOTAL GENERAL");										
 			$(nGroup).insertBefore( $('#tabla_detalle.DTFC_Cloned tbody tr:eq('+(0)+')', right.body)[0] );						
 			// Se crea atributo que asocie la fila de agregacion con sus filas hijas					
 			// Se añade fila de agregacion para tabla principal
@@ -803,13 +851,8 @@ function fixedColumnDetP()
 			$(nGroup).insertBefore( $('#tabla_detalle.DTFC_Cloned tbody tr:eq(0)', left.body)[0] );			
 			$('.DTFC_LeftFootWrapper').hide();
 		}		
-	});	
-	// new FixedColumns( oTable, {
-		// "sHeightMatch": "none",	
-		// "iLeftColumns": 2,
-	// });		
-	calcular_incumplimiento();
-	listenerFiltro();
+	});		
+	calcular_incumplimiento();	
 	//FIX PARA CHROME
 	$('.DTFC_LeftWrapper:first').css('height', ($('.DTFC_LeftWrapper:first').height()-15) + 'px'  );	
 }
@@ -1041,6 +1084,7 @@ $(document).ready(function () {
 			intento_fil = false;
 			label_col = label;
 			$('th div.'+clase).removeClass(clase);
+			$('td.'+clase).removeClass(clase);
 			$(this).children().addClass(clase);
 			//GET
 			//SE CLONA FORM Y SE ARREGLA LOS ITEM SELECCIONADOS POR USUARIO
@@ -1140,7 +1184,8 @@ $(document).ready(function () {
 			intento_col = false;
 			label_fil = label;
 			cat_fil = categoria;
-			$('td.'+clase).removeClass(clase);			
+			$('td.'+clase).removeClass(clase);		
+			$('th div.'+clase).removeClass(clase);			
 			$(this).addClass(clase);
 			//GET
 			//SE CLONA FORM Y SE ARREGLA LOS ITEM SELECCIONADOS POR USUARIO
@@ -1393,7 +1438,7 @@ $(document).ready(function () {
 				});								
 				break;
 			case 'celda':											
-				cadenas.push($('thead tr').children(':eq('+$(target).index()+')').attr('tag'));
+				cadenas.push($('thead tr').children(':eq('+$(target).index()+')').attr('tag'));								
 								
 				if($('.DTFC_Cloned tbody').children(':eq('+$(target).parent().index()+')').children().hasClass(grupo))				
 					categorias.push($('.DTFC_Cloned tbody').children(':eq('+$(target).parent().index()+')').attr('title'))							
@@ -1546,26 +1591,30 @@ function listenerFiltro()
 {	
 	var filtrado= false;
 	var indice=0;
-	var offset=0;
-
-	$('#filtro').keydown(function(e){			
+	var offset=0;	
+	
+	var matched_active='btn-success';
+	var matched='btn-warning';
+	var clase='';
+	
+	$('#filtro').keydown(function(e){				
+			
 		switch(e.keyCode)
 		{			
-			case 13:	
+			case 13:						
 				switch(filtrar_por)
 				{
-					case 'sku':
+					case 'sku':						
 						var needle=$('#filtro').val().toUpperCase();					
 						var delta=$('table.DTFC_Cloned tbody tr').height();
 						delta=delta
 						offset=delta;
-						var oSettings = oTable.fnSettings();
-						var ventana= maxHeight;					
+						var oSettings = oTableDet.fnSettings();									
 						
 						if(needle=='')
 						{
-							$('.matched').removeClass('matched');	
-							$('.matched_active').removeClass('matched_active');	
+							$('.'+matched).removeClass(matched);	
+							$('.'+matched_active).removeClass(matched_active);	
 							return false;
 						}
 						if(!filtrado)
@@ -1573,52 +1622,49 @@ function listenerFiltro()
 							filtrado=true;							
 							var hit=false;
 							// $('.ui-state-active').removeClass('ui-state-active');				
-							$('.matched').removeClass('matched');	
-							$('.matched_active').removeClass('matched_active');	
-							$('table.DTFC_Cloned tbody tr').each(function(){						
-								var haystack=$(this).attr('title').toString().toUpperCase();					
+							$('td.'+matched).removeClass(matched);	
+							$('td.'+matched_active).removeClass(matched_active);	
+							$('#tabla_detalle tbody tr').each(function(){						
+								var haystack=$(this).attr('title').toString().toUpperCase();													
 								if (haystack.indexOf(needle)!=-1) {															
 									if(!hit)							
-										clase='matched_active';														
+										clase=matched_active;														
 									else							
-										clase='matched';
+										clase=matched;
 																							
 									$(this).addClass(clase);
 									
-									$('#tabla_resumen tbody').children(':eq('+$(this).index()+')').addClass(clase);
+									$('table.tabla_detalle.DTFC_Cloned tbody').children(':eq('+$(this).index()+')').addClass(clase);
 									hit=true;							
 								}
 								if(!hit)
 									offset=offset+delta;
 							});
 							if(hit)
-							{					
-								if(offset<=ventana)
-									offset=0;
-								else
-									offset=($('.matched:first').index())*delta;
-								$('.dataTables_scrollBody').animate({ scrollTop: offset });		
+							{													
+								offset=($('.'+matched+':first').index())*delta;
+								$('.tabla_detalle.dataTables_scrollBody').animate({ scrollTop: offset });		
 							}
 							else
 							{
 								alert('El item no fue encontrado');
 								$('#filtro').val('');
-								$('.dataTables_scrollBody').animate({ scrollTop: 0 });	
+								$('.tabla_detalle.dataTables_scrollBody').animate({ scrollTop: 0 });	
 							}
 						}
 						else
 						{									
-							offset=($('.matched:first').index())*delta;
-							if($('.matched').length<=2)
+							offset=($('.'+matched+':first').index())*delta;
+							if($('.'+matched).length<=2)
 								filtrado=false;
-							$('.matched_active').removeClass('matched_active');	
-							$('#tabla_resumen tbody tr.matched:first').addClass('matched_active');
-							$('#tabla_resumen tbody tr.matched:first').removeClass('matched');	
+							$('.'+matched_active).removeClass(matched_active);	
+							$('#tabla_detalle tbody tr.'+matched+':first').addClass(matched_active);
+							$('#tabla_detalle tbody tr.'+matched+':first').removeClass(matched);	
 							
-							$('table.DTFC_Cloned tbody tr.matched:first').addClass('matched_active');
-							$('table.DTFC_Cloned tbody tr.matched:first').removeClass('matched');						
+							$('table.tabla_detalle.DTFC_Cloned tbody tr.'+matched+':first').addClass(matched_active);
+							$('table.tabla_detalle.DTFC_Cloned tbody tr.'+matched+':first').removeClass(matched);						
 							
-							$('.dataTables_scrollBody').animate({ scrollTop: offset });						
+							$('.dataTables_scrollBody:first').animate({ scrollTop: offset });						
 						}
 					break;
 					
@@ -1667,7 +1713,7 @@ function listenerFiltro()
 							{
 								alert('El item no fue encontrado');
 								$('#filtro').val('');
-								$('.dataTables_scrollBody').animate({ scrollLeft: 0 });	
+								$('.dataTables_scrollBody:first').animate({ scrollLeft: 0 });	
 							}
 						}
 						else
@@ -1680,7 +1726,7 @@ function listenerFiltro()
 							$('th div.btn-warning:first').addClass('btn-success');
 							$('th div.btn-warning:first').removeClass('btn-warning');	
 						
-							$('.dataTables_scrollBody').animate({ scrollLeft: offset });						
+							$('.dataTables_scrollBody:first').animate({ scrollLeft: offset });						
 						}
 					break;
 				}
@@ -1709,5 +1755,31 @@ function construirSlider(rango_precio){
 	});
 	$( "#amount" ).val( $( "#slider-range-min" ).slider( "value" ) + '%');	
 }
+
+function listenerCelda(){	
+	
+	var clase='ui-state-focus';
+	
+	$("#tabla_resumen tbody tr td").mouseenter(function(e){						
+		var target=$(e.target);		
+		$('.'+clase).removeClass(clase);
+		$(this).addClass(clase);
+		$('thead tr').children(':eq('+$(target).index()+')').children().addClass(clase);
+		$('.DTFC_Cloned tbody').children(':eq('+$(target).parent().index()+')').children().addClass(clase);
+		$(document).keydown(function(e){							
+			if(e.keyCode==17)	
+				$(target).css('cursor','pointer');								
+		});
+		$(document).keyup(function(e){														
+			if(e.keyCode==17)															
+				$(target).css('cursor','default');															
+		});
+	});
+	
+	$("#tabla_resumen tbody").mouseleave(function(e){						
+		$('.'+clase).removeClass(clase);
+	});
+}
+
  </script>
 {% endblock %}
