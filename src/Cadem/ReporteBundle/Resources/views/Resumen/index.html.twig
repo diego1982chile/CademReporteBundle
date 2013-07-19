@@ -288,7 +288,7 @@ var DatosAdicionales = [];
 var matriz_totales = [];
 var matriz_totales_det = [];
 var aoColumnDefs = {{aoColumnDefs|raw}};
-var clase='ui-state-highlight';
+var clase='btn-warning';
 var grupo='group';
 var suffix='';
 var variable="{{tag_variable|lower}}";
@@ -1227,7 +1227,7 @@ $(document).ready(function () {
 	$(document).on('click', '#tabla_resumen tbody tr td', function(e) {
 		if(e.ctrlKey)
 		{
-			$('form#filtros input').last().after('<img id="tabla-loader" class="loader" alt="" style="float:right" src="/bundles/cademreporte/images/loader.gif">');
+			$('.DTFC_Cloned').find('.DataTables_sort_icon').append('<img class="loader" alt="" style="float:left;margin-left:20px" src="/bundles/cademreporte/images/loader-minitrans.gif">');
 			obtenerDatosAdicionales('celda',$(e.target));		
 		}
 	});
@@ -1758,7 +1758,7 @@ function construirSlider(rango_precio){
 
 function listenerCelda(){	
 	
-	var clase='ui-state-focus';
+	var clase='ui-state-highlight';
 	
 	$("#tabla_resumen tbody tr td").mouseenter(function(e){						
 		var target=$(e.target);		
