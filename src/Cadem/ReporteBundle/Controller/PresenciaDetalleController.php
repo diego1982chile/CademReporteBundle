@@ -207,7 +207,9 @@ class PresenciaDetalleController extends Controller
 		INNER JOIN COMUNA com on s.COMUNA_ID=com.ID
 		INNER JOIN CADENA cad on s.CADENA_ID=cad.ID	
 		INNER JOIN ITEM i on i.ID = ic.ITEM_ID	
-		ORDER BY SEGMENTO,NOM_PRODUCTO,NOM_SALA";			
+		ORDER BY SEGMENTO,NOM_PRODUCTO,COD_PRODUCTO,NOM_SALA";			
+		
+		// print_r($sql);
 		
 		$sha1 = sha1($sql);
 
@@ -229,8 +231,8 @@ class PresenciaDetalleController extends Controller
 				GROUP BY i.NOMBRE, ni.NOMBRE
 				ORDER BY ni.NOMBRE,i.NOMBRE";
 			
-		$totales_producto = $em->getConnection()->executeQuery($sql)->fetchAll();		
-
+		$totales_producto = $em->getConnection()->executeQuery($sql)->fetchAll();				
+		
 		// Obtener totales verticales por segmento
 						
 		$sql =	"SELECT ni.NOMBRE as SEGMENTO, ISNULL(sc.CODIGOSALA, UPPER(cad.NOMBRE+' '+com.NOMBRE+' '+s.CALLE+' '+s.NUMEROCALLE)) as ID_SALA, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
@@ -242,7 +244,7 @@ class PresenciaDetalleController extends Controller
 				INNER JOIN COMUNA com on s.COMUNA_ID=com.ID
 				INNER JOIN CADENA cad on s.CADENA_ID=cad.ID								
 				GROUP BY cad.NOMBRE,com.NOMBRE,s.CALLE,s.NUMEROCALLE,ni.NOMBRE, sc.CODIGOSALA
-				ORDER BY ni.NOMBRE";			
+				ORDER BY ni.NOMBRE";						
 	
 		$totales_segmento = $em->getConnection()->executeQuery($sql)->fetchAll();		
 		
@@ -463,12 +465,13 @@ class PresenciaDetalleController extends Controller
 			// Lleno la fila con vacios, le agrego 1 posiciones, correspondientes al total					
 			$fila=array_fill(0,$num_salas+3,"<div style='background:grey;height:2.22em'></div>");								
 			$nivel2=$detalle_quiebre[$cont_regs]['SEGMENTO'];																								
-			$cont_totales_producto=0;				
+			$cont_totales_producto=0;										
+			$num_regs_totales=count($totales_producto);						
 		
 			while($cont_regs<$num_regs)
 			{	// Lleno la fila con vacios, le agrego 3 posiciones, correspondientes a los niveles de agregación y al total	
 				$columna_quiebre=array_search($detalle_quiebre[$cont_regs]['ID_SALA'],$salas);	
-						
+							
 				// Mientras el primer nivel de agregación no cambie			
 				if($nivel1==$detalle_quiebre[$cont_regs]['COD_PRODUCTO'])
 				{									
@@ -487,14 +490,17 @@ class PresenciaDetalleController extends Controller
 				}	
 				else
 				{ // Si el primer nivel de agregacion cambió, lo actualizo, agrego la fila al body y reseteo el contador de cadenas												
-					$fila[$num_salas+2]=round($totales_producto[$cont_totales_producto]['QUIEBRE']*100,1);					
-					$cont_totales_producto++;																			
+					if($cont_totales_producto<$num_regs_totales-1)
+					{
+						$fila[$num_salas+2]=number_format(round($totales_producto[$cont_totales_producto]['QUIEBRE']*100,1),1,',','.');					
+						$cont_totales_producto++;																			
+					}
 					$nivel1=$detalle_quiebre[$cont_regs]['COD_PRODUCTO'];
 					array_push($body,$fila);
 					$fila=array_fill(0,$num_salas+3,"<div style='background:grey;height:2.22em'></div>");	
 				}
 				if($cont_regs==$num_regs)		
-				{						
+				{									
 					$columna_quiebre=array_search($detalle_quiebre[$cont_regs-1]['COD_SALA'],$salas);											
 					switch($detalle_quiebre[$cont_regs-1]['quiebre'])
 					{
@@ -505,12 +511,13 @@ class PresenciaDetalleController extends Controller
 							$fila[$columna_quiebre+2]="<div style='background:$color_negativo;height:2.22em'></div>";	
 							break;
 					}					
-					$fila[$num_salas+2]=round($totales_producto[$cont_totales_producto]['QUIEBRE']*100,1);					
+					$fila[$num_salas+2]=number_format(round($totales_producto[$cont_totales_producto]['QUIEBRE']*100,1),1,',','.');					
 					$cont_totales_producto++;								
 					array_push($body,$fila);
 					$cont_regs++;
 				}			
 			}	
+			// print_r(count($body));
 			// Calculo de totales		
 			$fila=array_fill(0,$num_salas+1,"-");	
 			$num_regs=count($totales_segmento);
@@ -524,12 +531,12 @@ class PresenciaDetalleController extends Controller
 				// Mientras no cambie el segmento
 				if($nivel2==$totales_segmento[$cont_regs]['SEGMENTO'])
 				{
-					$fila[$columna_quiebre]=round($totales_segmento[$cont_regs]['QUIEBRE']*100,1);					
+					$fila[$columna_quiebre]=number_format(round($totales_segmento[$cont_regs]['QUIEBRE']*100,1),1,',','.');					
 					$cont_regs++;
 				}
 				else
 				{
-					$fila[$num_salas]=round($totales_horizontales_segmento[$cont_totales_horizontales_segmento]['QUIEBRE']*100,1);
+					$fila[$num_salas]=number_format(round($totales_horizontales_segmento[$cont_totales_horizontales_segmento]['QUIEBRE']*100,1),1,',','.');
 					$cont_totales_horizontales_segmento++;
 					array_push($matriz_totales,$fila);
 					$fila=array_fill(0,$num_salas+1,"-");
@@ -538,8 +545,8 @@ class PresenciaDetalleController extends Controller
 				if($cont_regs==$num_regs)		
 				{	
 					$columna_quiebre=array_search($totales_segmento[$cont_regs-1]['ID_SALA'],$salas);
-					$fila[$columna_quiebre]=round($totales_segmento[$cont_regs-1]['QUIEBRE']*100,1);					
-					$fila[$num_salas]=round($totales_horizontales_segmento[$cont_totales_horizontales_segmento]['QUIEBRE']*100,1);
+					$fila[$columna_quiebre]=number_format(round($totales_segmento[$cont_regs-1]['QUIEBRE']*100,1),1,',','.');					
+					$fila[$num_salas]=number_format(round($totales_horizontales_segmento[$cont_totales_horizontales_segmento]['QUIEBRE']*100,1),1,',','.');
 					array_push($matriz_totales,(object)$fila);		
 					$cont_regs++;					
 				}				
@@ -553,11 +560,11 @@ class PresenciaDetalleController extends Controller
 			{
 				$columna_quiebre=array_search($totales_verticales_segmento[$cont_regs]['ID_SALA'],$salas);					
 				// Mientras no cambie la cadena  
-				$fila[$columna_quiebre]=round($totales_verticales_segmento[$cont_regs]['QUIEBRE']*100,1);					
+				$fila[$columna_quiebre]=number_format(round($totales_verticales_segmento[$cont_regs]['QUIEBRE']*100,1),1,',','.');					
 				$cont_regs++;
 			}	
 			
-			$fila[$num_salas]=round($total[0]['QUIEBRE']*100,1);			
+			$fila[$num_salas]=number_format(round($total[0]['QUIEBRE']*100,1),1,',','.');			
 			
 			array_push($matriz_totales,$fila);				
 		}				
@@ -610,7 +617,7 @@ class PresenciaDetalleController extends Controller
 				INNER JOIN COMUNA com on s.COMUNA_ID=com.ID
 				INNER JOIN CADENA cad on s.CADENA_ID=cad.ID	
 				INNER JOIN ITEM i on i.ID = ic.ITEM_ID	
-				ORDER BY SEGMENTO,NOM_PRODUCTO,NOM_SALA";																										
+				ORDER BY SEGMENTO,NOM_PRODUCTO,COD_PRODUCTO,NOM_SALA";																										
 		
 		$sha1 = sha1($sql);
 
@@ -634,6 +641,7 @@ class PresenciaDetalleController extends Controller
 				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID				
 				GROUP BY i.NOMBRE, ni.NOMBRE
 				ORDER BY ni.NOMBRE,i.NOMBRE";
+						
 			
 		$totales_producto = $em->getConnection()->executeQuery($sql)->fetchAll();		
 		
