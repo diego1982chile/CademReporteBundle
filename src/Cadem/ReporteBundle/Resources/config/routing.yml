@@ -109,7 +109,12 @@ precio_resumen_detalle_body:
     pattern: /{variable}/resumen/detalle_body
     defaults: { _controller: CademReporteBundle:PrecioResumen:detallebody, variable: precio }
     requirements:
-        variable:  precio		
+        variable:  precio
+precio_detalle_excel:
+    pattern:  /{variable}/detalle/excel
+    defaults: { _controller: CademReporteBundle:PrecioDetalle:excel, variable: precio }
+    requirements:
+        variable:  precio
 #QUIEBRE
 quiebre_resumen_index:
     pattern: /{variable}/resumen
