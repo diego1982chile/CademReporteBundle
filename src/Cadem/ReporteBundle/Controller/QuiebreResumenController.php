@@ -529,13 +529,13 @@ class QuiebreResumenController extends Controller
 				{ // Mientras no cambie el 1er nivel asignamos los valores de quiebre a las columnas correspondientes				
 					$fila[0]=$resumen_quiebre[$cont_regs]['SEGMENTO'];					
 					$fila[1]=$resumen_quiebre[$cont_regs]['CATEGORIA'];												
-					$fila[$columna_quiebre+2]=round($resumen_quiebre[$cont_regs]['quiebre'],1);											
+					$fila[$columna_quiebre+2]=number_format(round($resumen_quiebre[$cont_regs]['quiebre'],1),1,',','.');											
 					$cont_regs++;
 					$cont_cads++;
 				}	
 				else
 				{ // Si el primer nivel de agregacion cambió, lo actualizo, agrego la fila al body y reseteo el contador de cadenas
-					$fila[$num_cads+2]=round($totales_segmento[$cont_totales_segmento]['quiebre']*100,1);					
+					$fila[$num_cads+2]=number_format(round($totales_segmento[$cont_totales_segmento]['quiebre']*100,1),1,',','.');					
 					$cont_totales_segmento++;
 					$cont_cads=0;					
 					$nivel1=$resumen_quiebre[$cont_regs]['SEGMENTO'];
@@ -545,8 +545,8 @@ class QuiebreResumenController extends Controller
 				if($cont_regs==$num_regs)		
 				{					
 					$columna_quiebre=array_search($resumen_quiebre[$cont_regs-1]['CADENA'],$cadenas);
-					$fila[$columna_quiebre+2]=round($resumen_quiebre[$cont_regs-1]['quiebre'],1);					
-					$fila[$num_cads+2]=round($totales_segmento[$cont_totales_segmento]['quiebre']*100,1);					
+					$fila[$columna_quiebre+2]=number_format(round($resumen_quiebre[$cont_regs-1]['quiebre'],1),1,',','.');					
+					$fila[$num_cads+2]=number_format(round($totales_segmento[$cont_totales_segmento]['quiebre']*100,1),1,',','.');					
 					array_push($body,(object)$fila);		
 					$cont_regs++;					
 				}
@@ -567,20 +567,20 @@ class QuiebreResumenController extends Controller
 				if($num_regs==1)		
 				{						
 					$columna_quiebre=array_search($totales_categoria[$cont_regs]['CADENA'],$cadenas);
-					$fila[$columna_quiebre]=round($totales_categoria[$cont_regs]['QUIEBRE']*100,1);										
-					$fila[$num_cads]=round($totales_horizontales_categoria[$cont_totales_horizontales_categoria]['QUIEBRE']*100,1);					
+					$fila[$columna_quiebre]=number_format(round($totales_categoria[$cont_regs]['QUIEBRE']*100,1),1,',','.');										
+					$fila[$num_cads]=number_format(round($totales_horizontales_categoria[$cont_totales_horizontales_categoria]['QUIEBRE']*100,1),1,',','.');					
 					array_push($matriz_totales,(object)$fila);		
 					$cont_regs++;
 					break;
 				}
 				if($nivel2==$totales_categoria[$cont_regs]['CATEGORIA'])
 				{					
-					$fila[$columna_quiebre]=round($totales_categoria[$cont_regs]['QUIEBRE']*100,1);					
+					$fila[$columna_quiebre]=number_format(round($totales_categoria[$cont_regs]['QUIEBRE']*100,1),1,',','.');					
 					$cont_regs++;
 				}
 				else
 				{
-					$fila[$num_cads]=round($totales_horizontales_categoria[$cont_totales_horizontales_categoria]['QUIEBRE']*100,1);
+					$fila[$num_cads]=number_format(round($totales_horizontales_categoria[$cont_totales_horizontales_categoria]['QUIEBRE']*100,1),1,',','.');
 					$cont_totales_horizontales_categoria++;
 					array_push($matriz_totales,$fila);
 					$fila=array_fill(0,$num_cads,"-");
@@ -590,7 +590,7 @@ class QuiebreResumenController extends Controller
 				{						
 					$columna_quiebre=array_search($totales_categoria[$cont_regs-1]['CADENA'],$cadenas);
 					$fila[$columna_quiebre]=round($totales_categoria[$cont_regs-1]['QUIEBRE']*100,1);										
-					$fila[$num_cads]=round($totales_horizontales_categoria[$cont_totales_horizontales_categoria]['QUIEBRE']*100,1);					
+					$fila[$num_cads]=number_format(round($totales_horizontales_categoria[$cont_totales_horizontales_categoria]['QUIEBRE']*100,1),1,',','.');					
 					array_push($matriz_totales,(object)$fila);		
 					$cont_regs++;					
 				}				
@@ -604,11 +604,11 @@ class QuiebreResumenController extends Controller
 			{
 				$columna_quiebre=array_search($totales_verticales_categoria[$cont_regs]['CADENA'],$cadenas);					
 				// Mientras no cambie la cadena  
-				$fila[$columna_quiebre]=round($totales_verticales_categoria[$cont_regs]['QUIEBRE']*100,1);					
+				$fila[$columna_quiebre]=number_format(round($totales_verticales_categoria[$cont_regs]['QUIEBRE']*100,1),1,',','.');					
 				$cont_regs++;
 			}	
 			
-			$fila[$num_cads]=round($total[0]['QUIEBRE']*100,1);
+			$fila[$num_cads]=number_format(round($total[0]['QUIEBRE']*100,1),1,',','.');
 			
 			// print_r($fila);
 			
@@ -873,7 +873,7 @@ class QuiebreResumenController extends Controller
 				INNER JOIN COMUNA com on s.COMUNA_ID=com.ID
 				INNER JOIN CADENA cad on s.CADENA_ID=cad.ID	
 				INNER JOIN ITEM i on i.ID = ic.ITEM_ID	
-				ORDER BY SEGMENTO,NOM_PRODUCTO,NOM_SALA";																																		
+				ORDER BY SEGMENTO,NOM_PRODUCTO,COD_PRODUCTO,NOM_SALA";																																		
 		
 		$sha1 = sha1($sql);
 		

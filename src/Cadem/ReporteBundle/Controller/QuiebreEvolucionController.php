@@ -157,7 +157,7 @@ class QuiebreEvolucionController extends Controller
 			->getForm();		
 		
 		//CONSULTA SACAR ULTIMAS 12 MEDICIONES
-		$sql = "SELECT TOP(12) m2.ID as ID, m2.NOMBRE as NOMBRE, m2.FECHAINICIO as FECHAINICIO FROM MEDICION m2 
+		$sql = "SELECT TOP(12) m2.ID as ID, m2.NOMBRE as NOMBRE, m2.FECHAINICIO as FECHAINICIO, m2.FECHAFIN as FECHAFIN FROM MEDICION m2 
 		INNER JOIN ESTUDIOVARIABLE ev on m2.ESTUDIOVARIABLE_ID=ev.ID
 		INNER JOIN VARIABLE v on v.ID=ev.VARIABLE_ID and v.NOMBRE='{$variable}'
 		INNER JOIN ESTUDIO e on ev.ESTUDIO_ID=e.ID and e.CLIENTE_ID={$user->getClienteID()} 
@@ -169,6 +169,8 @@ class QuiebreEvolucionController extends Controller
 		$mediciones=array();
 		$mediciones2=array();
 		$mediciones_id=array();
+		$mediciones_data = array();
+		$mediciones_tooltip = array();
 		$mediciones_id_str="";
 		
 		// Generamos el head de la tabla, y las mediciones
@@ -182,9 +184,17 @@ class QuiebreEvolucionController extends Controller
 				$fila['fecha']=$registro['FECHAINICIO'];
 				array_push($mediciones_id,$registro['ID']);
 				$mediciones_id_str.=$registro['ID'].',';
+				$fi = new \DateTime($registro['FECHAINICIO']);
+				$ff = new \DateTime($registro['FECHAFIN']);
+				$mediciones_data[] = $fi->format('d/m').'-'.$ff->format('d/m');
+				$mediciones_tooltip[] = $registro['NOMBRE'];				
 				array_push($mediciones,$fila);
 			}		
-		}										
+		}
+
+		$mediciones_data = array_reverse($mediciones_data);
+		
+		// print_r($mediciones_data);
 		
 		$mediciones_id_str=trim($mediciones_id_str,',');
 				
@@ -197,7 +207,7 @@ class QuiebreEvolucionController extends Controller
 		// TIME 2500MS
 		foreach($mediciones_id as $medicion_id)
 		{
-			$sql.="SELECT (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre, i.NOMBRE as PRODUCTO,  ni.NOMBRE as SEGMENTO, m.NOMBRE, m.FECHAINICIO FROM QUIEBRE q
+			$sql.="SELECT (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre, i.NOMBRE as PRODUCTO, ic.CODIGOITEM1 as COD_PROD,  ni.NOMBRE as SEGMENTO, m.NOMBRE, m.FECHAINICIO FROM QUIEBRE q
 				INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID and p.MEDICION_ID = {$medicion_id}	
 				INNER JOIN MEDICION m on p.MEDICION_ID=m.ID
 				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
@@ -205,11 +215,11 @@ class QuiebreEvolucionController extends Controller
 				INNER JOIN ITEM i on i.ID = ic.ITEM_ID
 				INNER JOIN ESTUDIOVARIABLE ev on ev.ID = m.ESTUDIOVARIABLE_ID
 				INNER JOIN ESTUDIO e on e.ID = ev.ESTUDIO_ID AND e.CLIENTE_ID = {$user->getClienteID()}
-				GROUP BY  ni.NOMBRE,i.NOMBRE,m.NOMBRE,m.FECHAINICIO
+				GROUP BY ni.NOMBRE,i.NOMBRE,ic.CODIGOITEM1,m.NOMBRE,m.FECHAINICIO
 				UNION ";
 		}
 		$sql = substr($sql, 0, -6);
-		$sql.="ORDER BY ni.NOMBRE,i.NOMBRE";
+		$sql.="ORDER BY ni.NOMBRE,i.NOMBRE";				
 		
 		$sha1 = sha1($sql);
 
@@ -217,10 +227,7 @@ class QuiebreEvolucionController extends Controller
 			$evolucion_quiebre = $em->getConnection()->executeQuery($sql)->fetchAll();
 			$session->set($sha1,$evolucion_quiebre);
 		}
-		else $evolucion_quiebre = $session->get($sha1);
-
-		
-		
+		else $evolucion_quiebre = $session->get($sha1);				
 		
 		$head=array('SKU/MEDICIÓN','CATEGORIA');	
 		
@@ -243,7 +250,7 @@ class QuiebreEvolucionController extends Controller
 		foreach($mediciones as $medicion)
 		{
 			array_push($mediciones2,$medicion['nombre']);					
-			array_push($head,$medicion['nombre']);
+			array_push($head,str_replace('AL','-',$medicion['nombre']));
 			$fila=array();
 			$fila['aTargets']=array($cont);		
 			// $fila['sWidth']="2%";
@@ -275,9 +282,7 @@ class QuiebreEvolucionController extends Controller
 			$session->set($sha1,$totales_producto);
 		}
 		else $totales_producto = $session->get($sha1);
-
-		
-
+	
 		// Obtener totales verticales por segmento
 		
 		$sql="";
@@ -303,10 +308,7 @@ class QuiebreEvolucionController extends Controller
 			$session->set($sha1,$totales_segmento);
 		}
 		else $totales_segmento = $session->get($sha1);
-
 		
-		
-
 		
 		// Obtener totales horizontales por totales segmento (ultima columna de totales verticales por categoria)
 		//TIME 270MS
@@ -349,10 +351,7 @@ class QuiebreEvolucionController extends Controller
 		$sql = "SELECT  SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
 		INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID and p.MEDICION_ID IN ({$mediciones_id_str})";		
 
-		$total = $em->getConnection()->executeQuery($sql)->fetchAll();
-
-		
-
+		$total = $em->getConnection()->executeQuery($sql)->fetchAll();		
 
 		// Calcula el ancho máximo de la tabla	
 		$extension=count($head)*11-100;
@@ -409,7 +408,8 @@ class QuiebreEvolucionController extends Controller
 			'aoColumnDefs' => json_encode($aoColumnDefs),
 			'columnas_reservadas' => 2,			
 			'tag_variable' => ucwords($variable),
-			'tag_cliente' => $cliente->getNombrefantasia()			
+			'tag_cliente' => $cliente->getNombrefantasia(),
+			'mediciones_data' => json_encode($mediciones_data)
 			)
 		);
 		//CACHE
@@ -461,16 +461,16 @@ class QuiebreEvolucionController extends Controller
 				// Mientras el primer nivel de agregación no cambie
 				if($nivel1==$evolucion_quiebre[$cont_regs]['PRODUCTO'])
 				{					
-					$fila[0]=trim($evolucion_quiebre[$cont_regs]['PRODUCTO']);
+					$fila[0]=trim($evolucion_quiebre[$cont_regs]['PRODUCTO'].' ['.$evolucion_quiebre[$cont_regs]['COD_PROD'].']');
 					$fila[1]=$evolucion_quiebre[$cont_regs]['SEGMENTO'];													
-					$fila[$columna_quiebre+2]=round($evolucion_quiebre[$cont_regs]['quiebre'],1);											
+					$fila[$columna_quiebre+2]=number_format(round($evolucion_quiebre[$cont_regs]['quiebre'],1),1,'.','.');											
 					$cont_regs++;
 					// $cont_meds++;
 				}	
 				else
 				{			
 					// Si el primer nivel de agregacion cambió, lo actualizo, agrego la fila al body y reseteo el contador de mediciones								
-					$fila[$num_meds+2]=round($totales_producto[$cont_totales_producto]['QUIEBRE']*100,1);					
+					$fila[$num_meds+2]=number_format(round($totales_producto[$cont_totales_producto]['QUIEBRE']*100,1),1,'.','.');					
 					$cont_totales_producto++;					
 					// $cont_meds=0;								
 					$nivel1=$evolucion_quiebre[$cont_regs]['PRODUCTO'];				
@@ -481,7 +481,7 @@ class QuiebreEvolucionController extends Controller
 				{	
 					$columna_quiebre=array_search($evolucion_quiebre[$cont_regs-1]['NOMBRE'],$mediciones);
 					$fila[$columna_quiebre+2]=round($evolucion_quiebre[$cont_regs-1]['quiebre'],1);				
-					$fila[$num_meds+2]=round($totales_producto[$cont_totales_producto]['QUIEBRE']*100,1);					
+					$fila[$num_meds+2]=number_format(round($totales_producto[$cont_totales_producto]['QUIEBRE']*100,1),1,'.','.');					
 					array_push($body,$fila);									
 					$cont_regs++;
 				}		
@@ -499,12 +499,12 @@ class QuiebreEvolucionController extends Controller
 				// Mientras no cambie el segmento
 				if($nivel2==$totales_segmento[$cont_regs]['SEGMENTO'])
 				{
-					$fila[$columna_quiebre]=round($totales_segmento[$cont_regs]['QUIEBRE']*100,1);					
+					$fila[$columna_quiebre]=number_format(round($totales_segmento[$cont_regs]['QUIEBRE']*100,1),1,'.','.');					
 					$cont_regs++;
 				}
 				else
 				{
-					$fila[$num_meds]=round($totales_horizontales_segmento[$cont_totales_horizontales_segmento]['QUIEBRE']*100,1);
+					$fila[$num_meds]=number_format(round($totales_horizontales_segmento[$cont_totales_horizontales_segmento]['QUIEBRE']*100,1),1,',','.');
 					$cont_totales_horizontales_segmento++;
 					array_push($matriz_totales,$fila);
 					$fila=array_fill(0,$num_meds+1,"-");
@@ -514,7 +514,7 @@ class QuiebreEvolucionController extends Controller
 				{	
 					$columna_quiebre=array_search($totales_segmento[$cont_regs-1]['MEDICION'],$mediciones);
 					$fila[$columna_quiebre]=round($totales_segmento[$cont_regs-1]['QUIEBRE']*100,1);	
-					$fila[$num_meds]=round($totales_horizontales_segmento[$cont_totales_horizontales_segmento]['QUIEBRE']*100,1);
+					$fila[$num_meds]=number_format(round($totales_horizontales_segmento[$cont_totales_horizontales_segmento]['QUIEBRE']*100,1),1,'.','.');
 					array_push($matriz_totales,$fila);		
 					$cont_regs++;					
 				}				
@@ -527,11 +527,11 @@ class QuiebreEvolucionController extends Controller
 			{
 				$columna_quiebre=array_search($totales_verticales_segmento[$cont_regs]['MEDICION'],$mediciones);					
 				// Mientras no cambie la cadena  
-				$fila[$columna_quiebre]=round($totales_verticales_segmento[$cont_regs]['QUIEBRE']*100,1);					
+				$fila[$columna_quiebre]=number_format(round($totales_verticales_segmento[$cont_regs]['QUIEBRE']*100,1),1,'.','.');					
 				$cont_regs++;
 			}	
 			
-			$fila[$num_meds]=round($total[0]['QUIEBRE']*100,1);			
+			$fila[$num_meds]=number_format(round($total[0]['QUIEBRE']*100,1),1,'.','.');			
 			
 			array_push($matriz_totales,$fila);		
 				
@@ -581,7 +581,7 @@ class QuiebreEvolucionController extends Controller
 		
 		foreach($mediciones_id as $medicion_id)
 		{
-			$sql.="SELECT (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre, i.NOMBRE as PRODUCTO,  ni.NOMBRE as SEGMENTO, m.NOMBRE, m.FECHAINICIO FROM QUIEBRE q
+			$sql.="SELECT (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre, i.NOMBRE as PRODUCTO, ic.CODIGOITEM1 as COD_PROD, ni.NOMBRE as SEGMENTO, m.NOMBRE, m.FECHAINICIO FROM QUIEBRE q
 				INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID and p.MEDICION_ID={$medicion_id}	
 				INNER JOIN MEDICION m on p.MEDICION_ID=m.ID			
 				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
@@ -590,7 +590,7 @@ class QuiebreEvolucionController extends Controller
 				INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
 				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
 				INNER JOIN ITEM i on i.ID = ic.ITEM_ID
-				GROUP BY  ni.NOMBRE,i.NOMBRE,m.NOMBRE,m.FECHAINICIO
+				GROUP BY ni.NOMBRE,i.NOMBRE,ic.CODIGOITEM1,m.NOMBRE,m.FECHAINICIO
 				UNION ";
 		}
 		$sql = substr($sql, 0, -6);

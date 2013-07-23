@@ -30,7 +30,7 @@
 				<div class="hero-unit" style="padding:15px;margin-bottom:10px">
 					<div id="{% if "QUIEBRE" in variables %}evo_QUIEBRE{% else %}evo_PRESENCIA{% endif %}" style="min-width: 250px; height: 300px; margin: 0 auto"></div>
 				</div>
-				{#% endfor %#}
+				{#% endfor %#}				
 			</div>												
 			<div class="row-fluid">
 		{% for n in noticias %}
@@ -44,12 +44,10 @@ n.titulo~"
 
 			<!--  <p><a class="btn" href="#">Ver detalles &raquo;</a></p> -->
 			</div>
-		{% endfor %}
-			
-
+		{% endfor %}			
           </div><!--/row-->
 		  
-        </div><!--/span-->
+        </div><!--/span-->		
 {% endblock %}
 
 
@@ -62,8 +60,8 @@ n.titulo~"
 {{"var evo_"~ev.getVariable.getNombre~";"}}
 {% endfor %}
 
-$(document).ready(function () {
-		
+
+$(document).ready(function () {		
 	
 	{% for ev in estudios[0].getEstudiovariables %}//COMIENZA FOR
 	
@@ -323,7 +321,7 @@ $(document).ready(function () {
 					renderTo: '{{"evo_"~nombrevar}}'
 				},
 				title: {
-					text: 'Evolutivo'
+					text: 'Gráfico Evolutivo'
 				},
 				xAxis: {
 					categories: data.evolutivo.mediciones
@@ -545,16 +543,8 @@ $(document).ready(function () {
             evo_quiebre_precio.yAxis[1].removePlotBand('pb-p1');
             evo_quiebre_precio.yAxis[1].removePlotBand('pb-p2');
         }
-		
-		
-		
 	
 	});
-	
-	
-	
-	
-	
 });
  </script>
 {% endblock %}
