@@ -341,7 +341,7 @@ class PresenciaDetalleController extends Controller
 		}		
 		$fila=array();
 		$fila['aTargets']=array($cont);		
-		// $fila['sWidth']="2%";	
+		$fila['sWidth']="80px";	
 		array_push($aoColumnDefs,$fila);		
 		foreach(array_reverse($prefixes) as $prefix)		
 			array_unshift($head,$prefix);		
@@ -392,7 +392,8 @@ class PresenciaDetalleController extends Controller
 			'body_action' => 'presencia_detalle_body',	
 			'aoColumnDefs' => json_encode($aoColumnDefs),
 			'columnas_reservadas' => 2,
-			'tag_variable' => $variable			
+			'tag_variable' => $variable,
+			'tag_cliente' => $cliente->getNombrefantasia()			
 			)
 		);
 		$time_taken = microtime(true) - $start;

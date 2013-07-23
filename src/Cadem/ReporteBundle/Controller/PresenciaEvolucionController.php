@@ -248,7 +248,7 @@ class PresenciaEvolucionController extends Controller
 		}
 		$fila=array();
 		$fila['aTargets']=array($cont);		
-		$fila['sWidth']="2%";	
+		$fila['sWidth']="80px";	
 		$fila['sClass']="medicion";
 		array_push($aoColumnDefs,$fila);
 		array_push($head,'TOTAL');

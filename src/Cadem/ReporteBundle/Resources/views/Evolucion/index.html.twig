@@ -43,15 +43,16 @@
 								<tbody>					
 								</tbody>                        					                   
 							</table>
-					</div><!--/row-->   
+					</div><!--/row-->   					
 				</div>
 					<div class="hero-unit" style="padding:30px">
 							<div class="row-fluid">
 								<div id="i_quiebre" ></div>								
 							</div>
 					</div>             
-				</div><!--/span-->
-			</div>
+					
+				</div><!--/span-->				
+			</div>			
 		</div>
 {% endblock %}
 
@@ -60,11 +61,9 @@ div.dataTables_scroll {
 	clear: both !important; 
 	}
 
-{% if variable=='1' %}
 table tbody tr{ 
 	height: 1.23em !important;
 }
-{% endif %} 	
 	
 td{
 	text-align: center !important;
@@ -181,6 +180,7 @@ var columnas_reservadas = parseInt({{columnas_reservadas}});
 var i_quiebre;
 var mediciones = {{mediciones|raw}};
 var grupo='group';
+var suffix='';
 
 function preInitTabla()
 {
@@ -252,26 +252,14 @@ function construirTabla()
 			"aaSortingFixed": [[ 1, 'asc' ]],
 			"sPaginationType": "full_numbers",		
 			"fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {	
-								switch(variable)
-								{
-									case 1:
-									case 5:
-										var col=0;
-										break;										
-									case 2:
-										var col=1;
-										break;										
-								}								
-								$(nRow).children(':eq('+col+')').attr('index',iDisplayIndex);
-								if(aData[0].length>14)
-									$(nRow).children(':eq(0)').text(aData[0].substring(0,14).replace(/ /g,'_')+'...');
+								if(aData[0].length>40)
+									$(nRow).children(':eq(0)').text(aData[0].substring(0,40).replace(/ /g,'_')+'...');
 								else
-									$(nRow).children(':eq(0)').text(aData[0].replace(/ /g,'_'));									
-								if(aData[col].length>40)
-									$(nRow).children(':eq('+col+')').text(aData[col].substring(0,40).replace(/ /g,'_')+'...');
-								else
-									$(nRow).children(':eq('+col+')').text(aData[col].replace(/ /g,'_'));							 
-								$(nRow).attr('title',aData[col]);													
+									$(nRow).children(':eq(0)').text(aData[0].replace(/ /g,'_'));							 
+								$(nRow).children(':eq(0)').attr('index',iDisplayIndex);
+								$(nRow).attr('title',aData[0]);																
+								
+								$(nRow).attr('data-tt-parent-id',aData[1]);																
 							},						
 			"fnInitComplete": function() {
 					switch(parseInt(variable))
@@ -280,9 +268,9 @@ function construirTabla()
 						case 5:
 							fixedColumn1();
 							break;						
-						case 2:							
-							fixedColumn2();
-							$('#colorear').attr('disabled',true);
+						case 2:				
+							suffix='.'+grupo;						
+							fixedColumn2();							
 							break;							
 					}					
 					// $(window).resize(function(){								
@@ -298,7 +286,7 @@ function construirTabla()
 		});
 		$('div.fg-toolbar:first').append("<h5 style='float:left;margin:0em'>Tabla Evolución {{tag_variable}}: {% if tag_variable|lower in ['quiebre','presencia'] %} (%) {%else%} ($) {%endif%}</h5>");	
 		// $("<div class='dataTables_filter' align='right' style='float:right'><label>buscar: <input id='buscar' /></label></div>").appendTo('#tabla_resumen_wrapper .fg-toolbar:first');				 				 		
-		$("<form id='control' class='form-horizontal'><div class='dataTables_filter input-append' align='right' style='float:right;width:46%'><label class='control-label' style='float:left' for='buscar'>buscar SKU:</label><input id='buscar' class='span2 input_filtro' /><button id='boton_buscar' class='btn' type='button' title='BUSCAR'><i class='icon-search'></i></button><button id='colorear' class='btn' type='button' title='COLOREAR CELDAS'><i class='icon-flag'></i></button></div></form>").appendTo('#tabla_resumen_wrapper .fg-toolbar:first');				 				
+		$("<form id='control' class='form-horizontal'><div class='dataTables_filter input-append' align='right' style='float:right;width:46%'><label class='control-label' style='float:left' for='buscar'>buscar SKU:</label><input id='buscar' class='span2 input_filtro' /><button id='boton_buscar' class='btn' type='button' title='BUSCAR'><i class='icon-search'></i></button><button id='colorear' class='btn' type='button' title='TERMOGRAMA'><i class='icon-flag'></i></button></div></form>").appendTo('#tabla_resumen_wrapper .fg-toolbar:first');				 				
 		
 		$('#boton_buscar').mousedown(function(){			
 			var e = jQuery.Event("keydown");
@@ -337,7 +325,7 @@ function colorearCeldas(flag){
 				minval: 100,
 				colorStyle: 'greentored',
 				lightness: 0.4,
-				reverseOrder: {% if tag_variable in ['presencia']%} true {% else %}	false {% endif %}				
+				reverseOrder: {% if tag_variable|lower in ['presencia']%} true {% else %}	false {% endif %}				
 				}		
 		);
 	}
@@ -350,17 +338,17 @@ function colorearCeldas(flag){
 }
 
 function listenerFiltro()
-{
+{	
 	var filtrado= false;
 	var indice=0;
 
 	$('#buscar').keydown(function(e){				
-		setTimeout("setFocus('buscar')", 0);	
+		setTimeout("setFocus('buscar')", 0);			
 		switch(e.keyCode)
 		{			
-			case 13:	
+			case 13:					
 				var needle=$('#buscar').val().toUpperCase();	
-				var delta=$('table.DTFC_Cloned tbody tr').height();
+				var delta=$('table.DTFC_Cloned tbody tr').height();				
 				var offset=delta;
 				var oSettings = oTable.fnSettings();
 				var ventana= maxHeight;					
@@ -393,15 +381,13 @@ function listenerFiltro()
 							$('#tabla_resumen tbody').children(':eq('+$(this).index()+')').addClass(clase);
 							hit=true;							
 						}
-						if(!hit)
-							offset=offset+delta;
 					});
 					if(hit)
 					{					
 						if(offset<=ventana)
 							offset=0;
 						else
-							offset=offset-delta;					
+							offset=($('.matched:first').index())*delta;					
 						$('.dataTables_scrollBody').animate({ scrollTop: offset });		
 					}
 					else
@@ -544,48 +530,110 @@ function fixedColumn1()
 }
 
 function fixedColumn2()
-{
-		new FixedColumns( oTable, {	
-		"iLeftColumns": 1,
+{	
+		new FixedColumns( oTable, {
 		"sHeightMatch": "none",		
+		"iLeftColumns": 1,
 		"fnDrawCallback": function ( left, right ) {
 			/////////////////////////// Esta parte añade las filas de agregacion a la tabla //////////////////////////////////
-			var that = this, groupVal = null, matches = 0, heights = [], index = -1;
-			
-			/* Get the heights of the cells and remove redundant ones */
-			var cont=0;
-			$('tbody tr td', left.body).each( function ( i ) {		
-				
-				var currVal = this.innerHTML;	
-				
-				/* Reset values on new cell data. */
-				if (currVal != groupVal) {
-					groupVal = currVal;
-					index++;
-					heights[index] = 0;
-					matches = 0;
-				} else  {
-					matches++;
-				}
-				heights[ index ] += 21;
-				// heights[ index ] += $(this.parentNode).height();
-				if ( currVal == groupVal && matches > 0 ) {
-					this.parentNode.parentNode.removeChild(this.parentNode);
-				}
-			} );
+			var oSettings = oTable.fnSettings();
+			if ( oSettings.aiDisplay.length === 0 )
+			{
+				return;
+			}
 
-			/* Now set the height of the cells which remain, from the summed heights */
-			$('tbody tr td', left.body).each( function ( i ) {
-				that.fnSetRowHeight( this.parentNode, heights[ i ] );
-			} );
-		}
-	});
-	
-	new FixedColumns( oTable, {
-		"sHeightMatch": "none",	
-		"iLeftColumns": 2,		
-	});
-		
+			var nGroup, nCell, iIndex, sGroup;
+			var sLastGroup = "", iCorrector=0;
+			var nTrs = $('#tabla_resumen tbody tr');
+			// var iColspan = nTrs[0].getElementsByTagName('td').length;
+            var cols=oTable.fnSettings().aoColumns.length-2;
+			var row=0;			
+			
+			for ( var i=0 ; i<nTrs.length ; i++ )
+			{
+				iIndex = oSettings._iDisplayStart + i;
+
+				sGroup = oSettings.aoData[ oSettings.aiDisplay[iIndex] ]._aData[1];				
+				
+				if ( sGroup != sLastGroup )
+				{					
+              		var nGroup = document.createElement('tr');
+					// // Se agrgega una columna correspondiente a la columna oculta					
+					var nCell;
+					nCell = document.createElement( 'td' );						 
+					nCell.className = grupo;																									
+					nCell.innerHTML = 0;															
+					nGroup.appendChild( nCell ); 										
+                  					
+                    for(var j=0 ; j< cols ; j++)
+					{
+						nCell = document.createElement( 'td' );						 
+						nCell.className = grupo;														
+						nCell.innerHTML = matriz_totales[row][j];																	
+						nGroup.appendChild( nCell );						 
+					}									
+					nGroup.setAttribute('data-tt-id',sGroup);	
+					nGroup.setAttribute('class','parent');	
+                    ++row;
+                    nTrs[i].parentNode.insertBefore( nGroup, nTrs[i] );
+					// Se crea atributo que asocie la fila de agregacion con sus filas hijas					
+					// Se añade fila de agregacion para tabla principal					
+                    
+					// /* Cell to insert into the frozen columns */
+					
+                    nGroup = document.createElement( 'tr' );
+					
+					nCell = document.createElement( 'td' );
+					nCell.className = grupo+" tag";
+					nCell.innerHTML = sGroup.toUpperCase();
+					nGroup.setAttribute('title',sGroup.toUpperCase());	
+					nGroup.appendChild( nCell );
+																			
+                    // Se añade fila de agregacion para tabla fija
+					$(nGroup).insertBefore( $('tbody tr:eq('+(i+iCorrector)+')', left.body)[0] );
+					
+					iCorrector++;
+					sLastGroup = sGroup;
+				}
+			}
+			var nGroup = document.createElement('tr');
+			// Se agrgega una columna correspondiente a la columna oculta			
+			var nCell;
+			nCell = document.createElement( 'td' );						 
+			nCell.className =grupo;																									
+			nCell.innerHTML = 0;															
+			nGroup.appendChild( nCell ); 				
+			
+			for(var j=0 ; j< cols ; ++j)
+			{
+				nCell = document.createElement( 'td' );						 
+				nCell.className = grupo;																				
+				// alert(matriz_totales[row][j]);
+				nCell.innerHTML = matriz_totales[row][j];																
+				nGroup.appendChild( nCell );						 
+			}					
+			$(nGroup).insertBefore( $('tbody tr:eq('+(0)+')', right.body)[0] );						
+			// Se crea atributo que asocie la fila de agregacion con sus filas hijas					
+			// Se añade fila de agregacion para tabla principal
+			nGroup.setAttribute('data-tt-id',"TOTALES");				
+			
+			// /* Cell to insert into the frozen columns */
+			
+			nGroup = document.createElement( 'tr' );
+			
+			nCell = document.createElement( 'td' );
+			nCell.className = grupo+" tag";
+			nCell.innerHTML = "TOTAL GENERAL";
+			nGroup.appendChild( nCell );						
+			
+			nGroup.setAttribute('title',"TOTAL GENERAL");	
+			
+			// Se añade fila de agregacion para tabla fija
+			$(nGroup).insertBefore( $('tbody tr:eq(0)', left.body)[0] );			
+			$('.DTFC_LeftFootWrapper').hide();
+		}		
+	});	
+	// calcular_incumplimiento();			
 	construirGrafico();		
 	listenerFiltro();
 	//FIX PARA CHROME
@@ -623,6 +671,118 @@ function colorTotales(){
 			break;		
 	}	
 }
+
+function calcular_incumplimiento()
+{	
+	var indice=parseInt($( "#slider-range-min" ).slider( "value" ));
+	var total=0;
+	var cont=0;
+	var n=$('.DataTables_sort_wrapper').length-3;
+	
+	$('#tabla_resumen tbody tr').each(function(){		
+		
+		var politica=parseInt($('table.DTFC_Cloned tbody').children(':eq('+$(this).index()+')').children(':eq(1)').text());				
+		var total_producto=0;
+		var cont_producto=0;
+		$(this).children().each(function(i){						
+			if(i>1 && i<n && !$(this).hasClass(grupo))
+			{				
+				// alert($(this).text());
+				var precio= parseInt($(this).text());					
+				if(precio.toString()!='NaN')
+				{									
+					if(Math.abs(precio-politica)>indice*politica/100)
+					{						
+						$(this).addClass('fueraRango');
+						cont++;
+						cont_producto++;
+					}
+					else
+						$(this).removeClass();					
+					total++;
+					total_producto++;
+				}					
+			}		
+		});
+		$(this).children(':eq('+n+')').text((100*cont_producto/total_producto).toFixed(1));		
+	});		
+	$('#pctje_incumplimiento').text((100*cont/total).toFixed(1)+'%');
+	$('#pctje_incumplimiento').attr('valor',(100*cont/total).toFixed(1));
+	calcularTotalesPrecio();
+}
+
+function calcularTotalesPrecio(){
+    //////////////// Esta parte calcula los valores de las agregaciones (SEGMENTO Y TOTAL) //////////////////////       
+	if($('#colorear').hasClass('btn-warning')){		
+		colorearCeldas(false,suffix);		
+	}
+	var cols=oTable.fnSettings().aoColumns.length-2;
+	
+	var totalesGlobales=new Array();
+	var totalesSalas=new Array();
+	var contadoresSalas=new Array();
+	var sumaCategoria= 0;	
+	var contCategoria= 0;
+	var sumaSala= 0;	
+	var contSala= 0;	
+	var total;	
+	
+	for (var i = 0; i < cols-1; i++) totalesGlobales[i] = 0;		 
+	for (var i = 0; i < cols-1; i++) contadoresSalas[i] = 0;		 
+	for (var i = 0; i < cols-1; i++) totalesSalas[i] = 0;		  
+	
+	for (var i = 0; i < cols-1 ; i++) totalesGlobales[i] = 0;
+	$('#tabla_resumen tbody tr.parent').each(function(){   	  
+	  var totalesParciales= new Array();
+	  var contadoresParciales= new Array();	  
+	  for (var i = 0; i < cols-1; i++) totalesParciales[i] = 0;		 
+	  for (var i = 0; i < cols-1; i++) contadoresParciales[i] = 0;		 
+		var cont=0;		
+		sumaCategoria=0;
+		contCategoria=0;
+		$('#tabla_resumen tbody tr[data-tt-parent-id="'+$(this).attr('data-tt-id')+'"]').each(function(){						
+		
+			// alert($(this).html());			
+			var j=0;
+			$(this).children().slice(2,cols).each(function(){				
+				// alert($(this).html());
+				// alert("fueraRango="+$(this).hasClass('fueraRango')? 1:0);												
+	
+				if(parseInt($(this).text()).toString()!="NaN")
+				{										
+					totalesParciales[j]+=$(this).hasClass('fueraRango')? 1:0;					
+					totalesSalas[j]+=$(this).hasClass('fueraRango')? 1:0;					
+					contadoresParciales[j]++;					
+					contadoresSalas[j]++;					
+					sumaCategoria+=$(this).hasClass('fueraRango')? 1:0;									
+					contCategoria++;					
+				}				
+				j++;
+			});
+			cont++;
+		});	  
+		// alert(totalesParciales);
+		var j=0;
+	  	 	  
+		$(this).children().slice(2,cols).each(function(){
+			var valor=parseFloat((totalesParciales[j]/contadoresParciales[j])*100);
+			$(this).text(valor.toString()=='NaN'?'-':valor.toFixed(1));
+			totalesGlobales[j]=totalesGlobales[j]+totalesParciales[j];              			
+			j++;
+		});		
+		
+		$(this).children(':eq('+cols+')').text(parseFloat((sumaCategoria/contCategoria)*100).toFixed(1));		
+		// totalesGlobales[j]=(parseFloat((sumaCategoria/contCategoria)*100).toFixed(1));
+	});  				
+	$('tr[data-tt-id=TOTALES]').children().slice(2,cols).each(function(j){
+		$(this).text(parseFloat((totalesSalas[j]/contadoresSalas[j])*100).toFixed(1));
+	});
+	$('tr[data-tt-id=TOTALES]').children(':eq('+cols+')').text($('#pctje_incumplimiento').attr('valor'));
+	if($('#colorear').hasClass('btn-warning')){		
+		colorearCeldas(true,suffix);				
+	}	
+}
+
 
 function construirGrafico()
 {	
@@ -809,7 +969,7 @@ $(document).ready(function () {
 		else
 		{ // Si no, el datasource esta en la tabla			
 			var data=oTable.fnGetData( index );			
-			data= data.slice(2,data.length-1);					
+			data= data.slice(2,data.length-1);				
 			for(i in data){
 				if(data[i] == '-') data[i]=null;
 			}			

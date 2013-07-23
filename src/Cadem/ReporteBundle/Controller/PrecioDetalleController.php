@@ -245,7 +245,7 @@ class PrecioDetalleController extends Controller
 		usort($salas_aux, array($this,"sortFunction"));		
 		// CONSTRUIR EL ENCABEZADO DE LA TABLA
 			
-		$prefixes=array('CATEGORIA','DESCRIPCIÓN','POLITICA');
+		$prefixes=array('DESCRIPCIÓN','POLÍTICA','POLÍTICA');
 		
 		$head=array();
 		
@@ -254,18 +254,19 @@ class PrecioDetalleController extends Controller
 		
 		$fila=array();
 		$fila['aTargets']=array(0);
-		$fila['sClass']="tag2";
-		$fila['sWidth']="100px";
+		$fila['sClass']="tag";
+		$fila['sWidth']="260px";
 		array_push($aoColumnDefs,$fila);
 		
 		$fila=array();
 		$fila['aTargets']=array(1);
-		$fila['sClass']="tag";
-		$fila['sWidth']="260px";
+		// $fila['sClass']="tag";
+		$fila['bVisible']=false;
+		// $fila['sWidth']="260px";
 		array_push($aoColumnDefs,$fila);		
 
 		$fila=array();
-		$fila['aTargets']=array(2);		
+		$fila['aTargets']=array(2);				
 		$fila['sWidth']="20px";
 		array_push($aoColumnDefs,$fila);	
 
@@ -287,8 +288,8 @@ class PrecioDetalleController extends Controller
 		}		
 		$fila=array();
 		$fila['aTargets']=array($cont);	
-		$fila['bVisible']=false;	
-		// $fila['sWidth']="2%";
+		// $fila['bVisible']=false;	
+		$fila['sWidth']="80px";
 		array_push($aoColumnDefs,$fila);		
 		foreach(array_reverse($prefixes) as $prefix)		
 			array_unshift($head,$prefix);		
@@ -296,7 +297,7 @@ class PrecioDetalleController extends Controller
 		
 		// Guardamos resultado de consulta en variable de sesión para reusarlas en un action posterior
 		$session->set("salas",$salas);				
-		$session->set("detalle_precio",$detalle_precio);	
+		$session->set("detalle_precio",$detalle_precio);			
 		// $session->set("totales_producto",$totales_producto);		
 		// $session->set("totales_segmento",$totales_segmento);		
 		// $session->set("totales_horizontales_segmento",$totales_horizontales_segmento);	
@@ -333,7 +334,8 @@ class PrecioDetalleController extends Controller
 			'aoColumnDefs' => json_encode($aoColumnDefs),
 			'columnas_reservadas' => 3,
 			'tag_variable' => 'Precio',
-			'rango_precio' => $rango_precio
+			'rango_precio' => $rango_precio,
+			'tag_cliente' => $cliente->getNombrefantasia()
 			)
 		);
 		$time_taken = microtime(true) - $start;
@@ -398,9 +400,9 @@ class PrecioDetalleController extends Controller
 				// Mientras el primer nivel de agregación no cambie			
 				if($nivel1==$detalle_precio[$cont_regs]['COD_PRODUCTO'])
 				{									
-					$fila[0]=$detalle_precio[$cont_regs]['SEGMENTO'];	
-					$fila[1]=$detalle_precio[$cont_regs]['NOM_PRODUCTO'];//.' ['.$detalle_quiebre[$cont_regs]['COD_PRODUCTO'].']';										
-					$fila[2]=$detalle_precio[$cont_regs]['politica'];
+					$fila[2]=$detalle_precio[$cont_regs]['SEGMENTO'];	
+					$fila[0]=$detalle_precio[$cont_regs]['NOM_PRODUCTO'];//.' ['.$detalle_quiebre[$cont_regs]['COD_PRODUCTO'].']';										
+					$fila[1]=$detalle_precio[$cont_regs]['politica'];
 					$fila[$columna_precio+3]=$detalle_precio[$cont_regs]['precio'];//.' ['.$detalle_quiebre[$cont_regs]['COD_PRODUCTO'].']';																														
 					$cont_regs++;						
 				}	
@@ -422,7 +424,16 @@ class PrecioDetalleController extends Controller
 					$cont_regs++;
 				}			
 			}				
-		}				
+		}
+
+		$cont_regs=0;
+		
+		while($cont_regs<$num_regs)
+		{
+			$fila=array_fill(0,$num_salas+3,0);	
+			array_push($matriz_totales,$fila);
+			$cont_regs++;
+		}			
 		/*
 		 * Output
 		 */
@@ -511,7 +522,7 @@ class PrecioDetalleController extends Controller
 		usort($salas_aux, array($this,"sortFunction"));		
 		// CONSTRUIR EL ENCABEZADO DE LA TABLA
 			
-		$prefixes=array('CATEGORIA','DESCRIPCION','POLITICA');
+		$prefixes=array('DESCRIPCIÓN','POLÍTICA','POLÍTICA');
 		
 		$head=array();
 		
@@ -520,14 +531,15 @@ class PrecioDetalleController extends Controller
 		
 		$fila=array();
 		$fila['aTargets']=array(0);
-		$fila['sClass']="tag2";
-		$fila['sWidth']="100px";
+		$fila['sClass']="tag";
+		$fila['sWidth']="260px";		
 		array_push($aoColumnDefs,$fila);
 		
 		$fila=array();
 		$fila['aTargets']=array(1);
-		$fila['sClass']="tag";
-		$fila['sWidth']="260px";
+		// $fila['sClass']="tag";
+		// $fila['sWidth']="260px";
+		$fila['bVisible']=false;	
 		array_push($aoColumnDefs,$fila);		
 
 		$fila=array();
@@ -553,7 +565,7 @@ class PrecioDetalleController extends Controller
 		}		
 		$fila=array();
 		$fila['aTargets']=array($cont);	
-		$fila['bVisible']=false;	
+		// $fila['bVisible']=false;	
 		// $fila['sWidth']="2%";
 		array_push($aoColumnDefs,$fila);		
 		foreach(array_reverse($prefixes) as $prefix)		

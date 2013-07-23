@@ -3,9 +3,17 @@
 {% set url_evolutivo = path(tag_variable|lower~'_resumen_evolutivo') %}    
 {% set url_body_action = path(body_action) %}
 {% set url_header_action = path(header_action) %}
+{% set url_header_detalle_action = path(header_detalle_action) %}
+{% set url_body_detalle_action = path(body_detalle_action) %}
+{% if tag_variable|lower == "quiebre" %}	
+    {% set url_evolutivo = path('quiebre_resumen_evolutivo') %}    
+    {% set url_excel = path('quiebre_detalle_excel') %}
+{% else %}	
+    {% set url_evolutivo = path('presencia_resumen_evolutivo') %}    
+    {% set url_excel = path('presencia_detalle_excel') %}
+{% endif %}
 
 {% block title %}Cadem Analytics{% endblock %}
-
 {% block filtro %}
 	<form id="filtros" action="" method="post" >
 		{% for form in forms %}
@@ -20,7 +28,7 @@
 		<div class="container-fluid well" style="padding-top:0">
 			<h4>Resumen {{tag_variable}} {{tag_cliente}} </h4>
 				<div class="hero-unit" style="padding:15px;margin-bottom:10px">
-					<div id='container' class="row-fluid">
+					<div id='container_tabla_resumen' class="row-fluid">
 							<table id="tabla_resumen" class="table table-bordered display" cellpadding="0" cellspacing="0" border="0" width='100%'>                      
 								<thead>
 									<tr>
@@ -50,6 +58,92 @@
 				</div><!--/span-->
 			</div>
 		</div>
+	<div id="dialog-detalle" title="Detalle">
+		<div id='container_tabla_detalle' class="row-fluid">
+			<table id='tabla_detalle'>
+				<thead>
+				</thead>
+				<tbody>
+				</tbody>
+			</table>
+		</div>
+			{% if tag_variable|lower in ['quiebre','presencia'] %}
+			<table id='controls' width='100%' style='float:right'>
+				<thead>
+					<tr>							
+						<th width='10%' class='ui-widget-content' style='font-size:medium'>
+							<label style=';color:#2e6e9e'>
+								Presencia:
+							</label>
+						</th>
+						<th width='10%' class='ui-widget-content'>
+							<div style='background:rgb(206, 250, 151);height:1.9em'>
+							</div>
+						</th>
+						<th width='10%' class='ui-widget-content'>
+							<label style=';color:#2e6e9e'>
+								Quiebre:
+							</label>
+						</th>
+						<th width='10%' class='ui-widget-content'>
+							<div style='background:rgb(242, 136, 115);height:1.9em'>
+							</div>
+						</th>
+						<th class='ui-widget-content' width='15%'>
+							<label style=';color:#2e6e9e'>
+								No planogramado:
+							</label>
+						</th>
+						<th width='10%' class='ui-widget-content'>
+							<div style='background:grey;height:1.9em'>
+							</div>
+						</th>
+						</th>
+						{% if tag_variable|upper  in ["QUIEBRE","PRESENCIA"] %}
+						<th width='10%'>
+							<a target="_blank" href="{{ url_excel }}"><label>Bajar Excel</label></a>
+						</th>
+						{% endif %}
+						
+					</tr>
+				</thead>
+			</table>		
+			{% else %}
+			<table id='controls' width='100%'>
+				<thead>
+					<tr >
+						<th width='5%' class='ui-widget-content'>							
+							<label for="amount" style=';color:#2e6e9e' >Índice:</label>
+						</th>
+						<th width='5%' class='ui-widget-content'>
+							<input type="text" id="amount" style="font-size:1.5em; color:#2e6e9e; font-weight: bold; width:2.5em; margin-top:.5em" />
+						</th>  							
+						<th width='20%' class='ui-widget-content'>
+							<div id="slider-range-min"></div>
+						</th>
+						<th width='5%' class='ui-widget-content'>
+							<label id='pctje_incumplimiento' style="font-size:1.5em; color:#2e6e9e; font-weight: bold; width:2.5em; margin-top:.5em;color:red" title='PORCENTAJE FUERA DE RANGO'>
+							</label>								
+						</th>
+						<th width='10%' class='ui-widget-content'>
+							<label style=';color:#2e6e9e'>
+								Fuera de rango:
+							</label>
+						</th>
+						<th width='10%' class='ui-widget-content'>
+							<div style='background:red;height:1.9em'>
+							</div>
+						</th>
+						{% if tag_variable|upper  in ["QUIEBRE","PRESENCIA"] %}
+						<th width='10%'>
+							<a target="_blank" href="{{ url_excel }}"><label>Bajar Excel</label></a>
+						</th>
+						{% endif %}
+					</tr>
+				</thead>
+			</table>
+		{% endif %}										
+	</div>		
 {% endblock %}
 
 {% block customstyles %}
@@ -68,6 +162,11 @@ td{
 th{
 	font-size: .55em !important;
 	text-align: center !important;
+	padding: 0em !important;
+}
+
+.head{
+	text-align: left !important;
 }
 
 .tag{
@@ -94,6 +193,27 @@ span.indenter{
 	margin-bottom: 0;
 }
 
+.ui-state-active{
+	border: none !important;
+}
+
+.ui-state-hover{
+	border: none !important;
+}
+
+.ui-state-focus{
+	border: none !important;
+}
+
+.ui-state-highlight{
+	border: none !important;
+}
+
+.group{
+	border-bottom: 0px !important;
+	border-top: 0px !important;
+}
+
 .total {
 	background-color:'#F7FE2E' !important;
 }
@@ -106,7 +226,7 @@ legend {
 }
 
 .dataTables_filter{
-	margin-bottom: 10px !important;
+	margin-bottom: 5px !important;
 	font-size: 14px !important;
 	height: 16px !important;
 	padding: .1em !important;
@@ -114,6 +234,34 @@ legend {
 
 .dataTables_filter label{
 	margin-bottom: 0em !important;	
+}
+
+div.DataTables_sort_wrapper{
+	padding-right: 0em !important;
+}
+
+div.dataTables_wrapper { 
+min-height: 130px !important; 
+}
+
+.fueraRango{
+	background:red;
+	color:white;
+}
+
+.btn_filtro{
+	padding: .1em !important;
+	width: 5em !important;		
+}
+
+.btn_accion{
+	padding-bottom: .1em !important;	
+	padding-top: .1em !important;	
+}
+
+#filtro{
+	width: 10em !important;
+	min-height: 25px !important;
 }
 
 {% endblock %}
@@ -132,14 +280,22 @@ legend {
 var i_quiebre;
 var periodo = {{ periodos|raw }};
 var oTable;
+var oTableDet;
 var oFc;
 var maxWidth;
 var maxWidth={{max_width}};
 var DatosAdicionales = [];
 var matriz_totales = [];
+var matriz_totales_det = [];
 var aoColumnDefs = {{aoColumnDefs|raw}};
+var clase='btn-warning';
+var grupo='group';
+var suffix='';
+var variable="{{tag_variable|lower}}";
+var columnas_reservadas = parseInt({{columnas_reservadas}});
+var filtrar_por='sku';
 
-function calcularAnchoMaximo()
+function calcularAnchoMaximo(id_tabla)
 {
 	// Calcula el ancho máximo de la tabla	
 	var anchoPantalla= screen.width;	
@@ -163,13 +319,14 @@ function calcularAnchoMaximo()
 			break;
 	}
 	// Calcula el ancho máximo de la tabla	
-	$('table').css('max-width',maxWidth+'%');
+	$('#'+id_tabla).css('max-width',maxWidth+'%');
 	// alert('maxWidth='+maxWidth);
 }
 
 function construirTabla()
-{
+{	
 	$('#tabla_resumen').ready(function(){		
+	
 		oTable = $('#tabla_resumen').dataTable({
 			"bProcessing": true,
 			"bServerSide": true,
@@ -198,7 +355,7 @@ function construirTabla()
 			"sScrollY": "230px",
 			"sScrollX": "100%",
 			"sScrollXInner": maxWidth+'%',
-			"bScrollCollapse": true,
+			"bScrollCollapse": false,
 			"bFilter": false,
 			"bSort": false,
 			"bInfo": false,
@@ -206,12 +363,26 @@ function construirTabla()
 			"bJQueryUI": true,
 			// "bAutoWidth": true, 
 			"aoColumnDefs": aoColumnDefs,
-			// "fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {			
-				// $(nRow).attr("data-tt-parent-id",aData[1]);
-			// },		
+			"fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {									
+								if(aData[0].length>40)
+									$(nRow).children(':eq(0)').text(aData[0].substring(0,40).replace(/ /g,'_')+'...');
+								else
+									$(nRow).children(':eq(0)').text(aData[0].replace(/ /g,'_'));							 
+								$(nRow).attr('title',aData[0]);																
+								
+								$(nRow).attr('data-tt-parent-id',aData[2]);																
+							},	
 			"aaSortingFixed": [[ 1, 'asc' ]],
-			"fnInitComplete": function() {										
-					fixedColumn();
+			"fnInitComplete": function() {		
+					
+					switch(variable)
+					{						
+						case 'precio':							
+							suffix='.'+grupo;							
+							break;							
+					}
+					fixedColumn();							
+					listenerCelda();					
 				},	
 			"oLanguage": {
 			  "sProcessing": "<b>Procesando...</b>"
@@ -223,24 +394,140 @@ function construirTabla()
 		});
 		
 		$('div.fg-toolbar:first').append("<h5 style='float:left;margin:0em'>Tabla Resumen {{tag_variable}}: (%)</h5>");
-		$("<div class='dataTables_filter input-append' align='right' style='float:right;width:60%'><button id='colorear' class='btn btn_filtro' type='button'><i class='icon-flag' title='COLOREAR CELDAS'></i></button></div>").appendTo('#tabla_resumen_wrapper .fg-toolbar:first');				 				
-		$('#colorear').mousedown(function(){
+		$("<div class='dataTables_filter input-append' align='right' style='float:right;width:60%'><button id='detalle' class='btn btn_accion' type='button'><i class='icon-zoom-in' title='VER DETALLE'></i></button><button id='colorear_resumen' class='btn btn_accion' type='button'><i class='icon-flag' title='TERMOGRAMA'></i></button></div>").appendTo('#tabla_resumen_wrapper .fg-toolbar:first');				 				
+		$('#colorear_resumen').mousedown(function(){
 			if($(this).hasClass('btn-warning'))
 			{
 				$(this).removeClass('btn-warning');
-				colorearCeldas(false);
+				colorearCeldas('tabla_resumen',false,suffix);
 			}
 			else
 			{
 				$(this).addClass('btn-warning');
-				colorearCeldas(true);
+				colorearCeldas('tabla_resumen',true,suffix);
 			}
 		});		
-	});
+		$('#detalle').mousedown(function(e){					
+			obtenerDatosAdicionales('boton',$(e.target));			
+		});				
+	});	
+}
+
+function construirTablaDetalle()
+{	
+	$('#tabla_detalle').ready(function(){		
+	
+		oTableDet = $('#tabla_detalle').dataTable({
+			"bProcessing": true,
+			"bServerSide": true,
+			"sAjaxSource": "{{ url_body_detalle_action }}",
+			"fnServerData": function ( sSource, aoData, fnCallback ) {				
+				//AGREGAMOS LOS DATOS SOLO SI HAY
+				if (DatosAdicionales.length > 0) for(i in DatosAdicionales) aoData.push(DatosAdicionales[i]);				
+				$.ajax( {
+					"dataType": 'json', 
+					"type": "POST", 
+					"url": sSource, 
+					"data": aoData, 
+					"success": function(data){//QUE PASA SI FALLA?														
+								matriz_totales_det=data.matriz_totales;																								
+								fnCallback(data);
+								DatosAdicionales = [];//AL FINAL SE BORRAN
+							}
+				} )
+				.done(function() { colorTotales(); })
+				.fail(function() {  })
+				.always(function() { quitarloader(); });
+			},
+			// "oLanguage": {
+						// "sProcessing": "<img src='{{ asset('bundles/cademreporte/images/loader.gif') }}'>"
+			// },			
+			'iDisplayLength': 10,
+			"sScrollY": "280px",			
+			"sScrollX": "100%",			
+			"sScrollXInner": maxWidth+'%',
+			"bScrollCollapse": false,
+			"bFilter": false,
+			"bSort": false,
+			"bInfo": false,
+			"bPaginate": false,
+			"bJQueryUI": true,
+			// "bAutoWidth": true, 
+			"aoColumnDefs": aoColumnDefs,
+			"fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {									
+								if(aData[0].length>25)
+									$(nRow).children(':eq(0)').text(aData[0].substring(0,25).replace(/ /g,'_')+'...');
+								else
+									$(nRow).children(':eq(0)').text(aData[0].replace(/ /g,'_'));							 
+								$(nRow).attr('title',aData[0]);																
+								
+								$(nRow).attr('data-tt-parent-id',aData[2]);																
+							},	
+			"aaSortingFixed": [[ 1, 'asc' ]],
+			"fnInitComplete": function() {		
+					
+					switch(variable)
+					{									
+						case 'quiebre':			
+						case 'presencia':							
+							fixedColumnDetQ();							
+							break;																													
+						case 'precio':							
+							suffix='.'+grupo;							
+							fixedColumnDetP();							
+							break;							
+					}					
+				},	
+			"oLanguage": {
+			  "sProcessing": "<b>Procesando...</b>"
+			},
+			"fnDrawCallback": function() {
+					quitarloader();
+			}			
+		//	"sDom": '<"H"Cfr>t<"F"ip>',					
+		});
+		
+		$('#tabla_detalle_wrapper div.fg-toolbar:first').append("<h5 style='float:left;margin:0em'>Tabla Detalle {{tag_variable}} (%)</h5>");
+		$("<div class='dataTables_filter input-append' align='right' style='float:right;width:60%'><button id='filtro_sku' title='FILTRO ACTIVO POR SKU' class='btn btn_filtro btn-warning' type='button'><i class='icon-filter'></i> SKU</button><button id='filtro_sala' class='btn btn_filtro' type='button' title='FILTRO ACTIVO POR SALA'><i class='icon-filter'></i> SALA</button><input id='filtro' class='span2 input_filtro' /><button id='boton_buscar' class='btn btn_accion' type='button' title='BUSCAR'><i class='icon-search'></i></button><button id='colorear_detalle' class='btn btn_accion' type='button'><i class='icon-flag' title='TERMOGRAMA'></i></button></div>").appendTo('#tabla_detalle_wrapper .fg-toolbar:first');				 				
+		
+		$('#boton_buscar').mousedown(function(){			
+			var e = jQuery.Event("keydown");
+			e.keyCode = 13; // # Some key code value
+			$('#filtro').trigger(e);
+		});
+		
+		$('.btn_filtro').mousedown(function(){
+			$('.input-append button.btn_filtro').removeClass('btn-warning');
+			$(this).addClass('btn-warning');			
+			if($(this).attr('id')=='filtro_sku')
+			{
+				filtrar_por='sku';
+			}
+			else
+			{
+				filtrar_por='sala';				
+			}
+		});
+		
+		listenerFiltro();
+		
+		$('#colorear_detalle').mousedown(function(){
+			if($(this).hasClass('btn-warning'))
+			{
+				$(this).removeClass('btn-warning');
+				colorearCeldas('tabla_detalle',false,suffix);
+			}
+			else
+			{
+				$(this).addClass('btn-warning');
+				colorearCeldas('tabla_detalle',true,suffix);
+			}
+		});				
+	});	
 }
 
 function fixedColumn()
-{			
+{				
 		new FixedColumns( oTable, {
 		"fnDrawCallback": function ( left, right ) {			
 			/////////////////////////// Esta parte añade las filas de agregacion a la tabla //////////////////////////////////
@@ -268,14 +555,14 @@ function fixedColumn()
 					// Se agrgega una columna correspondiente a la columna oculta					
 					var nCell;
 					nCell = document.createElement( 'td' );						 
-					nCell.className = "group";																									
+					nCell.className = grupo;																									
 					nCell.innerHTML = sGroup;															
 					nGroup.appendChild( nCell ); 					
 					
                     for(var j=0 ; j< cols ; ++j)
 					{
 						nCell = document.createElement( 'td' );						 
-						nCell.className = "group";																				
+						nCell.className = grupo;																				
 						// alert(matriz_totales[row][j]);
 						nCell.innerHTML = matriz_totales[row][j];																
 						nGroup.appendChild( nCell );						 
@@ -292,9 +579,10 @@ function fixedColumn()
 					
                     nGroup = document.createElement( 'tr' );
 					nCell = document.createElement( 'td' );
-					nCell.className = "group tag";
-					nCell.innerHTML = sGroup;
-					nGroup.appendChild( nCell );
+					nCell.className = grupo+" tag";
+					nCell.innerHTML = sGroup;					
+					nGroup.appendChild( nCell );					
+					nGroup.setAttribute('title',sGroup);				
                     // Se añade fila de agregacion para tabla fija
 					$(nGroup).insertBefore( $('tbody tr:eq('+(i+iCorrector)+')', left.body)[0] );
 					
@@ -306,14 +594,14 @@ function fixedColumn()
 			// Se agrgega una columna correspondiente a la columna oculta			
 			var nCell;
 			nCell = document.createElement( 'td' );						 
-			nCell.className = "group";																									
+			nCell.className = grupo;																									
 			nCell.innerHTML = 0;															
 			nGroup.appendChild( nCell ); 											
 			
 			for(var j=0 ; j< cols ; ++j)
 			{
 				nCell = document.createElement( 'td' );						 
-				nCell.className = "group";																				
+				nCell.className = grupo;																				
 				// alert(matriz_totales[row][j]);
 				nCell.innerHTML = matriz_totales[row][j];																
 				nGroup.appendChild( nCell );						 
@@ -330,7 +618,7 @@ function fixedColumn()
 			
 			nGroup = document.createElement( 'tr' );
 			nCell = document.createElement( 'td' );
-			nCell.className = "group tag";
+			nCell.className = grupo+" tag";
 			nCell.innerHTML = "TOTAL GENERAL";
 			nGroup.appendChild( nCell );
 			// Se añade fila de agregacion para tabla fija			
@@ -342,11 +630,241 @@ function fixedColumn()
 	$('.DTFC_LeftWrapper:first').css('height', ($('.DTFC_LeftWrapper:first').height()-15) + 'px'  );
 }
 
-function colorearCeldas(flag){
+function fixedColumnDetQ()
+{		
+		new FixedColumns( oTableDet, {
+		"fnDrawCallback": function ( left, right ) {			
+			/////////////////////////// Esta parte añade las filas de agregacion a la tabla //////////////////////////////////
+			var oSettings = oTableDet.fnSettings();
+			if ( oSettings.aiDisplay.length === 0 )
+			{
+				return;
+			}
+			var nGroup, nCell, iIndex, sGroup;
+			var sLastGroup = "", iCorrector=0;
+			var nTrs = $('#tabla_detalle tbody tr');
+			// var iColspan = nTrs[0].getElementsByTagName('td').length;
+            var cols=oSettings.aoColumns.length-2;
+			var row=0;
+			
+			for ( var i=0 ; i<nTrs.length ; ++i )
+			{
+				iIndex = oSettings._iDisplayStart + i;
+
+				sGroup = oSettings.aoData[ oSettings.aiDisplay[iIndex] ]._aData[1];
+				
+				if ( sGroup != sLastGroup )
+				{
+              		var nGroup = document.createElement('tr');
+					// Se agrgega una columna correspondiente a la columna oculta					
+					var nCell;
+					nCell = document.createElement( 'td' );						 
+					nCell.className = grupo;																									
+					nCell.innerHTML = sGroup;															
+					nGroup.appendChild( nCell ); 					
+					
+                    for(var j=0 ; j< cols ; ++j)
+					{
+						nCell = document.createElement( 'td' );						 
+						nCell.className = grupo;																				
+						// alert(matriz_totales[row][j]);
+						nCell.innerHTML = matriz_totales_det[row][j];																
+						nGroup.appendChild( nCell );						 
+					}
+					++row;
+					nGroup.setAttribute('title',sGroup);				
+                    nTrs[i].parentNode.insertBefore( nGroup, nTrs[i] );
+					// Se crea atributo que asocie la fila de agregacion con sus filas hijas
+					var att=document.createAttribute("data-tt-id");
+					att.value=sGroup;
+					// Se añade fila de agregacion para tabla principal
+					nTrs[i].previousSibling.setAttributeNode(att);				
+                    
+					// /* Cell to insert into the frozen columns */
+					
+                    nGroup = document.createElement( 'tr' );
+					nCell = document.createElement( 'td' );
+					nCell.className = grupo+" tag";
+					nCell.innerHTML = sGroup;
+					nCell.setAttribute('title',sGroup);				
+					nGroup.appendChild( nCell );
+					nGroup.setAttribute('title',sGroup);				
+                    // Se añade fila de agregacion para tabla fija
+					$(nGroup).insertBefore( $('tbody:first tr:eq('+(i+iCorrector)+')', left.body)[0] );
+					
+					iCorrector++;
+					sLastGroup = sGroup;
+				}
+			}
+			nGroup = document.createElement('tr');
+			// Se agrgega una columna correspondiente a la columna oculta			
+			var nCell;
+			nCell = document.createElement( 'td' );						 
+			nCell.className = grupo;																									
+			nCell.innerHTML = 0;															
+			nGroup.appendChild( nCell ); 											
+			
+			for(var j=0 ; j< cols ; ++j)
+			{
+				nCell = document.createElement( 'td' );						 
+				nCell.className = grupo;																				
+				// alert(matriz_totales[row][j]);
+				nCell.innerHTML = matriz_totales_det[row][j];																
+				nGroup.appendChild( nCell );						 
+			}						
+			nGroup.setAttribute('title',"TOTAL GENERAL");										
+			$(nGroup).insertBefore( $('#tabla_detalle.DTFC_Cloned tbody tr:eq('+(0)+')', right.body)[0] );
+			// Se crea atributo que asocie la fila de agregacion con sus filas hijas
+			var att=document.createAttribute("data-tt-id");
+			att.value="TOTALES";
+			// Se añade fila de agregacion para tabla principal
+			nTrs[0].previousSibling.setAttributeNode(att);				
+			
+			// /* Cell to insert into the frozen columns */
+			
+			nGroup = document.createElement( 'tr' );
+			nCell = document.createElement( 'td' );
+			nCell.className = grupo+" tag";
+			nCell.innerHTML = "TOTAL GENERAL";			
+			nGroup.appendChild( nCell );			
+			// Se añade fila de agregacion para tabla fija			
+			$(nGroup).insertBefore( $('#tabla_detalle.DTFC_Cloned tbody tr:eq('+(0)+')', left.body)[0] );	
+			matriz_totales_det=[];
+		}
+	});
+	//FIX PARA CHROME
+	$('.DTFC_LeftWrapper:first').css('height', ($('.DTFC_LeftWrapper:first').height()-15) + 'px'  );
+}
+
+function fixedColumnDetP()
+{	
+		new FixedColumns( oTableDet, {
+		"sHeightMatch": "none",		
+		"iLeftColumns": 2,
+		"fnDrawCallback": function ( left, right ) {
+			/////////////////////////// Esta parte añade las filas de agregacion a la tabla //////////////////////////////////
+			var oSettings = oTableDet.fnSettings();
+			if ( oSettings.aiDisplay.length === 0 )
+			{
+				return;
+			}
+
+			var nGroup, nCell, iIndex, sGroup;
+			var sLastGroup = "", iCorrector=0;
+			var nTrs = $('#tabla_detalle tbody tr');
+			// var iColspan = nTrs[0].getElementsByTagName('td').length;
+            var cols=oSettings.aoColumns.length-2;
+			var row=0;									
+			
+			for ( var i=0 ; i<nTrs.length ; i++ )
+			{
+				iIndex = oSettings._iDisplayStart + i;
+
+				sGroup = oSettings.aoData[ oSettings.aiDisplay[iIndex] ]._aData[2];				
+				
+				if ( sGroup != sLastGroup )
+				{					
+              		var nGroup = document.createElement('tr');
+					// // Se agrgega una columna correspondiente a la columna oculta					
+					var nCell;
+					nCell = document.createElement( 'td' );						 
+					nCell.className = grupo;																									
+					nCell.innerHTML = 0;															
+					nGroup.appendChild( nCell ); 										
+                  					
+                    for(var j=0 ; j< cols ; j++)
+					{
+						nCell = document.createElement( 'td' );						 
+						nCell.className = grupo;														
+						nCell.innerHTML = matriz_totales_det[row][j];																	
+						nGroup.appendChild( nCell );						 
+					}									
+					nGroup.setAttribute('data-tt-id',sGroup);	
+					nGroup.setAttribute('class','parent');	
+                    ++row;
+                    nTrs[i].parentNode.insertBefore( nGroup, nTrs[i] );
+					// Se crea atributo que asocie la fila de agregacion con sus filas hijas					
+					// Se añade fila de agregacion para tabla principal					
+                    
+					// /* Cell to insert into the frozen columns */
+					
+                    nGroup = document.createElement( 'tr' );
+					
+					nCell = document.createElement( 'td' );
+					nCell.className = grupo+" tag";
+					nCell.innerHTML = sGroup.toUpperCase();
+					nGroup.setAttribute('title',sGroup.toUpperCase());	
+					nGroup.appendChild( nCell );
+										
+					nCell = document.createElement( 'td' );
+					nCell.className = grupo;
+					nCell.innerHTML = "% INC.";
+					nGroup.setAttribute('title',sGroup.toUpperCase());	
+					nGroup.appendChild( nCell );
+										
+                    // Se añade fila de agregacion para tabla fija
+					$(nGroup).insertBefore( $('tbody tr:eq('+(i+iCorrector)+')', left.body)[0] );
+					
+					iCorrector++;
+					sLastGroup = sGroup;
+				}
+			}
+			var nGroup = document.createElement('tr');
+			// Se agrgega una columna correspondiente a la columna oculta			
+			var nCell;
+			nCell = document.createElement( 'td' );						 
+			nCell.className =grupo;																									
+			nCell.innerHTML = 0;															
+			nGroup.appendChild( nCell ); 				
+			
+			for(var j=0 ; j< cols ; ++j)
+			{
+				nCell = document.createElement( 'td' );						 
+				nCell.className = grupo;																				
+				// alert(matriz_totales[row][j]);
+				nCell.innerHTML = matriz_totales_det[row][j];																
+				nGroup.appendChild( nCell );						 
+			}					
+			nGroup.setAttribute('title',"TOTAL GENERAL");										
+			$(nGroup).insertBefore( $('#tabla_detalle.DTFC_Cloned tbody tr:eq('+(0)+')', right.body)[0] );						
+			// Se crea atributo que asocie la fila de agregacion con sus filas hijas					
+			// Se añade fila de agregacion para tabla principal
+			nGroup.setAttribute('data-tt-id',"TOTALES");				
+			
+			// /* Cell to insert into the frozen columns */
+			
+			nGroup = document.createElement( 'tr' );
+			
+			nCell = document.createElement( 'td' );
+			nCell.className = grupo+" tag";
+			nCell.innerHTML = "TOTAL GENERAL";
+			nGroup.appendChild( nCell );
+			
+			nCell = document.createElement( 'td' );
+			nCell.className = grupo;
+			nCell.innerHTML = "% INC.";
+			nGroup.appendChild( nCell );
+			
+			nGroup.setAttribute('title',"TOTAL GENERAL");	
+			
+			// Se añade fila de agregacion para tabla fija
+			$(nGroup).insertBefore( $('#tabla_detalle.DTFC_Cloned tbody tr:eq(0)', left.body)[0] );			
+			$('.DTFC_LeftFootWrapper').hide();
+		}		
+	});		
+	calcular_incumplimiento();	
+	//FIX PARA CHROME
+	$('.DTFC_LeftWrapper:first').css('height', ($('.DTFC_LeftWrapper:first').height()-15) + 'px'  );	
+}
+
+function colorearCeldas(id_tabla,flag,suffix){
 	
+	var selector="#"+id_tabla+" tbody tr td";
+	if(id_tabla=='tabla_detalle')
+		selector+=suffix;
 	if(flag)
 	{
-		$("#tabla_resumen tbody tr td").heatcolor(
+		$(selector).heatcolor(
 			function() {			
 				return parseFloat($(this).text());
 				},
@@ -354,13 +872,13 @@ function colorearCeldas(flag){
 				minval: 100,
 				colorStyle: 'greentored',
 				lightness: 0.4,
-				reverseOrder: {% if tag_variable in ['presencia']%} true {% else %}	false {% endif %}
+				reverseOrder: {% if tag_variable|lower in ['presencia']%} true {% else %}	false {% endif %}
 				}		
 		);
 	}
 	else
 	{
-		$("#tabla_resumen tbody tr td").removeAttr('style');
+		$("#"+id_tabla+" tbody tr td").removeAttr('style');
 		colorTotales();
 	}
 	
@@ -370,10 +888,11 @@ function colorTotales(){
 	var color_fondo = 'rgb(255, 235, 158)';
 	$('.DTFC_Cloned tbody tr:first td').css('background-color',color_fondo);
 	$('.table:not(.DTFC_Cloned) tbody tr:first td').css('background-color',color_fondo);
-	$('.table:not(.DTFC_Cloned) tbody tr td:last-of-type:not(.group)').css('background-color',color_fondo);
-	$('.DTFC_Cloned tbody tr td:first-of-type:not(.group)').css({
-		'background-color':'rgb(238, 236, 255)',
+	$('.table:not(.DTFC_Cloned) tbody tr td:last-of-type:not(.'+grupo+')').css('background-color',color_fondo);
+	$('.DTFC_Cloned tbody tr td:first-of-type:not(.'+grupo+')').css({
+		// 'background-color':'rgb(238, 236, 255)',
 		'color': 'black',
+		'cursor': 'pointer'
 	});	
 }
 
@@ -381,13 +900,31 @@ $(document).ready(function () {
 	
 	var callbacks = $.Callbacks();
 
-	callbacks.add( calcularAnchoMaximo() );
+	callbacks.add( calcularAnchoMaximo('tabla_resumen') );
 	callbacks.add( construirTabla() );
+	callbacks.add( construirTablaDetalle() );
+	
+	{% if rango_precio is defined %}
+		construirSlider({{rango_precio}});
+	{% endif %}
 	
 	$(window).bind('resize', function () {
 		$('.DTFC_Cloned').find('.DataTables_sort_icon').append('<img class="loader" alt="" style="float:left;margin-left:20px" src="/bundles/cademreporte/images/loader-minitrans.gif">');	
 		oTable.fnAdjustColumnSizing();
 	});		
+	
+	$( "#dialog-detalle" ).dialog({
+		autoOpen: false,
+		modal: true,
+		width: 800,
+		height: 530,
+		resizable: false,
+		buttons: {
+			Ok: function() {
+			  $( this ).dialog( "close" );
+			}
+		}	
+	});
 
 		i_quiebre = new Highcharts.Chart({
 		chart: {    
@@ -398,8 +935,8 @@ $(document).ready(function () {
 			plotBackgroundColor: null,
 			plotBorderWidth: null,
 			plotShadow: false,
-			width: 900,
-			height: 350
+			// width: 900,
+			// height: 350
 		},
 		title: {
 			text: 'Evolución {{estudios[0].getEstudioVariables[0].getNombrevariable}}'
@@ -490,12 +1027,13 @@ $(document).ready(function () {
 	var intento_fil = false;
 	var label_col = "";
 	var label_fil = "";
-	var cat_fil = "";
+	var cat_fil = "";	
 	//GRAFICAR COLUMNAS
 	$(document).on('click', 'thead th', function(e) {
 		var label= $(this).attr('tag');
 		if (e.ctrlKey){//AGREGAR OTRA LINEA
-			$(this).addClass("ui-state-active");
+			// $(this).addClass("ui-state-active");
+			$(this).children().addClass(clase);
 			intento_col = false;
 			//GET
 			//SE CLONA FORM Y SE ARREGLA LOS ITEM SELECCIONADOS POR USUARIO
@@ -505,7 +1043,7 @@ $(document).ready(function () {
 			originform.each(function(i) {
 				if($(this).is(':selected')) cform.find('option').eq(i).attr("selected", true);
 			});
-			//SE QUITA REGION Y COMUNA
+			//SE QUITA REGION Y PROVINCIA
 			cform.find('#f_region').remove();
 			cform.find('#f_provincia').remove();
 			cform.find('input').remove();
@@ -545,8 +1083,9 @@ $(document).ready(function () {
 			intento_col = true;
 			intento_fil = false;
 			label_col = label;
-			$(".ui-state-active").removeClass("ui-state-active");
-			$(this).addClass("ui-state-active");
+			$('th div.'+clase).removeClass(clase);
+			$('td.'+clase).removeClass(clase);
+			$(this).children().addClass(clase);
 			//GET
 			//SE CLONA FORM Y SE ARREGLA LOS ITEM SELECCIONADOS POR USUARIO
 			var cform = $('form#filtros').clone();
@@ -593,7 +1132,8 @@ $(document).ready(function () {
 		var label= $(this).text();
 		if (e.ctrlKey){//AGREGAR OTRA LINEA
 			intento_fil = false;
-			$(this).addClass("ui-state-active");
+			// $(this).addClass("ui-state-active");
+			$(this).addClass(clase);
 			//GET
 			//SE CLONA FORM Y SE ARREGLA LOS ITEM SELECCIONADOS POR USUARIO
 			var cform = $('form#filtros').clone();
@@ -644,8 +1184,9 @@ $(document).ready(function () {
 			intento_col = false;
 			label_fil = label;
 			cat_fil = categoria;
-			$(".ui-state-active").removeClass("ui-state-active");
-			$(this).addClass("ui-state-active");
+			$('td.'+clase).removeClass(clase);		
+			$('th div.'+clase).removeClass(clase);			
+			$(this).addClass(clase);
 			//GET
 			//SE CLONA FORM Y SE ARREGLA LOS ITEM SELECCIONADOS POR USUARIO
 			var cform = $('form#filtros').clone();
@@ -680,6 +1221,14 @@ $(document).ready(function () {
 			.done(function() { /*alert("second success");*/ })
 			.fail(function() { alert("Se produjo un error al cargar"); })
 			.always(function() { /*alert("finished");*/ quitarloader();});
+		}
+	});
+	
+	$(document).on('click', '#tabla_resumen tbody tr td', function(e) {
+		if(e.ctrlKey)
+		{
+			$('.DTFC_Cloned').find('.DataTables_sort_icon').append('<img class="loader" alt="" style="float:left;margin-left:20px" src="/bundles/cademreporte/images/loader-minitrans.gif">');
+			obtenerDatosAdicionales('celda',$(e.target));		
 		}
 	});
 				
@@ -726,10 +1275,17 @@ $(document).ready(function () {
 	}
 	
 	function recargarTabla()
-	{		
+	{				
 		$.get("{{ url_header_action }}",DatosAdicionales,function(data){
 		
+			// Si la búsquedo retorno un resultado vacio, mandar alerta y retornar falso
+			if(data.length==0)
+			{
+				alert('Esta búsqueda no devolvió resultados. Por favor revise los filtros en la sección izquierda de la página');
+				return false;
+			}
 			maxWidth=parseInt(data.max_width);
+			aoColumnDefs=JSON.parse(data.aoColumnDefs);			
 			// Primero destruimos la tabla si existe (la removemos del DOM)	
 			var ex = document.getElementById('tabla_resumen');
 			if ( $.fn.DataTable.fnIsDataTable( ex ) ) {
@@ -739,12 +1295,13 @@ $(document).ready(function () {
 			var table= document.createElement( 'table' );
 			var thead= document.createElement( 'thead' );
 			var att=document.createAttribute("id");
-			att.value="tabla_resumen";					
+			att.value='tabla_resumen';					
 			table.setAttributeNode(att);
 			var att=document.createAttribute("class");
 			att.value="tabla_resumen table table-bordered display";					
 			table.setAttributeNode(att);			
-			var tableHead = document.createElement( 'tr' );	 //tableheader 							
+			var tableHead = document.createElement( 'tr' );	 //tableheader 
+
 			$(data.head).each(function(key,value){				
 				var tableHeading = document.createElement( 'th' );					
 				att=document.createAttribute("tag");
@@ -756,18 +1313,143 @@ $(document).ready(function () {
 					tableHeading.innerHTML = value;									
 				tableHead.appendChild( tableHeading );				
 			});						
-			table.appendChild( tableHead );	
+			
 			thead.appendChild( tableHead );
 			table.appendChild( thead );						
-			document.getElementById('container').appendChild(table);			
+			document.getElementById('container_tabla_resumen').appendChild(table);			
 			// Luego recalculamos el ancho maximo en base a la cardinalidad del head
-			calcularAnchoMaximo();			
+			calcularAnchoMaximo('tabla_resumen');			
 			// Luego volvemos a construir la tabla con dataTables
 			construirTabla();
 		},"json")
 		.done(function() {  })
 		.fail(function() {  })
 		.always(function() { quitarloader('#tabla-loader'); });
+	}
+	
+	function recargarTablaDetalle()
+	{				
+		$.get("{{ url_header_detalle_action }}",DatosAdicionales,function(data){
+			DatosAdicionales = [];
+			// Si la búsquedo retorno un resultado vacio, mandar alerta y retornar falso
+			if(data.head.length<=4)
+			{
+				alert('Esta búsqueda no devolvió resultados. Es posible que no existan datos para este cruce en la medición actual.\n\nSi no es este el caso, por favor revise los filtros en la sección izquierda de la página');
+				return false;
+			}
+			maxWidth=parseInt(data.max_width);
+			aoColumnDefs=JSON.parse(data.aoColumnDefs);			
+			// Primero destruimos la tabla si existe (la removemos del DOM)	
+			var ex = document.getElementById('tabla_detalle');
+			if ( $.fn.DataTable.fnIsDataTable( ex ) ) {
+			  oTableDet.fnDestroy(true);
+			}			
+			// Luego generamos el html de la tabla y lo añadimos al DOM
+			var table= document.createElement( 'table' );
+			var thead= document.createElement( 'thead' );
+			var att=document.createAttribute("id");
+			att.value='tabla_detalle';					
+			table.setAttributeNode(att);
+			var att=document.createAttribute("class");
+			att.value="tabla_detalle table table-bordered display";					
+			table.setAttributeNode(att);			
+			var tableHead = document.createElement( 'tr' );	 //tableheader 
+	
+			var cols=data.head.length-1;			
+			$(data.head).each(function(key,value){				
+				var tableHeading = document.createElement( 'th' );											
+				
+				if(key<columnas_reservadas || key==cols)
+				{					
+					tableHeading.innerHTML = value;
+					tableHeading.setAttribute('rowspan',2);				
+					tableHeading.setAttribute('title',value);		
+					tableHeading.setAttribute('style',"vertical-align:middle");	
+				}
+				else
+				{					
+					tableHeading.innerHTML = value['cod_sala'];										
+				}												
+				tableHead.appendChild( tableHeading );				
+			});				
+			thead.appendChild( tableHead );
+			tableHead = document.createElement( 'tr' );	 //tableheader 				
+			$(data.head).each(function(key,value){										
+				if(key>=columnas_reservadas && key!=cols)
+				{					
+					var tableHeading = document.createElement( 'th' );						
+					tableHeading.innerHTML = value['nom_sala'].substring(0,14)+'...';
+					tableHeading.setAttribute('title',value['nom_sala']);		
+					tableHead.appendChild( tableHeading );									
+				}																		
+			});			
+			thead.appendChild( tableHead );
+			table.appendChild( thead );				
+			document.getElementById('container_tabla_detalle').appendChild(table);			
+			// Luego recalculamos el ancho maximo en base a la cardinalidad del head
+			calcularAnchoMaximo('tabla_detalle');			
+			// Luego volvemos a construir la tabla con dataTables
+			construirTablaDetalle();			
+			$( "#dialog-detalle" ).dialog( "open" );				
+		},"json")
+		.done(function() {  })
+		.fail(function() {  })
+		.always(function() { quitarloader('#tabla-loader'); });
+	}
+		
+	function obtenerDatosAdicionales(caso,target){
+
+		// 1o Obtener las comunas
+		var cform = $('form#filtros').clone();
+		cform.find('option').removeAttr("selected");
+		var originform = $('form#filtros option');
+		originform.each(function(i) {
+			if($(this).is(':selected')) cform.find('option').eq(i).attr("selected", true);
+		});
+		//SE QUITA REGION Y PROVINCIA
+		cform.find('#f_region').remove();
+		cform.find('#f_provincia').remove();
+		cform.find('input').remove();
+		
+		var dataform = cform.serialize();												
+		// Luego obtener los grupos (categorías o segmentos) y cadenas
+		var categorias= new Array();
+		var segmentos= new Array();
+		var cadenas= new Array();
+		
+		function objeto(nombre,elementos)
+		{
+			this.nombre=nombre;
+			this.elementos=elementos;
+		}
+				
+		switch(caso)
+		{	
+			case 'boton':								
+				$('td.'+clase).each(function(){			
+					if($(this).hasClass(grupo))
+						categorias.push($(this).attr('title'))			
+					else
+						segmentos.push($(this).attr('title'))			
+				});
+				
+				$('th div.'+clase).each(function(){						
+					cadenas.push($(this).parent().attr('tag'))						
+				});								
+				break;
+			case 'celda':											
+				cadenas.push($('thead tr').children(':eq('+$(target).index()+')').attr('tag'));								
+								
+				if($('.DTFC_Cloned tbody').children(':eq('+$(target).parent().index()+')').children().hasClass(grupo))				
+					categorias.push($('.DTFC_Cloned tbody').children(':eq('+$(target).parent().index()+')').attr('title'))							
+				else				
+					segmentos.push($('.DTFC_Cloned tbody').children(':eq('+$(target).parent().index()+')').attr('title'))														
+				break;
+		}
+		dataform+='&categorias='+JSON.stringify(categorias)+'&segmentos='+JSON.stringify(segmentos)+'&cadenas='+JSON.stringify(cadenas);			
+		$( "#dialog-detalle" ).dialog( "option", "title", "Detalle {{tag_variable}}: "+categorias+segmentos+"/"+cadenas );
+		DatosAdicionales = dataform;			
+		recargarTablaDetalle();		
 	}
 	
 	function quitarloader(id_){
@@ -791,8 +1473,313 @@ $(document).ready(function () {
 		  '<button type="button" class="close" data-dismiss="alert">×</button>'+
 		  '<strong>'+strong+'</strong> '+text+
 		'</div>';
-		$('#container').prepend(alerttipo);
+		$('#container_tabla_resumen').prepend(alerttipo);
 	}
 	
+	function calcular_incumplimiento()
+	{	
+	var indice=parseInt($( "#slider-range-min" ).slider( "value" ));
+	var total=0;
+	var cont=0;
+	var n=oTableDet.fnSettings().aoColumns.length-2;	
+	
+	$('#tabla_detalle tbody tr').each(function(){		
+		
+		var politica=parseInt($('.tabla_detalle.DTFC_Cloned tbody').children(':eq('+$(this).index()+')').children(':eq(1)').text());				
+		
+		var total_producto=0;
+		var cont_producto=0;
+		$(this).children().each(function(i){						
+			if(i>1 && i<n && !$(this).hasClass(grupo))
+			{				
+				// alert($(this).text());
+				var precio= parseInt($(this).text());					
+				if(precio.toString()!='NaN')
+				{									
+					if(Math.abs(precio-politica)>indice*politica/100)
+					{						
+						$(this).addClass('fueraRango');
+						cont++;
+						cont_producto++;
+					}
+					else
+						$(this).removeClass();					
+					total++;
+					total_producto++;
+				}					
+			}		
+		});		
+		$(this).children(':last').text((100*cont_producto/total_producto).toFixed(1));		
+	});		
+	$('#pctje_incumplimiento').text((100*cont/total).toFixed(1)+'%');
+	$('#pctje_incumplimiento').attr('valor',(100*cont/total).toFixed(1));
+	calcularTotalesPrecio();
+}
+
+function calcularTotalesPrecio(){
+    //////////////// Esta parte calcula los valores de las agregaciones (SEGMENTO Y TOTAL) //////////////////////       
+	if($('#colorear_detalle').hasClass('btn-warning')){		
+		colorearCeldas('tabla_detalle',false,suffix);		
+	}
+	var cols=oTableDet.fnSettings().aoColumns.length-2;
+	
+	var totalesGlobales=new Array();
+	var totalesSalas=new Array();
+	var contadoresSalas=new Array();
+	var sumaCategoria= 0;	
+	var contCategoria= 0;
+	var sumaSala= 0;	
+	var contSala= 0;	
+	var total;	
+	
+	for (var i = 0; i < cols-1; i++) totalesGlobales[i] = 0;		 
+	for (var i = 0; i < cols-1; i++) contadoresSalas[i] = 0;		 
+	for (var i = 0; i < cols-1; i++) totalesSalas[i] = 0;		  
+	
+	for (var i = 0; i < cols-1 ; i++) totalesGlobales[i] = 0;
+	$('#tabla_detalle tbody tr.parent').each(function(){   	  
+	  var totalesParciales= new Array();
+	  var contadoresParciales= new Array();	  
+	  for (var i = 0; i < cols-1; i++) totalesParciales[i] = 0;		 
+	  for (var i = 0; i < cols-1; i++) contadoresParciales[i] = 0;		 
+		var cont=0;		
+		sumaCategoria=0;
+		contCategoria=0;
+		$('#tabla_detalle tbody tr[data-tt-parent-id="'+$(this).attr('data-tt-id')+'"]').each(function(){						
+		
+			// alert($(this).html());			
+			var j=0;
+			$(this).children().slice(2,cols).each(function(){				
+				// alert($(this).html());
+				// alert("fueraRango="+$(this).hasClass('fueraRango')? 1:0);												
+	
+				if(parseInt($(this).text()).toString()!="NaN")
+				{										
+					totalesParciales[j]+=$(this).hasClass('fueraRango')? 1:0;					
+					totalesSalas[j]+=$(this).hasClass('fueraRango')? 1:0;					
+					contadoresParciales[j]++;					
+					contadoresSalas[j]++;					
+					sumaCategoria+=$(this).hasClass('fueraRango')? 1:0;									
+					contCategoria++;					
+				}				
+				j++;
+			});
+			cont++;
+		});	  
+		var j=0;
+	  	 	  
+		$(this).children().slice(2,cols).each(function(){
+			var valor=parseFloat((totalesParciales[j]/contadoresParciales[j])*100);
+			$(this).text(valor.toString()=='NaN'?'-':valor.toFixed(1));
+			totalesGlobales[j]=totalesGlobales[j]+totalesParciales[j];              			
+			j++;
+		});		
+		
+		$(this).children(':eq('+cols+')').text(parseFloat((sumaCategoria/contCategoria)*100).toFixed(1));		
+		// totalesGlobales[j]=(parseFloat((sumaCategoria/contCategoria)*100).toFixed(1));
+	});  				
+	$('#tabla_detalle tbody tr[data-tt-id=TOTALES]').children().slice(2,cols).each(function(j){
+		$(this).text(parseFloat((totalesSalas[j]/contadoresSalas[j])*100).toFixed(1));
+	});
+	$('#tabla_detalle tbody tr[data-tt-id=TOTALES]').children(':eq('+cols+')').text($('#pctje_incumplimiento').attr('valor'));
+	if($('#colorear_detalle').hasClass('btn-warning')){		
+		colorearCeldas('tabla_detalle',true,suffix);				
+	}	
+}
+
+function listenerFiltro()
+{	
+	var filtrado= false;
+	var indice=0;
+	var offset=0;	
+	
+	var matched_active='btn-success';
+	var matched='btn-warning';
+	var clase='';
+	
+	$('#filtro').keydown(function(e){				
+			
+		switch(e.keyCode)
+		{			
+			case 13:						
+				switch(filtrar_por)
+				{
+					case 'sku':						
+						var needle=$('#filtro').val().toUpperCase();					
+						var delta=$('table.DTFC_Cloned tbody tr').height();
+						delta=delta
+						offset=delta;
+						var oSettings = oTableDet.fnSettings();									
+						
+						if(needle=='')
+						{
+							$('.'+matched).removeClass(matched);	
+							$('.'+matched_active).removeClass(matched_active);	
+							return false;
+						}
+						if(!filtrado)
+						{
+							filtrado=true;							
+							var hit=false;
+							// $('.ui-state-active').removeClass('ui-state-active');				
+							$('td.'+matched).removeClass(matched);	
+							$('td.'+matched_active).removeClass(matched_active);	
+							$('#tabla_detalle tbody tr').each(function(){						
+								var haystack=$(this).attr('title').toString().toUpperCase();													
+								if (haystack.indexOf(needle)!=-1) {															
+									if(!hit)							
+										clase=matched_active;														
+									else							
+										clase=matched;
+																							
+									$(this).addClass(clase);
+									
+									$('table.tabla_detalle.DTFC_Cloned tbody').children(':eq('+$(this).index()+')').addClass(clase);
+									hit=true;							
+								}
+								if(!hit)
+									offset=offset+delta;
+							});
+							if(hit)
+							{													
+								offset=($('.'+matched+':first').index())*delta;
+								$('.tabla_detalle.dataTables_scrollBody').animate({ scrollTop: offset });		
+							}
+							else
+							{
+								alert('El item no fue encontrado');
+								$('#filtro').val('');
+								$('.tabla_detalle.dataTables_scrollBody').animate({ scrollTop: 0 });	
+							}
+						}
+						else
+						{									
+							offset=($('.'+matched+':first').index())*delta;
+							if($('.'+matched).length<=2)
+								filtrado=false;
+							$('.'+matched_active).removeClass(matched_active);	
+							$('#tabla_detalle tbody tr.'+matched+':first').addClass(matched_active);
+							$('#tabla_detalle tbody tr.'+matched+':first').removeClass(matched);	
+							
+							$('table.tabla_detalle.DTFC_Cloned tbody tr.'+matched+':first').addClass(matched_active);
+							$('table.tabla_detalle.DTFC_Cloned tbody tr.'+matched+':first').removeClass(matched);						
+							
+							$('.dataTables_scrollBody:first').animate({ scrollTop: offset });						
+						}
+					break;
+					
+					case 'sala':
+						var needle=$('#filtro').val().toUpperCase();					
+						var delta=$('#tabla_resumen tbody tr:first td').eq(-2).width();
+						delta = delta*0.92;										
+						var oSettings = oTable.fnSettings();
+						var ventana= 1000;									
+						var posicion;
+						if(needle=='')
+						{
+							$('th div.btn-warning').removeClass('btn-warning');	
+							$('th div.btn-success').removeClass('btn-success');	
+							return false;
+						}
+						if(!filtrado)
+						{					
+							$('th div.btn-warning').removeClass('btn-warning');	
+							$('th div.btn-success').removeClass('btn-success');	
+							filtrado=true;							
+							var hit=false;
+							// $('.ui-state-active').removeClass('ui-state-active');				
+							$('th.btn-warning').removeClass('btn-warning');	
+							$('th.btn-success').removeClass('btn-success');	
+							$('.DataTables_sort_wrapper').slice(2,$('.DataTables_sort_wrapper').length-1).each(function(){							
+								var haystack=$(this).parent().attr('title').toString().toUpperCase();					
+								if (haystack.indexOf(needle)!=-1) {																																										
+									if(!hit)							
+										clase='btn-success';														
+									else							
+										clase='btn-warning';																					
+									$(this).addClass(clase);																												
+									hit=true;							
+								}
+								// if(!hit)
+									// offset=offset+2*delta/3;						
+							});					
+							if(hit)
+							{											
+								offset=($('.btn-success').parent().index())*delta;
+								
+								$('.dataTables_scrollBody').animate({ scrollLeft: offset });		
+							}
+							else
+							{
+								alert('El item no fue encontrado');
+								$('#filtro').val('');
+								$('.dataTables_scrollBody:first').animate({ scrollLeft: 0 });	
+							}
+						}
+						else
+						{											
+							offset=($('.btn-success').parent().index())*delta;																							
+							
+							if($('th div.btn-warning').length<=1)
+								filtrado=false;					
+							$('th div.btn-success').removeClass('btn-success');	
+							$('th div.btn-warning:first').addClass('btn-success');
+							$('th div.btn-warning:first').removeClass('btn-warning');	
+						
+							$('.dataTables_scrollBody:first').animate({ scrollLeft: offset });						
+						}
+					break;
+				}
+			break;	
+			
+			default:
+				filtrado=false;				
+			break;
+		}
+	});
+}	
+
+function construirSlider(rango_precio){
+	
+	$( "#slider-range-min" ).slider({
+		  range: "min",
+		  value: rango_precio,
+		  min: 0,
+		  max: 100,
+		  slide: function( event, ui ) {
+			$( "#amount" ).val( ui.value + '%');	
+		  },
+		  change: function( event, ui ) {			
+			calcular_incumplimiento();			
+		  }
+	});
+	$( "#amount" ).val( $( "#slider-range-min" ).slider( "value" ) + '%');	
+}
+
+function listenerCelda(){	
+	
+	var clase='ui-state-highlight';
+	
+	$("#tabla_resumen tbody tr td").mouseenter(function(e){						
+		var target=$(e.target);		
+		$('.'+clase).removeClass(clase);
+		$(this).addClass(clase);
+		$('thead tr').children(':eq('+$(target).index()+')').children().addClass(clase);
+		$('.DTFC_Cloned tbody').children(':eq('+$(target).parent().index()+')').children().addClass(clase);
+		$(document).keydown(function(e){							
+			if(e.keyCode==17)	
+				$(target).css('cursor','pointer');								
+		});
+		$(document).keyup(function(e){														
+			if(e.keyCode==17)															
+				$(target).css('cursor','default');															
+		});
+	});
+	
+	$("#tabla_resumen tbody").mouseleave(function(e){						
+		$('.'+clase).removeClass(clase);
+	});
+}
+
  </script>
 {% endblock %}

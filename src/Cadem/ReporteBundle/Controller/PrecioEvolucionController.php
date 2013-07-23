@@ -235,21 +235,20 @@ class PrecioEvolucionController extends Controller
 		}
 		else $evolucion_precio = $session->get($sha1);	
 		
-		$head=array('CATEGORIA',' DESCRIPCIÓN');	
+		$head=array('DESCRIPCIÓN','CATEGORÍA');	
 		
 		// Oonstruir inicialización de columnas		
 		$aoColumnDefs=array();
 		
 		$fila=array();
 		$fila['aTargets']=array(0);
-		$fila['sClass']="tag2";
-		$fila['sWidth']="100px";
+		$fila['sClass']="tag";
+		$fila['sWidth']="260px";
 		array_push($aoColumnDefs,$fila);
 		
 		$fila=array();
-		$fila['aTargets']=array(1);
-		$fila['sClass']="tag";
-		$fila['sWidth']="260px";
+		$fila['aTargets']=array(1);		
+		$fila['bVisible']=false;	
 		array_push($aoColumnDefs,$fila);		
 
 		$cont=2;		
@@ -267,10 +266,10 @@ class PrecioEvolucionController extends Controller
 		}
 		$fila=array();
 		$fila['aTargets']=array($cont);	
-		$fila['bVisible']=false;	
+		// $fila['bVisible']=false;	
 		// $fila['sClass']="medicion";
 		array_push($aoColumnDefs,$fila);		
-		// $fila['sWidth']="2%";	
+		$fila['sWidth']="100px";	
 		array_push($head,'TOTAL');
 		
 		// Obtener totales horizontales por producto
@@ -386,7 +385,7 @@ class PrecioEvolucionController extends Controller
 		$session->set("mediciones_id_str",$mediciones_id_str);
 		
 		$session->set("head",$head);
-		$session->set("aoColumnDefs",$aoColumnDefs);		
+		$session->set("aoColumnDefs",$aoColumnDefs);						
 						
 		//RESPONSE
 		$response = $this->render('CademReporteBundle:Evolucion:index.html.twig',
@@ -464,8 +463,8 @@ class PrecioEvolucionController extends Controller
 				// Mientras el primer nivel de agregación no cambie
 				if($nivel1==$evolucion_precio[$cont_regs]['PRODUCTO'])
 				{					
-					$fila[0]=$evolucion_precio[$cont_regs]['SEGMENTO'];	
-					$fila[1]=trim($evolucion_precio[$cont_regs]['PRODUCTO']);																					
+					$fila[1]=$evolucion_precio[$cont_regs]['SEGMENTO'];	
+					$fila[0]=trim($evolucion_precio[$cont_regs]['PRODUCTO']);																					
 					$fila[$columna_precio+2]=round($evolucion_precio[$cont_regs]['PRECIO'],1);
 					$cont_regs++;
 					// $cont_meds++;
@@ -473,7 +472,7 @@ class PrecioEvolucionController extends Controller
 				else
 				{			
 					// Si el primer nivel de agregacion cambió, lo actualizo, agrego la fila al body y reseteo el contador de mediciones								
-					$fila[$num_meds+2]=round($totales_producto[$cont_totales_producto]['PRECIO']*100,1);					
+					$fila[$num_meds+2]=round($totales_producto[$cont_totales_producto]['PRECIO'],1);					
 					$cont_totales_producto++;					
 					// $cont_meds=0;								
 					$nivel1=$evolucion_precio[$cont_regs]['PRODUCTO'];				
@@ -484,7 +483,7 @@ class PrecioEvolucionController extends Controller
 				{	
 					$columna_precio=array_search($evolucion_precio[$cont_regs-1]['NOMBRE'],$mediciones);
 					$fila[$columna_precio+2]=round($evolucion_precio[$cont_regs-1]['PRECIO']);
-					$fila[$num_meds+2]=round($totales_producto[$cont_totales_producto]['PRECIO']*100,1);					
+					$fila[$num_meds+2]=round($totales_producto[$cont_totales_producto]['PRECIO'],1);					
 					array_push($body,$fila);									
 					$cont_regs++;
 				}		
@@ -502,12 +501,12 @@ class PrecioEvolucionController extends Controller
 				// Mientras no cambie el segmento
 				if($nivel2==$totales_segmento[$cont_regs]['SEGMENTO'])
 				{
-					$fila[$columna_precio]=round($totales_segmento[$cont_regs]['PRECIO']*100,1);					
+					$fila[$columna_precio]=round($totales_segmento[$cont_regs]['PRECIO'],1);					
 					$cont_regs++;
 				}
 				else
 				{
-					$fila[$num_meds]=round($totales_horizontales_segmento[$cont_totales_horizontales_segmento]['PRECIO']*100,1);
+					$fila[$num_meds]=round($totales_horizontales_segmento[$cont_totales_horizontales_segmento]['PRECIO'],1);
 					$cont_totales_horizontales_segmento++;
 					array_push($matriz_totales,$fila);
 					$fila=array_fill(0,$num_meds+1,"-");
@@ -516,8 +515,8 @@ class PrecioEvolucionController extends Controller
 				if($cont_regs==$num_regs)		
 				{	
 					$columna_precio=array_search($totales_segmento[$cont_regs-1]['MEDICION'],$mediciones);
-					$fila[$columna_precio]=round($totales_segmento[$cont_regs-1]['PRECIO']*100,1);	
-					$fila[$num_meds]=round($totales_horizontales_segmento[$cont_totales_horizontales_segmento]['PRECIO']*100,1);
+					$fila[$columna_precio]=round($totales_segmento[$cont_regs-1]['PRECIO'],1);	
+					$fila[$num_meds]=round($totales_horizontales_segmento[$cont_totales_horizontales_segmento]['PRECIO'],1);
 					array_push($matriz_totales,$fila);		
 					$cont_regs++;					
 				}				
@@ -530,11 +529,11 @@ class PrecioEvolucionController extends Controller
 			{
 				$columna_precio=array_search($totales_verticales_segmento[$cont_regs]['MEDICION'],$mediciones);					
 				// Mientras no cambie la cadena  
-				$fila[$columna_precio]=round($totales_verticales_segmento[$cont_regs]['PRECIO']*100,1);					
+				$fila[$columna_precio]=round($totales_verticales_segmento[$cont_regs]['PRECIO'],1);					
 				$cont_regs++;
 			}	
 			
-			$fila[$num_meds]=round($total[0]['PRECIO']*100,1);			
+			$fila[$num_meds]=round($total[0]['PRECIO'],1);			
 			
 			array_push($matriz_totales,$fila);		
 				

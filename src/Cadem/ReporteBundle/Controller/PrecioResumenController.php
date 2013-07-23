@@ -231,7 +231,7 @@ class PrecioResumenController extends Controller
 		
 		$fila=array();
 		$fila['aTargets']=array($cont);		
-		// $fila['sWidth']="2%";	
+		$fila['sWidth']="80px";	
 		array_push($aoColumnDefs,$fila);				
 		
 		foreach(array_reverse($prefixes) as $prefix)		
@@ -313,6 +313,7 @@ class PrecioResumenController extends Controller
 		$session->set("totales_horizontales_categoria",$totales_horizontales_categoria);	
 		$session->set("totales_verticales_categoria",$totales_verticales_categoria);	
 		$session->set("total",$total);			
+		$session->set("flag",false);	
 						
 		// Calcula el ancho máximo de la tabla	
 		$extension=count($head)*10-100;
@@ -374,8 +375,12 @@ class PrecioResumenController extends Controller
 			'aoColumnDefs' => json_encode($aoColumnDefs),			
 			'header_action' => 'precio_resumen_header',
 			'body_action' => 'precio_resumen_body',	
+			'header_detalle_action' => 'precio_resumen_detalle_header',
+			'body_detalle_action' => 'precio_resumen_detalle_body',						
 			'tag_variable' => ucwords($variable),
-			'tag_cliente' => $cliente->getNombrefantasia()
+			'tag_cliente' => $cliente->getNombrefantasia(),
+			'columnas_reservadas' => 3,
+			'rango_precio' => $this->get('cadem_reporte.helper.cliente')->getRangoPrecio()
 			)
 		);		
 		//CACHE
@@ -792,5 +797,266 @@ class PrecioResumenController extends Controller
 			'aoColumns' => $aoColumns
 		);		
 		return new JsonResponse($output);		
-	}	
+	}
+
+	public function detalleheaderAction(Request $request)
+	{		
+		// Recuperar el usuario, parámetros y datos de sesión
+		$user = $this->getUser();
+		$em = $this->getDoctrine()->getManager();
+		$session=$this->get("session");			
+		// $salas=$session->get("salas");					
+		$parametros = $request->query->all();										
+		
+		// Como es una llamada desde el filtro, entonces se deben recuperar los parametros y regenerar el dataset			
+		$estudio=$parametros['f_estudio']['Estudio'];	
+		$medicion=$parametros['f_periodo']['Periodo'];			
+		$comunas='';
+		foreach($parametros['f_comuna']['Comuna'] as $comuna)
+			$comunas.=$comuna.',';	
+		$comunas = trim($comunas, ',');		
+		
+		$f_cadena=json_decode(stripslashes($parametros['cadenas']));
+		$f_segmento=json_decode(stripslashes($parametros['segmentos']));
+		$f_categoria=json_decode(stripslashes($parametros['categorias']));
+		
+		$cadenas='';
+		foreach($f_cadena as $cadena)
+			$cadenas.="'".$cadena."',";
+		$cadenas = trim($cadenas, ',');				
+		
+		$segmentos='';
+		foreach($f_segmento as $segmento)
+			$segmentos.="'".$segmento."',";
+		$segmentos = trim($segmentos, ',');		
+		
+		$and_segmento='';
+		$and_categoria='';
+		
+		if(strlen($segmentos)>0)		
+			$and_segmento="and ni.NOMBRE in ({$segmentos})";		
+		
+		$categorias='';
+		foreach($f_categoria as $categoria)
+			$categorias.="'".$categoria."',";
+		$categorias = trim($categorias, ',');		
+		
+		if(strlen($categorias)>0)		
+			$and_categoria="and ni2.NOMBRE in ({$categorias})";		
+
+		//23 SEG
+		$start = microtime(true);
+		$sql = "SELECT precio as precio, p.POLITICAPRECIO as politica, ic.CODIGOITEM1 as COD_PRODUCTO,i.NOMBRE as NOM_PRODUCTO,ni.NOMBRE as SEGMENTO, ni2.NOMBRE as CATEGORIA, ISNULL(sc.CODIGOSALA, UPPER(cad.NOMBRE+' '+com.NOMBRE+' '+s.CALLE+' '+s.NUMEROCALLE)) as ID_SALA, ISNULL(sc.CODIGOSALA,'-') as COD_SALA, UPPER(cad.NOMBRE+' '+com.NOMBRE+' '+s.CALLE+' '+s.NUMEROCALLE) as NOM_SALA FROM PRECIO pr
+				INNER JOIN PLANOGRAMAP p on p.ID = pr.PLANOGRAMAP_ID and p.MEDICION_ID = {$medicion} and pr.PRECIO is not null and p.POLITICAPRECIO is not null
+				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
+				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in ({$comunas}) 
+				INNER JOIN CADENA c on s.CADENA_ID= c.ID and c.NOMBRE in ({$cadenas})
+				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
+				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID {$and_segmento} 
+				INNER JOIN NIVELITEM ni2 on ic.NIVELITEM_ID2 = ni2.ID {$and_categoria}
+				INNER JOIN COMUNA com on s.COMUNA_ID=com.ID
+				INNER JOIN CADENA cad on s.CADENA_ID=cad.ID	
+				INNER JOIN ITEM i on i.ID = ic.ITEM_ID	
+				INNER JOIN PARAMETRO pa on pa.CLIENTE_ID = {$user->getClienteID()} and pa.NOMBRE='rango_precio'
+				ORDER BY SEGMENTO,NOM_PRODUCTO,NOM_SALA";								
+		
+		$sha1 = sha1($sql);
+		
+		// print_r($sql);
+
+		if(!$session->has($sha1)){
+			$detalle_precio = $em->getConnection()->executeQuery($sql)->fetchAll();
+			$session->set($sha1,$detalle_precio);
+		}
+		else $detalle_precio = $session->get($sha1);
+		$time_taken = microtime(true) - $start;
+		//return $time_taken*1000;
+								
+		// Variable para saber cuantos niveles de agregacion define el cliente, esto debe ser parametrizado en una etapa posterior
+		$niveles=2;												
+						
+		$head=array();
+		$salas=array();		
+		$salas_aux=array();		
+		
+		// Generamos el head de la tabla, y las salas
+		foreach($detalle_precio as $registro)
+		{			
+			$fila=array();						
+			
+			if(!in_array($registro['ID_SALA'],$head))
+			{
+				array_push($head,$registro['ID_SALA']);
+				$fila['ID_SALA']=$registro['ID_SALA'];
+				$fila['COD_SALA']=$registro['COD_SALA'];
+				$fila['NOM_SALA']=$registro['NOM_SALA'];
+				array_push($salas_aux,$fila);
+			}					
+		}						
+		// Ordenamos la estructura usando comparador personalizado
+		usort($salas_aux, array($this,"sortFunction"));		
+		
+		// CONSTRUIR EL ENCABEZADO DE LA TABLA
+			
+		$prefixes=array('DESCRIPCIÓN','POLÍTICA','POLÍTICA');
+		
+		$head=array();
+		
+		// Oonstruir inicialización de columnas
+		$aoColumnDefs=array();
+		
+		$fila=array();
+		$fila['aTargets']=array(0);
+		$fila['sClass']="tag";
+		$fila['sWidth']="160px";		
+		array_push($aoColumnDefs,$fila);
+		
+		$fila=array();
+		$fila['aTargets']=array(1);
+		// $fila['sClass']="tag";
+		// $fila['sWidth']="260px";
+		$fila['bVisible']=false;	
+		array_push($aoColumnDefs,$fila);		
+
+		$fila=array();
+		$fila['aTargets']=array(2);		
+		$fila['sWidth']="20px";
+		array_push($aoColumnDefs,$fila);	
+
+		$cont=3;						
+		
+		foreach($salas_aux as $sala)
+		{
+			$fila=array();
+			$fila['cod_sala']=$sala['COD_SALA'];
+			$fila['nom_sala']=$sala['NOM_SALA'];			
+			array_push($salas,$sala['ID_SALA']);		
+			array_push($head,$fila);
+			$fila=array();
+			$fila['aTargets']=array($cont);		
+			// $fila['sWidth']="3%";
+			array_push($aoColumnDefs,$fila);
+			$cont++;			
+			// $head[$sala['COD_SALA']]=$sala['NOM_SALA'];											
+		}	
+
+		$fila=array();
+		$fila['aTargets']=array($cont);		
+		// $fila['sWidth']="2%";		
+		array_push($aoColumnDefs,$fila);
+		
+		foreach(array_reverse($prefixes) as $prefix)		
+			array_unshift($head,$prefix);		
+		array_push($head,'TOTAL');						
+		
+		// Guardamos resultado de consulta en variable de sesión para reusarlas en un action posterior
+		$session->set("salas",$salas);		
+		$session->set("detalle_precio",$detalle_precio);			
+		$session->set("flag",true);		
+		// Calcula el ancho máximo de la tabla	
+		$extension=count($head)*(12+log(count($head),10))-100;
+	
+		if($extension<0)
+			$extension=0;
+			
+		$max_width=100+$extension;	
+		/*
+		 * Output
+		 */
+		// $session->close();
+		$output = array(
+			"head" => (array)$head,
+			"max_width" => $max_width,
+			'aoColumnDefs' => json_encode($aoColumnDefs),					
+		);		
+		return new JsonResponse($output);		
+	}
+	
+	public function detallebodyAction(Request $request)
+	{
+		$start = microtime(true);
+		// Recuperar el usuario y datos de sesión
+		$user = $this->getUser();
+		$em = $this->getDoctrine()->getManager();
+		$session=$this->get("session");			
+		$salas=$session->get("salas");				
+		$total=$session->get("total");			
+		$detalle_precio=$session->get("detalle_precio");		
+		$flag=$session->get("flag");		
+		
+		// CONSTRUIR EL CUERPO DE LA TABLA						
+		$body=array();									
+		$num_regs=count($detalle_precio);		
+		$cont_salas=0;
+		$cont_regs=0;
+		$num_salas=count($salas);			
+		$matriz_totales=array();		
+
+		$variable=$session->get("variable");										
+				
+		if($num_regs>0 && $flag)
+		{
+			$nivel1=$detalle_precio[$cont_regs]['COD_PRODUCTO'];		
+			// Lleno la fila con vacios, le agrego 1 posiciones, correspondientes al total					
+			$fila=array_fill(0,$num_salas+3," ");								
+			$nivel2=$detalle_precio[$cont_regs]['SEGMENTO'];																								
+			$cont_totales_producto=0;				
+		
+			while($cont_regs<$num_regs)
+			{	// Lleno la fila con vacios, le agrego 3 posiciones, correspondientes a los niveles de agregación y al total	
+				$columna_precio=array_search($detalle_precio[$cont_regs]['ID_SALA'],$salas);	
+						
+				// Mientras el primer nivel de agregación no cambie			
+				if($nivel1==$detalle_precio[$cont_regs]['COD_PRODUCTO'])
+				{									
+					$fila[2]=$detalle_precio[$cont_regs]['SEGMENTO'];	
+					$fila[0]=$detalle_precio[$cont_regs]['NOM_PRODUCTO'];//.' ['.$detalle_quiebre[$cont_regs]['COD_PRODUCTO'].']';										
+					$fila[1]=$detalle_precio[$cont_regs]['politica'];
+					$fila[$columna_precio+3]=$detalle_precio[$cont_regs]['precio'];//.' ['.$detalle_quiebre[$cont_regs]['COD_PRODUCTO'].']';																														
+					$cont_regs++;						
+				}	
+				else
+				{ // Si el primer nivel de agregacion cambió, lo actualizo, agrego la fila al body y reseteo el contador de cadenas												
+					$fila[$num_salas+3]=0;					
+					// $cont_totales_producto++;																			
+					$nivel1=$detalle_precio[$cont_regs]['COD_PRODUCTO'];
+					array_push($body,$fila);
+					$fila=array_fill(0,$num_salas+3," ");	
+				}
+				if($cont_regs==$num_regs)		
+				{						
+					$columna_precio=array_search($detalle_precio[$cont_regs-1]['COD_SALA'],$salas);	
+					$fila[$columna_precio+3]=$detalle_precio[$cont_regs-1]['precio'];														
+					$fila[$num_salas+3]=0;					
+					// $cont_totales_producto++;								
+					array_push($body,$fila);
+					$cont_regs++;
+				}			
+			}				
+		}
+
+		$cont_regs=0;
+		
+		while($cont_regs<$num_regs)
+		{
+			$fila=array_fill(0,$num_salas+3,0);	
+			array_push($matriz_totales,$fila);
+			$cont_regs++;
+		}
+		/*
+		 * Output
+		 */
+		// $session->close();
+		$time_taken = microtime(true) - $start;
+		$output = array(
+			"sEcho" => intval($_POST['sEcho']),
+			"iTotalRecords" => count($detalle_precio),
+			"iTotalDisplayRecords" => count($body),
+			"aaData" => $body,
+			"matriz_totales" => $matriz_totales,
+			"time_taken" => $time_taken*1000
+		);		
+		return new JsonResponse($output);		
+	}
+	
 }
