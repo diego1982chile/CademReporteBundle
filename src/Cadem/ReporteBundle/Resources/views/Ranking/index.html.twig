@@ -40,6 +40,7 @@
                             <tr>							
                               <th>#</th>
                               <th>Cod.</th>
+                              <th>Cad.</th>
                               <th>Sala</th>
                               <th>%{{variable}} ant</th>
                               <th>%{{variable}} act</th>
@@ -52,8 +53,15 @@
 							{% for row in ranking_sala %}
                             <tr>
                               <td>{{rank}}</td>
-                              <td>{{row.codigosala}}</td>
-                              <td title="{{row.calle}} {{row.numerocalle}}">{{row.cadena}}, {{row.calle|slice(0,35)}} {{row.numerocalle}}</td>
+                              <td>
+	                              {% if row.codigosala == '' %}
+	                                  NO
+	                              {% else %}
+	                                  {{row.codigosala}}
+	                              {% endif %}
+                          	  </td>
+                              <td>{{row.cadena|slice(0,6)}}</td>
+                              <td title="{{row.calle}} {{row.numerocalle}}">{{row.calle|slice(0,35)}} {{row.numerocalle}}</td>
                               <td>{% if row.quiebre_anterior is not null %} {{row.quiebre_anterior|number_format(1)}} {% else %} NO {% endif %}</td>
                               <td>{% if row.quiebre is not null %} {{row.quiebre|number_format(1)}} {% else %} NO {% endif %}</td>
                               <td>{% if row.diferencia is not null %}
@@ -280,6 +288,8 @@ $(document).ready(function () {
 		var h5 = $this.prev().prev();
 		var form = $this.prev();
 		form.children('label').css('padding-top','0');
+		if(index == 0) var aTargets = [ 4,5,6 ]; //SALA TIENE UNA COL MAS
+		else var aTargets = [ 3,4,5 ];
 		var d = $this.dataTable({
 			"bJQueryUI": true,
 			"sPaginationType": "full_numbers",
@@ -288,7 +298,7 @@ $(document).ready(function () {
 			"bInfo": false,
 			"bPaginate": false,
 			"aoColumnDefs": [
-			  { "sClass": "text-center", "aTargets": [ 3,4,5 ] }
+			  { "sClass": "text-center", "aTargets": aTargets }
 			],
 			"sDom": '<"H"<"toolbar">Cfr>t<"F"ip>',
 			"bAutoWidth": true
@@ -380,8 +390,9 @@ $(document).ready(function () {
 				{
 					oTables[0].fnAddData([
 						cont,
-						row[i].codigosala,
-						row[i].cadena+", "+row[i].calle.substring(0, 35)+" "+row[i].numerocalle,
+						(row[i].codigosala == null)?"NO":row[i].codigosala,
+						row[i].cadena.substring(0, 6),
+						row[i].calle.substring(0, 35)+" "+row[i].numerocalle,
 						(row[i].quiebre_anterior != null)?parseFloat(row[i].quiebre_anterior).toFixed(1):"NO",
 						(row[i].quiebre != null)?parseFloat(row[i].quiebre).toFixed(1):"NO",
 						(row[i].diferencia != null)?parseFloat(row[i].diferencia).toFixed(1):"NO",
