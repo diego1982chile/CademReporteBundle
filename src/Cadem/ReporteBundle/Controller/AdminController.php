@@ -1297,9 +1297,9 @@ class AdminController extends Controller
                         sort($empleado);
 
                         $sql = "SELECT e.NOMBRE as nombre, e.ID as id FROM EMPLEADO e
-                                WHERE e.NOMBRE IN ( ? )";
-                        $param = array($empleado);
-                        $tipo_param = array(\Doctrine\DBAL\Connection::PARAM_STR_ARRAY);
+                                WHERE e.NOMBRE IN ( ? ) AND e.CLIENTE_ID = ?";
+                        $param = array($empleado, $id_cliente);
+                        $tipo_param = array(\Doctrine\DBAL\Connection::PARAM_STR_ARRAY, \PDO::PARAM_INT);
                         $query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
 
                         usort($query, array($this,"cmp"));
