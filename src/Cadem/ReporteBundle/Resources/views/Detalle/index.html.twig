@@ -480,8 +480,8 @@ function listenerFiltro()
 				{
 					case 'sku':
 						var needle=$('#filtro').val().toUpperCase();					
-						var delta=$('table.DTFC_Cloned tbody tr').height();
-						delta=delta
+						var delta=$('table.DTFC_Cloned tbody tr:first').height();
+						delta=0.97*delta;
 						offset=delta;
 						var oSettings = oTable.fnSettings();
 						var ventana= maxHeight;					
