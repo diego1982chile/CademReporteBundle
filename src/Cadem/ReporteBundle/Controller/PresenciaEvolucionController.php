@@ -156,7 +156,10 @@ class PresenciaEvolucionController extends Controller
 			->getForm();		
 		
 		//CONSULTA SACAR ULTIMAS 12 MEDICIONES
-		$sql = "SELECT TOP(12) m2.ID as ID, m2.NOMBRE as NOMBRE, m2.FECHAINICIO as FECHAINICIO FROM MEDICION m2 INNER JOIN ESTUDIOVARIABLE ev on m2.ESTUDIOVARIABLE_ID=ev.ID INNER JOIN ESTUDIO e on ev.ESTUDIO_ID=e.ID and e.CLIENTE_ID={$user->getClienteID()} ORDER BY m2.FECHAINICIO DESC";											
+		$sql = "SELECT TOP(12) m2.ID as ID, m2.NOMBRE as NOMBRE, m2.FECHAINICIO as FECHAINICIO, m2.FECHAFIN as FECHAFIN FROM MEDICION m2 
+		INNER JOIN ESTUDIOVARIABLE ev on m2.ESTUDIOVARIABLE_ID=ev.ID 
+		INNER JOIN ESTUDIO e on ev.ESTUDIO_ID=e.ID and e.CLIENTE_ID={$user->getClienteID()} 
+		ORDER BY m2.FECHAINICIO DESC";											
 		
 		$data_mediciones = $em->getConnection()->executeQuery($sql)->fetchAll();				
 				
@@ -164,6 +167,9 @@ class PresenciaEvolucionController extends Controller
 		$mediciones=array();
 		$mediciones2=array();
 		$mediciones_id=array();
+		$mediciones_id_str="";
+		$mediciones_data = array();
+		$mediciones_tooltip = array();
 		$mediciones_id_str="";
 		
 		// Generamos el head de la tabla, y las mediciones
@@ -177,6 +183,10 @@ class PresenciaEvolucionController extends Controller
 				$fila['fecha']=$registro['FECHAINICIO'];
 				array_push($mediciones_id,$registro['ID']);
 				$mediciones_id_str.=$registro['ID'].',';
+				$fi = new \DateTime($registro['FECHAINICIO']);
+				$ff = new \DateTime($registro['FECHAFIN']);
+				$mediciones_data[] = $fi->format('d/m').'-'.$ff->format('d/m');
+				$mediciones_tooltip[] = $registro['NOMBRE'];
 				array_push($mediciones,$fila);
 			}		
 		}										
@@ -238,7 +248,7 @@ class PresenciaEvolucionController extends Controller
 		foreach($mediciones as $medicion)
 		{
 			array_push($mediciones2,$medicion['nombre']);					
-			array_push($head,$medicion['nombre']);
+			array_push($head,str_replace('AL','-',$medicion['nombre']));			
 			$fila=array();
 			$fila['aTargets']=array($cont);		
 			// $fila['sWidth']="2%";
@@ -401,7 +411,8 @@ class PresenciaEvolucionController extends Controller
 			'aoColumnDefs' => json_encode($aoColumnDefs),
 			'columnas_reservadas' => 2,
 			'tag_variable' => ucwords($variable),
-			'tag_cliente' => $cliente->getNombrefantasia()			
+			'tag_cliente' => $cliente->getNombrefantasia(),
+			'mediciones_data' => json_encode($mediciones_data)			
 			)
 		);
 		//CACHE
@@ -455,14 +466,14 @@ class PresenciaEvolucionController extends Controller
 				{					
 					$fila[0]=trim($evolucion_quiebre[$cont_regs]['PRODUCTO']);
 					$fila[1]=$evolucion_quiebre[$cont_regs]['SEGMENTO'];													
-					$fila[$columna_quiebre+2]=round($evolucion_quiebre[$cont_regs]['quiebre'],1);											
+					$fila[$columna_quiebre+2]=number_format(round($evolucion_quiebre[$cont_regs]['quiebre'],1),1,',','.');											
 					$cont_regs++;
 					// $cont_meds++;
 				}	
 				else
 				{			
 					// Si el primer nivel de agregacion cambió, lo actualizo, agrego la fila al body y reseteo el contador de mediciones								
-					$fila[$num_meds+2]=round($totales_producto[$cont_totales_producto]['QUIEBRE']*100,1);					
+					$fila[$num_meds+2]=number_format(round($totales_producto[$cont_totales_producto]['QUIEBRE']*100,1),1,',','.');					
 					$cont_totales_producto++;					
 					// $cont_meds=0;								
 					$nivel1=$evolucion_quiebre[$cont_regs]['PRODUCTO'];				
@@ -472,8 +483,8 @@ class PresenciaEvolucionController extends Controller
 				if($cont_regs==$num_regs)		
 				{	
 					$columna_quiebre=array_search($evolucion_quiebre[$cont_regs-1]['NOMBRE'],$mediciones);
-					$fila[$columna_quiebre+2]=round($evolucion_quiebre[$cont_regs-1]['quiebre'],1);				
-					$fila[$num_meds+2]=round($totales_producto[$cont_totales_producto]['QUIEBRE']*100,1);					
+					$fila[$columna_quiebre+2]=number_format(round($evolucion_quiebre[$cont_regs-1]['quiebre'],1),1,',','.');				
+					$fila[$num_meds+2]=number_format(round($totales_producto[$cont_totales_producto]['QUIEBRE']*100,1),1,',','.');					
 					array_push($body,$fila);									
 					$cont_regs++;
 				}		
@@ -491,12 +502,12 @@ class PresenciaEvolucionController extends Controller
 				// Mientras no cambie el segmento
 				if($nivel2==$totales_segmento[$cont_regs]['SEGMENTO'])
 				{
-					$fila[$columna_quiebre]=round($totales_segmento[$cont_regs]['QUIEBRE']*100,1);					
+					$fila[$columna_quiebre]=number_format(round($totales_segmento[$cont_regs]['QUIEBRE']*100,1),1,',','.');					
 					$cont_regs++;
 				}
 				else
 				{
-					$fila[$num_meds]=round($totales_horizontales_segmento[$cont_totales_horizontales_segmento]['QUIEBRE']*100,1);
+					$fila[$num_meds]=number_format(round($totales_horizontales_segmento[$cont_totales_horizontales_segmento]['QUIEBRE']*100,1),1,',','.');
 					$cont_totales_horizontales_segmento++;
 					array_push($matriz_totales,$fila);
 					$fila=array_fill(0,$num_meds+1,"-");
@@ -506,7 +517,7 @@ class PresenciaEvolucionController extends Controller
 				{	
 					$columna_quiebre=array_search($totales_segmento[$cont_regs-1]['MEDICION'],$mediciones);
 					$fila[$columna_quiebre]=round($totales_segmento[$cont_regs-1]['QUIEBRE']*100,1);	
-					$fila[$num_meds]=round($totales_horizontales_segmento[$cont_totales_horizontales_segmento]['QUIEBRE']*100,1);
+					$fila[$num_meds]=number_format(round($totales_horizontales_segmento[$cont_totales_horizontales_segmento]['QUIEBRE']*100,1),1,',','.');
 					array_push($matriz_totales,$fila);		
 					$cont_regs++;					
 				}				
@@ -519,7 +530,7 @@ class PresenciaEvolucionController extends Controller
 			{
 				$columna_quiebre=array_search($totales_verticales_segmento[$cont_regs]['MEDICION'],$mediciones);					
 				// Mientras no cambie la cadena  
-				$fila[$columna_quiebre]=round($totales_verticales_segmento[$cont_regs]['QUIEBRE']*100,1);					
+				$fila[$columna_quiebre]=number_format(round($totales_verticales_segmento[$cont_regs]['QUIEBRE']*100,1),1,',','.');					
 				$cont_regs++;
 			}	
 			

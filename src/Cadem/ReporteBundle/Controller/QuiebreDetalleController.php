@@ -214,7 +214,7 @@ class QuiebreDetalleController extends Controller
 		INNER JOIN COMUNA com on s.COMUNA_ID=com.ID
 		INNER JOIN CADENA cad on s.CADENA_ID=cad.ID	
 		INNER JOIN ITEM i on i.ID = ic.ITEM_ID	
-		ORDER BY SEGMENTO,NOM_PRODUCTO,NOM_SALA";			
+		ORDER BY SEGMENTO,NOM_PRODUCTO,COD_PRODUCTO,NOM_SALA";			
 		
 		$sha1 = sha1($sql);
 
@@ -489,7 +489,7 @@ class QuiebreDetalleController extends Controller
 				}	
 				else
 				{ // Si el primer nivel de agregacion cambió, lo actualizo, agrego la fila al body y reseteo el contador de cadenas												
-					$fila[$num_salas+2]=round($totales_producto[$cont_totales_producto]['QUIEBRE']*100,1);					
+					$fila[$num_salas+2]=number_format(round($totales_producto[$cont_totales_producto]['QUIEBRE']*100,1),1,',','.');					
 					$cont_totales_producto++;																			
 					$nivel1=$detalle_quiebre[$cont_regs]['COD_PRODUCTO'];
 					array_push($body,$fila);
@@ -509,7 +509,7 @@ class QuiebreDetalleController extends Controller
 							break;
 					}					
 					// $fila[$columna_quiebre+2]=$detalle_quiebre[$cont_regs-1]['quiebre'];
-					$fila[$num_salas+2]=round($totales_producto[$cont_totales_producto]['QUIEBRE']*100,1);					
+					$fila[$num_salas+2]=number_format(round($totales_producto[$cont_totales_producto]['QUIEBRE']*100,1),1,',','.');					
 					$cont_totales_producto++;								
 					array_push($body,$fila);
 					$cont_regs++;
@@ -528,12 +528,12 @@ class QuiebreDetalleController extends Controller
 				// Mientras no cambie el segmento
 				if($nivel2==$totales_segmento[$cont_regs]['SEGMENTO'])
 				{
-					$fila[$columna_quiebre]=round($totales_segmento[$cont_regs]['QUIEBRE']*100,1);					
+					$fila[$columna_quiebre]=number_format(round($totales_segmento[$cont_regs]['QUIEBRE']*100,1),1,',','.');					
 					$cont_regs++;
 				}
 				else
 				{
-					$fila[$num_salas]=round($totales_horizontales_segmento[$cont_totales_horizontales_segmento]['QUIEBRE']*100,1);
+					$fila[$num_salas]=number_format(round($totales_horizontales_segmento[$cont_totales_horizontales_segmento]['QUIEBRE']*100,1),1,',','.');
 					$cont_totales_horizontales_segmento++;
 					array_push($matriz_totales,$fila);
 					$fila=array_fill(0,$num_salas+1,"-");
@@ -542,8 +542,8 @@ class QuiebreDetalleController extends Controller
 				if($cont_regs==$num_regs)		
 				{	
 					$columna_quiebre=array_search($totales_segmento[$cont_regs-1]['ID_SALA'],$salas);
-					$fila[$columna_quiebre]=round($totales_segmento[$cont_regs-1]['QUIEBRE']*100,1);					
-					$fila[$num_salas]=round($totales_horizontales_segmento[$cont_totales_horizontales_segmento]['QUIEBRE']*100,1);
+					$fila[$columna_quiebre]=number_format(round($totales_segmento[$cont_regs-1]['QUIEBRE']*100,1),1,',','.');					
+					$fila[$num_salas]=number_format(round($totales_horizontales_segmento[$cont_totales_horizontales_segmento]['QUIEBRE']*100,1),1,',','.');
 					array_push($matriz_totales,(object)$fila);		
 					$cont_regs++;					
 				}				
@@ -557,11 +557,11 @@ class QuiebreDetalleController extends Controller
 			{
 				$columna_quiebre=array_search($totales_verticales_segmento[$cont_regs]['ID_SALA'],$salas);					
 				// Mientras no cambie la cadena  
-				$fila[$columna_quiebre]=round($totales_verticales_segmento[$cont_regs]['QUIEBRE']*100,1);					
+				$fila[$columna_quiebre]=number_format(round($totales_verticales_segmento[$cont_regs]['QUIEBRE']*100,1),1,',','.');					
 				$cont_regs++;
 			}	
 			
-			$fila[$num_salas]=round($total[0]['QUIEBRE']*100,1);			
+			$fila[$num_salas]=number_format(round($total[0]['QUIEBRE']*100,1),1,',','.');			
 			
 			array_push($matriz_totales,$fila);				
 		}				
@@ -614,7 +614,7 @@ class QuiebreDetalleController extends Controller
 				INNER JOIN COMUNA com on s.COMUNA_ID=com.ID
 				INNER JOIN CADENA cad on s.CADENA_ID=cad.ID	
 				INNER JOIN ITEM i on i.ID = ic.ITEM_ID	
-				ORDER BY SEGMENTO,NOM_PRODUCTO,NOM_SALA";																										
+				ORDER BY SEGMENTO,NOM_PRODUCTO,COD_PRODUCTO,NOM_SALA";																										
 		
 		$sha1 = sha1($sql);
 

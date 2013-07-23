@@ -209,7 +209,7 @@ class PrecioDetalleController extends Controller
 		INNER JOIN CADENA cad on s.CADENA_ID=cad.ID	
 		INNER JOIN ITEM i on i.ID = ic.ITEM_ID	
 		INNER JOIN PARAMETRO pa on pa.CLIENTE_ID = {$user->getClienteID()} and pa.NOMBRE='rango_precio'
-		ORDER BY SEGMENTO,NOM_PRODUCTO,NOM_SALA";		
+		ORDER BY SEGMENTO,NOM_PRODUCTO,COD_PRODUCTO,NOM_SALA";		
 		
 		$sha1 = sha1($sql);
 
@@ -485,7 +485,7 @@ class PrecioDetalleController extends Controller
 		INNER JOIN CADENA cad on s.CADENA_ID=cad.ID	
 		INNER JOIN ITEM i on i.ID = ic.ITEM_ID	
 		INNER JOIN PARAMETRO pa on pa.CLIENTE_ID = {$user->getClienteID()} and pa.NOMBRE='rango_precio'
-		ORDER BY SEGMENTO,NOM_PRODUCTO,NOM_SALA";						
+		ORDER BY SEGMENTO,NOM_PRODUCTO,COD_PRODUCTO,NOM_SALA";						
 						
 		$sha1 = sha1($sql);		
 		

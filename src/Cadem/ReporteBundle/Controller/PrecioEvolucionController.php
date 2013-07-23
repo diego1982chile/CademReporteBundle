@@ -172,7 +172,7 @@ class PrecioEvolucionController extends Controller
 		
 		//CONSULTA
 		
-		$sql = "SELECT TOP(12) m2.ID as ID, m2.NOMBRE as NOMBRE, m2.FECHAINICIO as FECHAINICIO FROM MEDICION m2 
+		$sql = "SELECT TOP(12) m2.ID as ID, m2.NOMBRE as NOMBRE, m2.FECHAINICIO as FECHAINICIO, m2.FECHAFIN as FECHAFIN FROM MEDICION m2 
 		INNER JOIN ESTUDIOVARIABLE ev on m2.ESTUDIOVARIABLE_ID=ev.ID AND ev.VARIABLE_ID={$id_variable}
 		INNER JOIN ESTUDIO e on ev.ESTUDIO_ID=e.ID and e.CLIENTE_ID={$user->getClienteID()} 
 		ORDER BY m2.FECHAINICIO DESC";											
@@ -185,6 +185,9 @@ class PrecioEvolucionController extends Controller
 		$mediciones=array();
 		$mediciones2=array();
 		$mediciones_id=array();
+		$mediciones_id_str="";		
+		$mediciones_data = array();
+		$mediciones_tooltip = array();
 		$mediciones_id_str="";		
 		
 		// Generamos el head de la tabla, y las mediciones
@@ -199,10 +202,16 @@ class PrecioEvolucionController extends Controller
 				$fila['fecha']=$registro['FECHAINICIO'];
 				array_push($mediciones_id,$registro['ID']);
 				$mediciones_id_str.=$registro['ID'].',';
+				$fi = new \DateTime($registro['FECHAINICIO']);
+				$ff = new \DateTime($registro['FECHAFIN']);
+				$mediciones_data[] = $fi->format('d/m').'-'.$ff->format('d/m');
+				$mediciones_tooltip[] = $registro['NOMBRE'];
 				array_push($mediciones,$fila);				
 			}		
 		}														
 				
+		$mediciones_data = array_reverse($mediciones_data);		
+		
 		$mediciones_id_str=trim($mediciones_id_str,',');		
 		
 		usort($mediciones, array($this,"sortFunction"));
@@ -255,8 +264,8 @@ class PrecioEvolucionController extends Controller
 		
 		foreach($mediciones as $medicion)
 		{
-			array_push($mediciones2,$medicion['nombre']);					
-			array_push($head,$medicion['nombre']);
+			array_push($mediciones2,$medicion['nombre']);											
+			array_push($head,str_replace('AL','-',$medicion['nombre']));		
 			$fila=array();
 			$fila['aTargets']=array($cont);	
 			$fila['sClass']="medicion";			
@@ -409,7 +418,8 @@ class PrecioEvolucionController extends Controller
 			'aoColumnDefs' => json_encode($aoColumnDefs),
 			'columnas_reservadas' => 2,
 			'tag_variable' => ucwords($variable),
-			'tag_cliente' => $cliente->getNombrefantasia()			
+			'tag_cliente' => $cliente->getNombrefantasia(),
+			'mediciones_data' => json_encode($mediciones_data)						
 			)
 		);
 		//CACHE
