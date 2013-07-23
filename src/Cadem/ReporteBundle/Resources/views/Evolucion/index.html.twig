@@ -1099,7 +1099,7 @@ $(document).ready(function () {
 			var tableHead = document.createElement( 'tr' );	 //tableheader 							
 			$(data.head).each(function(key,value){				
 				var tableHeading = document.createElement( 'th' );					
-				tableHeading.innerHTML = value.replace(/ /g,'');												
+				tableHeading.innerHTML = value.replace(/ - /g,'-');												
 				tableHead.appendChild( tableHeading );				
 			});						
 			table.appendChild( tableHead );	

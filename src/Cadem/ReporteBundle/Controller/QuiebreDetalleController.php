@@ -226,7 +226,7 @@ class QuiebreDetalleController extends Controller
 					
 		// Obtener totales horizontales por producto
 			
-		$sql =	"SELECT  i.NOMBRE, ni.NOMBRE, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
+		$sql =	"SELECT i.NOMBRE, ni.NOMBRE, SUM(case when q.HAYQUIEBRE = 1 then 1 else 0 end)*1.0/COUNT(q.HAYQUIEBRE) as QUIEBRE FROM QUIEBRE q
 				INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID AND p.MEDICION_ID = {$id_ultima_medicion}
 				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
 				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in ({$comunas})
@@ -473,7 +473,7 @@ class QuiebreDetalleController extends Controller
 				// Mientras el primer nivel de agregación no cambie			
 				if($nivel1==$detalle_quiebre[$cont_regs]['COD_PRODUCTO'])
 				{									
-					$fila[0]=$detalle_quiebre[$cont_regs]['NOM_PRODUCTO'];//.' ['.$detalle_quiebre[$cont_regs]['COD_PRODUCTO'].']';					
+					$fila[0]=$detalle_quiebre[$cont_regs]['NOM_PRODUCTO'].' ['.$detalle_quiebre[$cont_regs]['COD_PRODUCTO'].']';					
 					$fila[1]=$detalle_quiebre[$cont_regs]['SEGMENTO'];	
 					// $fila[$columna_quiebre+2]=$detalle_quiebre[$cont_regs]['quiebre'];
 					switch($detalle_quiebre[$cont_regs]['quiebre'])

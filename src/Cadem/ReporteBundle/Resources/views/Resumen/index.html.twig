@@ -1669,7 +1669,7 @@ function listenerFiltro()
 							});
 							if(hit)
 							{													
-								offset=($('.'+matched+':first').index())*delta;
+								offset=($('.'+matched_active+':first').index())*delta;
 								$('.tabla_detalle.dataTables_scrollBody:last').animate({ scrollTop: offset });		
 							}
 							else

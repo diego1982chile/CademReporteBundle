@@ -70,9 +70,12 @@ class PrecioDetalleController extends Controller
 		$choices_regiones = array();
 		foreach($regiones as $r)
 		{
-			$choices_regiones[$r->getId()] = strtoupper($r->getNombre());
+			$choices_regiones[$r->getId()] = strtoupper($r->getNombre());			
 		}
-
+		
+		if(count($choices_regiones)>0)
+			$id_region=key($choices_regiones);		
+			
 		//PROVINCIA
 		$query = $em->createQuery(
 			'SELECT DISTINCT p FROM CademReporteBundle:Provincia p
@@ -80,8 +83,9 @@ class PrecioDetalleController extends Controller
 			JOIN c.salas s
 			JOIN s.salaclientes sc
 			JOIN sc.cliente cl
-			WHERE cl.id = :id and p.region_id=15')
-			->setParameter('id', $cliente->getId());
+			WHERE cl.id = :id and p.region_id = :id_region')
+			->setParameter('id', $cliente->getId())
+			->setParameter('id_region', $id_region);
 		$provincias = $query->getResult();
 		
 		$choices_provincias = array();
@@ -97,9 +101,11 @@ class PrecioDetalleController extends Controller
 			JOIN c.salas s
 			JOIN s.salaclientes sc
 			JOIN sc.cliente cl
-			WHERE cl.id = :id and p.region_id=15')
-			->setParameter('id', $cliente->getId());
+			WHERE cl.id = :id and p.region_id = :id_region')
+			->setParameter('id', $cliente->getId())
+			->setParameter('id_region', $id_region);
 		$comunas = $query->getResult();
+				
 		
 		$choices_comunas = array();
 		foreach($comunas as $r)
@@ -162,7 +168,7 @@ class PrecioDetalleController extends Controller
 				'choices'   => $choices_regiones,
 				'required'  => true,
 				'multiple'  => true,
-				'data' => array(15)
+				'data' => array($id_region)
 			))
 			->getForm();
 			
@@ -183,6 +189,7 @@ class PrecioDetalleController extends Controller
 				'data' => array_keys($choices_comunas)
 			))
 			->getForm();
+				
 		
 		//ULTIMA MEDICION
 		$id_ultima_medicion = $this->get('cadem_reporte.helper.medicion')->getIdUltimaMedicion();
@@ -305,7 +312,7 @@ class PrecioDetalleController extends Controller
 		// $session->set("total",$total);	
 
 		// Calcula el ancho máximo de la tabla	
-		$extension=count($head)*11-100;
+		$extension=count($head)*13-100;
 	
 		if($extension<0)
 			$extension=0;
@@ -401,7 +408,7 @@ class PrecioDetalleController extends Controller
 				if($nivel1==$detalle_precio[$cont_regs]['COD_PRODUCTO'])
 				{									
 					$fila[2]=$detalle_precio[$cont_regs]['SEGMENTO'];	
-					$fila[0]=$detalle_precio[$cont_regs]['NOM_PRODUCTO'];//.' ['.$detalle_quiebre[$cont_regs]['COD_PRODUCTO'].']';										
+					$fila[0]=$detalle_precio[$cont_regs]['NOM_PRODUCTO'].' ['.$detalle_precio[$cont_regs]['COD_PRODUCTO'].']';										
 					$fila[1]=$detalle_precio[$cont_regs]['politica'];
 					$fila[$columna_precio+3]=$detalle_precio[$cont_regs]['precio'];//.' ['.$detalle_quiebre[$cont_regs]['COD_PRODUCTO'].']';																														
 					$cont_regs++;						
