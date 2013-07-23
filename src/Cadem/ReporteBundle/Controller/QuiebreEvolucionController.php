@@ -709,7 +709,7 @@ class QuiebreEvolucionController extends Controller
 		$session->set("total",$total);		
 		
 		// Calcula el ancho máximo de la tabla	
-		$extension=count($head)*12-100;
+		$extension=count($head)*11-100;
 	
 		if($extension<0)
 			$extension=0;

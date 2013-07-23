@@ -222,7 +222,7 @@ class PrecioEvolucionController extends Controller
 		
 		foreach($mediciones_id as $medicion_id)
 		{
-			$sql.="SELECT AVG(pr.PRECIO) as PRECIO, i.NOMBRE as PRODUCTO, ni.NOMBRE as SEGMENTO, m.NOMBRE, m.FECHAINICIO FROM PRECIO pr 
+			$sql.="SELECT AVG(pr.PRECIO) as PRECIO, i.NOMBRE as PRODUCTO, ic.CODIGOITEM1 as COD_PROD, ni.NOMBRE as SEGMENTO, m.NOMBRE, m.FECHAINICIO FROM PRECIO pr 
 				INNER JOIN PLANOGRAMAP p on p.ID = pr.PLANOGRAMAP_ID and p.MEDICION_ID={$medicion_id} and pr.PRECIO is not null and p.POLITICAPRECIO is not null
 				INNER JOIN MEDICION m on p.MEDICION_ID=m.ID	 
 				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID AND sc.CLIENTE_ID = {$user->getClienteID()} 
@@ -230,7 +230,8 @@ class PrecioEvolucionController extends Controller
 				INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID 
 				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID 
 				INNER JOIN PARAMETRO pa on pa.CLIENTE_ID = {$user->getClienteID()} and pa.NOMBRE='rango_precio'
-				INNER JOIN ITEM i on i.ID = ic.ITEM_ID GROUP BY ni.NOMBRE,i.NOMBRE,m.NOMBRE,m.FECHAINICIO 
+				INNER JOIN ITEM i on i.ID = ic.ITEM_ID 
+				GROUP BY ni.NOMBRE,i.NOMBRE,ic.CODIGOITEM1,m.NOMBRE,m.FECHAINICIO 
 				UNION ";
 		}
 		$sql = substr($sql, 0, -6);
@@ -372,7 +373,7 @@ class PrecioEvolucionController extends Controller
 		$total = $em->getConnection()->executeQuery($sql)->fetchAll();									
 
 		// Calcula el ancho máximo de la tabla	
-		$extension=count($head)*12-100;
+		$extension=count($head)*11-100;
 	
 		if($extension<0)
 			$extension=0;
@@ -474,7 +475,7 @@ class PrecioEvolucionController extends Controller
 				if($nivel1==$evolucion_precio[$cont_regs]['PRODUCTO'])
 				{					
 					$fila[1]=$evolucion_precio[$cont_regs]['SEGMENTO'];	
-					$fila[0]=trim($evolucion_precio[$cont_regs]['PRODUCTO']);																					
+					$fila[0]=trim($evolucion_precio[$cont_regs]['PRODUCTO'].' ['.$evolucion_precio[$cont_regs]['COD_PROD'].']');																					
 					$fila[$columna_precio+2]=round($evolucion_precio[$cont_regs]['PRECIO'],1);
 					$cont_regs++;
 					// $cont_meds++;
@@ -593,7 +594,7 @@ class PrecioEvolucionController extends Controller
 		
 		foreach($mediciones_id as $medicion_id)
 		{			
-			$sql.="SELECT (SUM(case when ABS(pr.PRECIO-p.POLITICAPRECIO)>pa.VALOR*p.POLITICAPRECIO/100 then 1 else 0 END)*100.0)/COUNT(pr.ID) as PRECIO, i.NOMBRE as PRODUCTO, ni.NOMBRE as SEGMENTO, m.NOMBRE, m.FECHAINICIO FROM PRECIO pr 
+			$sql.="SELECT AVG(pr.PRECIO) as PRECIO, ic.CODIGOITEM1 as COD_PROD, i.NOMBRE as PRODUCTO, ni.NOMBRE as SEGMENTO, m.NOMBRE, m.FECHAINICIO FROM PRECIO pr 
 				INNER JOIN PLANOGRAMAP p on p.ID = pr.PLANOGRAMAP_ID and p.MEDICION_ID={$medicion_id} and pr.PRECIO is not null and p.POLITICAPRECIO is not null
 				INNER JOIN MEDICION m on p.MEDICION_ID=m.ID	 
 				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID AND sc.CLIENTE_ID = {$user->getClienteID()} 
@@ -602,11 +603,12 @@ class PrecioEvolucionController extends Controller
 				INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID 
 				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID 
 				INNER JOIN PARAMETRO pa on pa.CLIENTE_ID = {$user->getClienteID()} and pa.NOMBRE='rango_precio'
-				INNER JOIN ITEM i on i.ID = ic.ITEM_ID GROUP BY ni.NOMBRE,i.NOMBRE,m.NOMBRE,m.FECHAINICIO 
+				INNER JOIN ITEM i on i.ID = ic.ITEM_ID 
+				GROUP BY ni.NOMBRE,i.NOMBRE,ic.CODIGOITEM1,m.NOMBRE,m.FECHAINICIO 
 				UNION ";				
 		}
 		$sql = substr($sql, 0, -6);
-		$sql.="ORDER BY ni.NOMBRE,i.NOMBRE";		
+		$sql.="ORDER BY ni.NOMBRE,i.NOMBRE";				
 						
 		$sha1 = sha1($sql);
 		if(!$session->has($sha1)){
@@ -727,7 +729,7 @@ class PrecioEvolucionController extends Controller
 		$session->set("total",$total);		
 		
 		// Calcula el ancho máximo de la tabla	
-		$extension=count($head)*12-100;
+		$extension=count($head)*11-100;
 	
 		if($extension<0)
 			$extension=0;
