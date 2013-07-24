@@ -1528,17 +1528,22 @@ class AdminController extends Controller
                     
                     //SI LA PRIMERA FILA TIENE LOS ENCABEZADOS SE BORRA
                     if($m[0][0] === 'FOLIO' || $m[0][1] === 'EAN' || $m[0][2] === 'PRECIO') unset($m[0]);
-                    
+
+                    //KEY CONCATENACION EAN-CADENA y INDICES DE CORTE DE FOLIO
+                    $keycon = ':';
+                    $cadstart = 2;
+                    $cadlenght = 3;
 
                     //SE VALIDA QUE EL FOLIO-EAN NO ESTE EN LA BD
                     $chunk = 0;
                     foreach($m as $k => $value){
                         $folioean[floor($chunk/2000)][] = $value[0].'-'.$value[1];
                         $ean[floor($chunk/2000)][] = $value[1];
+                        $cad = substr($value[0], $cadstart, $cadlenght);
                         if(strlen($value[2]) === 0) $m[$k][2] = "NULL"; //SI NO HAY PRECIO SE PASA A NULL
-                        else{
-                            if(isset($precio_csv[$value[1]]) && $value[2] == (string) intval($value[2])) $precio_csv[$value[1]] = array(intval($m[$k][2]) + $precio_csv[$value[1]][0], 1 + $precio_csv[$value[1]][1]);
-                            elseif($value[2] == (string) intval($value[2])) $precio_csv[$value[1]] = array(intval($m[$k][2]), 1);
+                        else{ //SI HAY PRECIO SE GUARDA LA SUMA ACUMULADA CON EL COUNT DE PRODUCTOS
+                            if(isset($precio_csv[$value[1].$keycon.$cad]) && $value[2] == (string) intval($value[2])) $precio_csv[$value[1].$keycon.$cad] = array(intval($m[$k][2]) + $precio_csv[$value[1].$keycon.$cad][0], 1 + $precio_csv[$value[1].$keycon.$cad][1]);
+                            elseif($value[2] == (string) intval($value[2])) $precio_csv[$value[1].$keycon.$cad] = array(intval($m[$k][2]), 1);
                         }
                         if(strlen($value[3]) === 0) $m[$k][3] = "NULL"; //SI NO HAY POLITICAPRECIO SE PASA A NULL PARA EL INSERT
                         if(strlen($value[4]) === 0) $m[$k][4] = "NULL"; //SI NO HAY FECHAHORACAPTURA SE PASA A NULL PARA EL INSERT
@@ -1562,23 +1567,26 @@ class AdminController extends Controller
                         foreach ($query as $v) $folioean_encontrados[] = $v['folioean'];
 
                         //PRECIO PROMEDIO
-                        $sql = "SELECT i.CODIGO as codigo, SUM(pr.PRECIO) as suma, COUNT(pr.ID) as count FROM PLANOGRAMAP p
+                        $sql = "SELECT i.CODIGO as codigo, s.FOLIOCADEM as folio, SUM(pr.PRECIO) as suma, COUNT(pr.ID) as count FROM PLANOGRAMAP p
                                 INNER JOIN PRECIO pr on p.ID = pr.PLANOGRAMAP_ID AND pr.PRECIO IS NOT NULL
                                 INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID AND ic.CLIENTE_ID = ?
                                 INNER JOIN ITEM i on i.ID = ic.ITEM_ID AND i.CODIGO IN ( ? )
-                                GROUP BY i.CODIGO";
+                                INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
+                                INNER JOIN SALA s on s.ID = sc.SALA_ID
+                                GROUP BY i.CODIGO, s.FOLIOCADEM";
                         $param = array($id_cliente, $ean[$k]);
                         $tipo_param = array(\PDO::PARAM_INT,\Doctrine\DBAL\Connection::PARAM_STR_ARRAY);
                         $query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
                         foreach ($query as $v){
-                            if(isset($precio_csv[$v['codigo']]) && $v['suma'] == (string) intval($v['suma'])){
-                                $precio_prom[$v['codigo']] = round((intval($v['suma'])+$precio_csv[$v['codigo']][0])/(intval($v['count'])+$precio_csv[$v['codigo']][1]));
+                            $cad = substr($v['folio'], $cadstart, $cadlenght);
+                            if(isset($precio_csv[$v['codigo'].$keycon.$cad]) && $v['suma'] == (string) intval($v['suma'])){
+                                $precio_prom[$v['codigo'].$keycon.$cad] = round((intval($v['suma'])+$precio_csv[$v['codigo'].$keycon.$cad][0])/(intval($v['count'])+$precio_csv[$v['codigo'].$keycon.$cad][1]));
                             }
                             elseif($v['suma'] == (string) intval($v['suma'])){
-                                $precio_prom[$v['codigo']] = round((intval($v['suma']))/(intval($v['count'])));
+                                $precio_prom[$v['codigo'].$keycon.$cad] = round((intval($v['suma']))/(intval($v['count'])));
                             }
-                            elseif(isset($precio_csv[$v['codigo']])){
-                                $precio_prom[$v['codigo']] = round(($precio_csv[$v['codigo']][0])/($precio_csv[$v['codigo']][1]));
+                            elseif(isset($precio_csv[$v['codigo'].$keycon.$cad])){
+                                $precio_prom[$v['codigo'].$keycon.$cad] = round(($precio_csv[$v['codigo'].$keycon.$cad][0])/($precio_csv[$v['codigo'].$keycon.$cad][1]));
                             }
                         }
                         //SE AGREGAN LOS PRECIOS QUE FALTAN, NO ESTAN EN BD
@@ -1629,7 +1637,8 @@ class AdminController extends Controller
                             ));
                         }
                         else{//SE VALIDA LA POLITICA DE PRECIO, SI NO HAY DATOS SE DEJA NULL
-                            if(isset($precio_prom[$fila[1]])) $m[$k][3] = $precio_prom[$fila[1]];
+                            $cad = substr($fila[0], $cadstart, $cadlenght);
+                            if(isset($precio_prom[$fila[1].$keycon.$cad])) $m[$k][3] = $precio_prom[$fila[1].$keycon.$cad];
                             // else{
                             //     return new JsonResponse(array(
                             //         'status' => false,
