@@ -202,7 +202,7 @@ class PresenciaEvolucionController extends Controller
 		// TIME 2500MS
 		foreach($mediciones_id as $medicion_id)
 		{
-			$sql.="SELECT (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre, i.NOMBRE as PRODUCTO,  ni.NOMBRE as SEGMENTO, m.NOMBRE, m.FECHAINICIO FROM QUIEBRE q
+			$sql.="SELECT (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre, i.NOMBRE as PRODUCTO, ic.CODIGOITEM1 as COD_PROD,ni.NOMBRE as SEGMENTO, m.NOMBRE, m.FECHAINICIO FROM QUIEBRE q
 				INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID and p.MEDICION_ID = {$medicion_id}	
 				INNER JOIN MEDICION m on p.MEDICION_ID=m.ID
 				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
@@ -210,7 +210,7 @@ class PresenciaEvolucionController extends Controller
 				INNER JOIN ITEM i on i.ID = ic.ITEM_ID
 				INNER JOIN ESTUDIOVARIABLE ev on ev.ID = m.ESTUDIOVARIABLE_ID
 				INNER JOIN ESTUDIO e on e.ID = ev.ESTUDIO_ID AND e.CLIENTE_ID = {$user->getClienteID()}
-				GROUP BY  ni.NOMBRE,i.NOMBRE,m.NOMBRE,m.FECHAINICIO
+				GROUP BY  ni.NOMBRE,i.NOMBRE,ic.CODIGOITEM1,m.NOMBRE,m.FECHAINICIO
 				UNION ";
 		}
 		$sql = substr($sql, 0, -6);
@@ -464,7 +464,7 @@ class PresenciaEvolucionController extends Controller
 				// Mientras el primer nivel de agregación no cambie
 				if($nivel1==$evolucion_quiebre[$cont_regs]['PRODUCTO'])
 				{					
-					$fila[0]=trim($evolucion_quiebre[$cont_regs]['PRODUCTO']);
+					$fila[0]=trim($evolucion_quiebre[$cont_regs]['PRODUCTO'].' ['.$evolucion_quiebre[$cont_regs]['COD_PROD'].']');
 					$fila[1]=$evolucion_quiebre[$cont_regs]['SEGMENTO'];													
 					$fila[$columna_quiebre+2]=number_format(round($evolucion_quiebre[$cont_regs]['quiebre'],1),1,',','.');											
 					$cont_regs++;
@@ -584,7 +584,7 @@ class PresenciaEvolucionController extends Controller
 		
 		foreach($mediciones_id as $medicion_id)
 		{
-			$sql.="SELECT (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre, i.NOMBRE as PRODUCTO,  ni.NOMBRE as SEGMENTO, m.NOMBRE, m.FECHAINICIO FROM QUIEBRE q
+			$sql.="SELECT (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre, i.NOMBRE as PRODUCTO, ic.CODIGOITEM1 as COD_PROD,  ni.NOMBRE as SEGMENTO, m.NOMBRE, m.FECHAINICIO FROM QUIEBRE q
 				INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID and p.MEDICION_ID={$medicion_id}	
 				INNER JOIN MEDICION m on p.MEDICION_ID=m.ID			
 				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
@@ -593,7 +593,7 @@ class PresenciaEvolucionController extends Controller
 				INNER JOIN CLIENTE c on c.ID = sc.CLIENTE_ID
 				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID
 				INNER JOIN ITEM i on i.ID = ic.ITEM_ID
-				GROUP BY  ni.NOMBRE,i.NOMBRE,m.NOMBRE,m.FECHAINICIO
+				GROUP BY ni.NOMBRE,i.NOMBRE,ic.CODIGOITEM1, m.NOMBRE,m.FECHAINICIO
 				UNION ";
 		}
 		$sql = substr($sql, 0, -6);
@@ -712,7 +712,7 @@ class PresenciaEvolucionController extends Controller
 		$session->set("total",$total);		
 		
 		// Calcula el ancho máximo de la tabla	
-		$extension=count($head)*12-100;
+		$extension=count($head)*11-100;
 	
 		if($extension<0)
 			$extension=0;

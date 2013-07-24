@@ -254,6 +254,28 @@ div.DataTables_sort_wrapper {
 	// padding: .1em !important;
 }
 
+.ui-state-active{
+	border: none !important;
+}
+
+.ui-state-hover{
+	border: none !important;
+}
+
+.ui-state-focus{
+	border: none !important;
+}
+
+.ui-state-highlight{
+	border: none !important;
+}
+
+.group{
+	border-bottom: 0px !important;
+	border-top: 0px !important;
+	font-weight: bold
+}
+
 {% endblock %}
 
 {% block stylesheets %}
@@ -352,9 +374,9 @@ function construirTabla()
 			"aaSortingFixed": [[ 1, 'asc' ]],			
 			"fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {									
 								if(aData[0].length>40)
-									$(nRow).children(':eq(0)').text(aData[0].substring(0,40).replace(/ /g,'_')+'...');
+									$(nRow).children(':eq(0)').text(aData[0].substring(0,40).replace(/ /g,' ')+'...');
 								else
-									$(nRow).children(':eq(0)').text(aData[0].replace(/ /g,'_'));							 
+									$(nRow).children(':eq(0)').text(aData[0].replace(/ /g,' '));							 
 								$(nRow).attr('title',aData[0]);																
 								
 								$(nRow).attr('data-tt-parent-id',aData[2]);																
@@ -370,7 +392,8 @@ function construirTabla()
 							suffix='.'+grupo;
 							fixedColumn2();							
 							break;							
-					}						
+					}
+					listenerCelda();
 				},	
 			"oLanguage": {
 				  "sProcessing": "<b>Procesando...</b>"
@@ -452,12 +475,13 @@ function listenerFiltro()
 		switch(e.keyCode)
 		{			
 			case 13:	
+				e.preventDefault();
 				switch(filtrar_por)
 				{
 					case 'sku':
 						var needle=$('#filtro').val().toUpperCase();					
-						var delta=$('table.DTFC_Cloned tbody tr').height();
-						delta=delta
+						var delta=$('table.DTFC_Cloned tbody tr:first').height();
+						delta=0.97*delta;
 						offset=delta;
 						var oSettings = oTable.fnSettings();
 						var ventana= maxHeight;					
@@ -487,16 +511,11 @@ function listenerFiltro()
 									
 									$('#tabla_resumen tbody').children(':eq('+$(this).index()+')').addClass(clase);
 									hit=true;							
-								}
-								if(!hit)
-									offset=offset+delta;
+								}								
 							});
 							if(hit)
-							{					
-								if(offset<=ventana)
-									offset=0;
-								else
-									offset=($('.matched:first').index())*delta;
+							{													
+								offset=($('.matched_active:first').index())*delta;
 								$('.dataTables_scrollBody').animate({ scrollTop: offset });		
 							}
 							else
@@ -826,41 +845,35 @@ function fixedColumn2()
 }
 
 function colorTotales(){
+	$('.tag').each(function(){
+		$(this).css('cursor','pointer');
+		// $(this).parent().attr('title',$(this).text());
+	});
 	switch(parseInt(variable))
 	{
 		case 1:
+		case 2:
 		case 5:
 			var color_fondo = 'rgb(255, 235, 158)';
-			$('.DTFC_Cloned tbody tr:first td').css('background-color',color_fondo);
-			$('.table:not(.DTFC_Cloned) tbody tr:first td').css('background-color',color_fondo);
-			$('.table:not(.DTFC_Cloned) tbody tr td:last-of-type:not(.group)').css('background-color',color_fondo);
-			// $('.DTFC_Cloned tbody tr td:first-of-type:not(.group)').css({
+			$('.DTFC_Cloned tbody tr:first td').css({
+				'background-color':color_fondo,
+				'font-weight':'bold'
+			});
+			$('.table:not(.DTFC_Cloned) tbody tr:first td').css({
+				'background-color':color_fondo,
+				'font-weight':'bold'
+			});
+			$('.table:not(.DTFC_Cloned) tbody tr td:last-of-type:not(.group)').css({
+				'background-color':color_fondo,
+				'font-weight':'bold'
+			});
+			$('.DTFC_Cloned tbody tr td:first-of-type:not(.group)').css({
+				'font-weight':'bold'
 				// 'background-color':'rgb(238, 236, 255)',
 				// 'color': 'black',
-			// });
+			});	
 			break;
-		case 2:						
-			// $('.DTFC_Cloned tbody tr td:first-of-type:not(.group)').css({
-				// 'background-color':'rgb(217, 214, 247)',
-				// 'color': 'black',
-				// 'border': '1px solid #B2B2B2'
-			// });
-			// $('.DTFC_Cloned tbody tr td:nth-last-of-type(2):not(.group)').css({
-				// 'background-color':'rgb(232, 231, 245)',
-				// 'color': 'black',				
-			// });	
-			$('.DTFC_Cloned tbody tr td:first-of-type:not(.'+grupo+')').css({
-				'background-color':'rgb(232, 231, 245)',
-				'color': 'black',
-				'border': '1px solid #B2B2B2'
-			});
-			
-			// $('.DTFC_Cloned tbody tr td:nth-last-of-type(2):not(.group)').css({
-				// 'background-color':'rgb(255, 235, 158)',
-				// 'color': 'black',				
-			// });				
-			break;
-	}		
+	}	
 }
 
 function calcular_incumplimiento()
@@ -1166,6 +1179,32 @@ $(document).ready(function () {
 		'</div>';
 		$('#container').parent().append(alerttipo);
 	}			
+	
+	function listenerCelda(){	
+	
+	var clase='ui-state-highlight';
+	
+		$("#tabla_resumen tbody tr td div").mouseenter(function(e){						
+			var target=$(e.target);		
+			$('.'+clase).removeClass(clase);
+			$(this).addClass(clase);
+			$('thead tr').children(':eq('+$(target).parent().index()+')').children().addClass(clase);
+			$('.DTFC_Cloned tbody').children(':eq('+$(target).parent().parent().index()+')').children().addClass(clase);
+			$(document).keydown(function(e){							
+				if(e.keyCode==17)	
+					$(target).css('cursor','pointer');								
+			});
+			$(document).keyup(function(e){														
+				if(e.keyCode==17)															
+					$(target).css('cursor','default');															
+			});
+		});	
+		
+		$("#tabla_resumen tbody").mouseleave(function(e){						
+			$('.'+clase).removeClass(clase);
+		});
+	}
+
 	
  </script>
 {% endblock %}

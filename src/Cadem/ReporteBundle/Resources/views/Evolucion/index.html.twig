@@ -383,7 +383,7 @@ function listenerFiltro()
 			case 13:					
 				var needle=$('#buscar').val().toUpperCase();	
 				var delta=$('table.DTFC_Cloned tbody tr:first').height();				
-				delta=0.94*delta;
+				delta=0.97*delta;
 				var offset=delta;
 				var oSettings = oTable.fnSettings();				
 				
@@ -417,9 +417,8 @@ function listenerFiltro()
 						}
 					});
 					if(hit)
-					{					
-											
-						offset=($('.matched:first').index())*delta;
+					{															
+						offset=($('.matched_active:first').index())*delta;
 						$('.dataTables_scrollBody').animate({ scrollTop: offset });		
 					}
 					else
@@ -1099,7 +1098,7 @@ $(document).ready(function () {
 			var tableHead = document.createElement( 'tr' );	 //tableheader 							
 			$(data.head).each(function(key,value){				
 				var tableHeading = document.createElement( 'th' );					
-				tableHeading.innerHTML = value.replace(/ /g,'');												
+				tableHeading.innerHTML = value.replace(/ - /g,'-');												
 				tableHead.appendChild( tableHeading );				
 			});						
 			table.appendChild( tableHead );	
