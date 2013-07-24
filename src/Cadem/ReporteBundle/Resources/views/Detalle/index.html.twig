@@ -563,7 +563,7 @@ function listenerFiltro()
 							// $('.ui-state-active').removeClass('ui-state-active');				
 							$('th.btn-warning').removeClass('btn-warning');	
 							$('th.btn-success').removeClass('btn-success');	
-							$('.DataTables_sort_wrapper').slice(2,$('.DataTables_sort_wrapper').length-1).each(function(){															
+							$('.DataTables_sort_wrapper').slice(2,$('.DataTables_sort_wrapper').length-1).each(function(){																							
 								var haystack=$(this).parent().attr('title').toString().toUpperCase();					
 								var haystack2=$('th[rowspan=1]:eq('+$(this).parent().index()+')').attr('title').toString().toUpperCase();													
 								if (haystack.indexOf(needle)!=-1 || haystack2.indexOf(needle)!=-1) {																																										
@@ -855,6 +855,7 @@ function colorTotales(){
 		case 2:
 		case 5:
 			var color_fondo = 'rgb(255, 235, 158)';
+			$('.table:not(.DTFC_Cloned) tbody tr td:last-of-type:not(.group)').addClass(grupo);
 			$('.DTFC_Cloned tbody tr:first td').css({
 				'background-color':color_fondo,
 				'font-weight':'bold'
@@ -863,11 +864,10 @@ function colorTotales(){
 				'background-color':color_fondo,
 				'font-weight':'bold'
 			});
-			$('.table:not(.DTFC_Cloned) tbody tr td:last-of-type:not(.group)').css({
+			$('.table:not(.DTFC_Cloned) tbody tr td:last-of-type').css({
 				'background-color':color_fondo,
 				'font-weight':'bold'
-			});
-			$('.table:not(.DTFC_Cloned) tbody tr td:last-of-type:not(.group)').addClass(grupo);
+			});			
 			$('.DTFC_Cloned tbody tr td:first-of-type:not(.group)').css({
 				'font-weight':'bold'
 				// 'background-color':'rgb(238, 236, 255)',
@@ -1152,6 +1152,7 @@ $(document).ready(function () {
 				else
 				{					
 					tableHeading.innerHTML = value['cod_sala'];										
+					tableHeading.setAttribute('title',value['cod_sala']);		
 				}												
 				tableHead.appendChild( tableHeading );				
 			});	
