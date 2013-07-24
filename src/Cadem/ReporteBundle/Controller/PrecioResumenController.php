@@ -377,6 +377,7 @@ class PrecioResumenController extends Controller
 			'body_action' => 'precio_resumen_body',	
 			'header_detalle_action' => 'precio_resumen_detalle_header',
 			'body_detalle_action' => 'precio_resumen_detalle_body',						
+			'prefixe_tag_variable' => 'Incumplimiento',
 			'tag_variable' => ucwords($variable),
 			'tag_cliente' => $cliente->getNombrefantasia(),
 			'columnas_reservadas' => 3,
