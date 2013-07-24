@@ -26,7 +26,7 @@
 {% block body %}
     <div class="span9">
 		<div class="container-fluid well" style="padding-top:0">
-			<h4>Resumen {{tag_variable}} {{tag_cliente}} </h4>
+			<h4>Resumen {% if prefixe_tag_variable is defined %} {{prefixe_tag_variable}}{% endif %} {{tag_variable}} {{tag_cliente}} </h4>
 				<div class="hero-unit" style="padding:15px;margin-bottom:10px">
 					<div id='container_tabla_resumen' class="row-fluid">
 							<table id="tabla_resumen" class="table table-bordered display" cellpadding="0" cellspacing="0" border="0" width='100%'>                      
@@ -210,8 +210,8 @@ span.indenter{
 }
 
 .group{
-	border-bottom: 0px !important;
-	border-top: 0px !important;
+	border-bottom: 1px solid #A19B9E !important;
+	border-top: 1px solid #A19B9E !important;
 	font-weight: bold
 }
 
@@ -408,8 +408,8 @@ function construirTabla()
 		//	"sDom": '<"H"Cfr>t<"F"ip>',					
 		});
 		
-		$('div.fg-toolbar:first').append("<h5 style='float:left;margin:0em'>Tabla Resumen {{tag_variable}}: (%)</h5>");
-		$("<div class='dataTables_filter input-append' align='right' style='float:right;width:60%'><button id='detalle' class='btn btn_accion' type='button'><i class='icon-zoom-in' title='VER DETALLE'></i></button><button id='colorear_resumen' class='btn btn_accion' type='button'><i class='icon-flag' title='TERMOGRAMA'></i></button></div>").appendTo('#tabla_resumen_wrapper .fg-toolbar:first');				 				
+		$('div.fg-toolbar:first').append("<h5 style='float:left;margin:0em'>Tabla Resumen {% if prefixe_tag_variable is defined %} {{prefixe_tag_variable}}{% endif %} {{tag_variable}}: (%)</h5>");
+		$("<div class='dataTables_filter input-append' align='right' style='float:right;width:60%'><button id='detalle' class='btn btn_accion' type='button'><i class='icon-zoom-in' title='VER DETALLE'></i></button><button id='colorear_resumen' class='btn btn_accion' type='button'><i class='icon-eye-open' title='TERMOGRAMA'></i></button></div>").appendTo('#tabla_resumen_wrapper .fg-toolbar:first');				 				
 		$('#colorear_resumen').mousedown(function(){
 			if($(this).hasClass('btn-warning'))
 			{
@@ -470,8 +470,8 @@ function construirTablaDetalle()
 			// "bAutoWidth": true, 
 			"aoColumnDefs": aoColumnDefs,
 			"fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {									
-								if(aData[0].length>30)
-									$(nRow).children(':eq(0)').text(aData[0].substring(0,30).replace(/ /g,' ')+'...');
+								if(aData[0].length>25)
+									$(nRow).children(':eq(0)').text(aData[0].substring(0,25).replace(/ /g,' ')+'...');
 								else
 									$(nRow).children(':eq(0)').text(aData[0].replace(/ /g,'_'));							 
 								$(nRow).attr('title',aData[0]);																
@@ -902,6 +902,7 @@ function colorearCeldas(id_tabla,flag,suffix){
 }
 
 function colorTotales(){
+	$('.table:not(.DTFC_Cloned) tbody tr td:last-of-type:not(.group)').addClass(grupo);
 	var color_fondo = 'rgb(255, 235, 158)';
 	$('.DTFC_Cloned tbody tr:first td').css({
 		'background-color':color_fondo,
@@ -911,8 +912,9 @@ function colorTotales(){
 		'background-color':color_fondo,
 		'font-weight': 'bold',	
 	});
-	$('.table:not(.DTFC_Cloned) tbody tr td:last-of-type:not(.'+grupo+')').css({
-		'background-color':color_fondo,
+	$('.table:not(.DTFC_Cloned) tbody tr td:last-of-type').addClass('table_bordered');
+	$('.table:not(.DTFC_Cloned) tbody tr td:last-of-type').css({
+		'background-color':color_fondo,		
 		'font-weight': 'bold'
 	});
 	$('.DTFC_Cloned tbody tr td:first-of-type:not(.'+grupo+')').css({
@@ -921,6 +923,7 @@ function colorTotales(){
 		'font-weight': 'bold',
 		'cursor': 'pointer'
 	});	
+	
 }
 
 $(document).ready(function () {
@@ -966,7 +969,7 @@ $(document).ready(function () {
 			// height: 350
 		},
 		title: {
-			text: 'Gráfico Evolución {{tag_variable|lower}}'
+			text: 'Gráfico Evolución {% if prefixe_tag_variable is defined %} {{prefixe_tag_variable}}{% endif %} {{tag_variable|lower}}'
 		},
 		tooltip: {
 			pointFormat: ' <span style="color:{series.color}">{series.name}</span>: <b>{point.y}%</b><br/>',
@@ -1359,7 +1362,17 @@ $(document).ready(function () {
 		$.get("{{ url_header_detalle_action }}",DatosAdicionales,function(data){
 			DatosAdicionales = [];
 			// Si la búsquedo retorno un resultado vacio, mandar alerta y retornar falso
-			if(data.head.length<=4)
+			switch('{{tag_variable|lower}}')
+			{
+				case 'quiebre':
+				case 'presencia':
+					var minimo=3;
+					break;
+				case 'precio':
+					var minimo=4;
+					break;
+			}
+			if(data.head.length<=minimo)
 			{
 				alert('Esta búsqueda no devolvió resultados. Es posible que no existan datos para este cruce en la medición actual.\n\nSi no es este el caso, por favor revise los filtros en la sección izquierda de la página');
 				return false;
@@ -1681,8 +1694,8 @@ function listenerFiltro()
 						}
 						else
 						{									
-							offset=($('.'+matched+':first').index())*delta;
-							if($('.'+matched).length<=2)
+							offset=($('.'+matched_active+':first').index())*delta;
+							if($('.'+matched).length<=1)
 								filtrado=false;
 							$('.'+matched_active).removeClass(matched_active);	
 							$('#tabla_detalle tbody tr.'+matched+':first').addClass(matched_active);

@@ -177,9 +177,9 @@ div.dataTables_wrapper {
 }
 
 .group{
-	border-bottom: 0px !important;
-	border-top: 0px !important;
-	font-weight:bold;
+	border-bottom: 1px solid #A19B9E !important;
+	border-top: 1px solid #A19B9E !important;
+	font-weight: bold
 }
 
 {% endblock %}
@@ -272,7 +272,7 @@ function construirTabla()
 			"sScrollY": maxHeight+'px',
 			"sScrollX": "100%",
 			"sScrollXInner": maxWidth+'%',
-			"bScrollCollapse": true,
+			"bScrollCollapse": false,
 			"bFilter": false,
 			"bSort": false,
 			"bInfo": false,
@@ -319,7 +319,7 @@ function construirTabla()
 		});
 		$('div.fg-toolbar:first').append("<h5 style='float:left;margin:0em'>Tabla Evolución {{tag_variable}}: {% if tag_variable|lower in ['quiebre','presencia'] %} (%) {%else%} ($) {%endif%}</h5>");	
 		// $("<div class='dataTables_filter' align='right' style='float:right'><label>buscar: <input id='buscar' /></label></div>").appendTo('#tabla_resumen_wrapper .fg-toolbar:first');				 				 		
-		$("<form id='control' class='form-horizontal'><div class='dataTables_filter input-append' align='right' style='float:right;width:46%'><label class='control-label' style='float:left'>buscar SKU:</label><input id='buscar' class='span2 input_filtro' /><button id='boton_buscar' class='btn btn_accion' type='button' title='BUSCAR'><i class='icon-search'></i></button><button id='colorear' class='btn btn_accion' type='button' title='TERMOGRAMA'><i class='icon-flag'></i></button></div></form>").appendTo('#tabla_resumen_wrapper .fg-toolbar:first');				 				
+		$("<form id='control' class='form-horizontal'><div class='dataTables_filter input-append' align='right' style='float:right;width:46%'><label class='control-label' style='float:left'>buscar SKU:</label><input id='buscar' class='span2 input_filtro' /><button id='boton_buscar' class='btn btn_accion' type='button' title='BUSCAR'><i class='icon-search'></i></button><button id='colorear' class='btn btn_accion' type='button' title='TERMOGRAMA'><i class='icon-eye-open'></i></button></div></form>").appendTo('#tabla_resumen_wrapper .fg-toolbar:first');				 				
 		
 		$('#boton_buscar').mousedown(function(){			
 			var e = jQuery.Event("keydown");
@@ -1080,6 +1080,21 @@ $(document).ready(function () {
 	function recargarTabla()
 	{		
 		$.get("{{ url_header_action }}",DatosAdicionales,function(data){			
+			switch('{{tag_variable|lower}}')
+			{
+				case 'quiebre':
+				case 'presencia':
+					var minimo=3;
+					break;
+				case 'precio':
+					var minimo=4;
+					break;
+			}			
+			if(data.head.length<=minimo)
+			{
+				alert('Esta búsqueda no devolvió resultados. Es posible que no existan datos para este cruce en la medición actual.\n\nSi no es este el caso, por favor revise los filtros en la sección izquierda de la página');
+				return false;
+			}
 			maxWidth=parseInt(data.max_width);
 			// Primero destruimos la tabla si existe (la removemos del DOM)	
 			var ex = document.getElementById('tabla_resumen');

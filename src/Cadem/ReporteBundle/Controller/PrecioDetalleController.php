@@ -82,10 +82,13 @@ class PrecioDetalleController extends Controller
 			JOIN p.comunas c
 			JOIN c.salas s
 			JOIN s.salaclientes sc
-			JOIN sc.cliente cl
-			WHERE cl.id = :id and p.region_id = :id_region')
+			JOIN sc.cliente cl			
+			WHERE cl.id = :id
+			order by p.region_id')
+			// WHERE cl.id = :id and p.region_id = :id_region')
 			->setParameter('id', $cliente->getId())
-			->setParameter('id_region', $id_region);
+			// ->setParameter('id_region', $id_region);
+			->setMaxResults(1);
 		$provincias = $query->getResult();
 		
 		$choices_provincias = array();
@@ -103,7 +106,8 @@ class PrecioDetalleController extends Controller
 			JOIN sc.cliente cl
 			WHERE cl.id = :id and p.region_id = :id_region')
 			->setParameter('id', $cliente->getId())
-			->setParameter('id_region', $id_region);
+			// ->setParameter('id_region', $id_region);
+			->setParameter('id_region', $regiones[0]->getId());
 		$comunas = $query->getResult();
 				
 		
@@ -218,6 +222,8 @@ class PrecioDetalleController extends Controller
 		INNER JOIN PARAMETRO pa on pa.CLIENTE_ID = {$user->getClienteID()} and pa.NOMBRE='rango_precio'
 		ORDER BY SEGMENTO,NOM_PRODUCTO,COD_PRODUCTO,NOM_SALA";		
 		
+		// print_r($sql);
+		
 		$sha1 = sha1($sql);
 
 		if(!$session->has($sha1)){
@@ -267,14 +273,15 @@ class PrecioDetalleController extends Controller
 		
 		$fila=array();
 		$fila['aTargets']=array(1);
-		// $fila['sClass']="tag";
-		$fila['bVisible']=false;
-		// $fila['sWidth']="260px";
+		// $fila['sClass']="tag";		
+		$fila['sWidth']="0px";
+		// $fila['bVisible']=false;
 		array_push($aoColumnDefs,$fila);		
 
 		$fila=array();
 		$fila['aTargets']=array(2);				
-		$fila['sWidth']="20px";
+		$fila['sWidth']="0px";
+		$fila['bVisible']=false;
 		array_push($aoColumnDefs,$fila);	
 
 		$cont=3;		
@@ -493,7 +500,9 @@ class PrecioDetalleController extends Controller
 		INNER JOIN ITEM i on i.ID = ic.ITEM_ID	
 		INNER JOIN PARAMETRO pa on pa.CLIENTE_ID = {$user->getClienteID()} and pa.NOMBRE='rango_precio'
 		ORDER BY SEGMENTO,NOM_PRODUCTO,COD_PRODUCTO,NOM_SALA";						
-						
+
+		
+		
 		$sha1 = sha1($sql);		
 		
 		if(!$session->has($sha1)){
@@ -539,19 +548,20 @@ class PrecioDetalleController extends Controller
 		$fila=array();
 		$fila['aTargets']=array(0);
 		$fila['sClass']="tag";
-		$fila['sWidth']="260px";		
+		$fila['sWidth']="260px";
 		array_push($aoColumnDefs,$fila);
 		
 		$fila=array();
 		$fila['aTargets']=array(1);
-		// $fila['sClass']="tag";
-		// $fila['sWidth']="260px";
-		$fila['bVisible']=false;	
-		array_push($aoColumnDefs,$fila);		
+		// $fila['sClass']="tag";		
+		$fila['sWidth']="20px";
+		// $fila['bVisible']=false;
+		array_push($aoColumnDefs,$fila);					
 
 		$fila=array();
 		$fila['aTargets']=array(2);		
 		$fila['sWidth']="20px";
+		$fila['bVisible']=false;
 		array_push($aoColumnDefs,$fila);	
 
 		$cont=3;		
