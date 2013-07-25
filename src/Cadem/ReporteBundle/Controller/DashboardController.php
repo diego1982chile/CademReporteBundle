@@ -51,7 +51,7 @@ class DashboardController extends Controller
 						
 		foreach($variables as $variable)
 		{													
-			$id_ultima_medicion = $this->get('cadem_reporte.helper.medicion')->getIdUltimaMedicionPorVariable($variable);								
+			$id_ultima_medicion = $this->get('cadem_reporte.helper.medicion')->getIdUltimaMedicionPorVariable($variable);
 
 			if($id_ultima_medicion !== -1){								
 		
@@ -102,19 +102,19 @@ class DashboardController extends Controller
 			}			
 		}
 		
-		// OBTENER PORCENTAJE QUIEBRE POR REGIONES Y SUS COORDENADAS RESPECTIVAS
-		
-		$sql = "SELECT r.LATITUD as lat, r.LONGITUD AS long, (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as count FROM QUIEBRE q 
+		// OBTENER PORCENTAJE QUIEBRE POR SALA Y SUS COORDENADAS RESPECTIVAS
+		$id_ultima_medicion = $this->get('cadem_reporte.helper.medicion')->getIdUltimaMedicionPorVariable('QUIEBRE');
+
+		$sql = "SELECT s.ID, s.LATITUD as lat, s.LONGITUD AS lon, c.NOMBRE as cadena, s.CALLE as calle, (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre FROM QUIEBRE q 
 				INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID 
 				INNER JOIN MEDICION m on m.ID = p.MEDICION_ID and m.ID = {$id_ultima_medicion}
 				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID 
 				INNER JOIN SALA s on s.ID = sc.SALA_ID 
-				INNER JOIN COMUNA c on s.COMUNA_ID = c.ID
-				INNER JOIN PROVINCIA prov on c.PROVINCIA_ID=prov.ID
-				INNER JOIN REGION r on prov.REGION_ID=r.ID
-				GROUP BY r.LATITUD, r.LONGITUD";								
+				INNER JOIN CADENA c on c.ID = s.CADENA_ID
+				GROUP BY s.ID, s.LATITUD, s.LONGITUD, c.NOMBRE, s.CALLE";
 			
-		$quiebre_regiones = $em->getConnection()->executeQuery($sql)->fetchAll();
+		$query_map = $em->getConnection()->executeQuery($sql)->fetchAll();
+
 						
 		//NOTICIAS
 		$query = $em->createQuery(
@@ -135,7 +135,7 @@ class DashboardController extends Controller
 			'estudios' => $estudios,
 			'variables' => $variables,
 			'noticias' => $noticias,
-			'quiebre_regiones' => json_encode($quiebre_regiones)
+			'query_map' => json_encode($query_map)
 		));
 
 		//CACHE
