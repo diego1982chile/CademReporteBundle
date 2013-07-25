@@ -3,12 +3,13 @@
 {% block title %}Cadem Analytics{% endblock %}
 
 {% block filtro %}
-	<form id="filtros" action="" method="post" >
+	<!-- <form id="filtros" action="" method="post" >
 		{% for form in forms %}
 				{{ form_widget(form) }}
 		{% endfor %}
 		<input class="btn btn-primary" type="submit" value="Filtrar" />
-	</form>
+	</form> -->
+	<div id="map" style="height: 650px"></div>
 {% endblock %}
 
 {% block body %}
@@ -49,16 +50,75 @@ n.titulo~"
 		  
         </div><!--/span-->		
 {% endblock %}
+
+{% block stylesheets %}
+	<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.6.3/leaflet.css" />
+	<link rel="stylesheet" href="{{ asset('bundles/cademreporte/css/Control.FullScreen.css') }}" />
+{% endblock %}
+
+{% block customstyles %}
+	.leaflet-cluster-anim .leaflet-marker-icon, .leaflet-cluster-anim .leaflet-marker-shadow {
+		-webkit-transition: -webkit-transform 0.2s ease-out, opacity 0.2s ease-in;
+		-moz-transition: -moz-transform 0.2s ease-out, opacity 0.2s ease-in;
+		-o-transition: -o-transform 0.2s ease-out, opacity 0.2s ease-in;
+		transition: transform 0.2s ease-out, opacity 0.2s ease-in;
+	}
+
+	.marker-cluster-small {
+		background-color: rgba(181, 226, 140, 0.6);
+	}
+	.marker-cluster-small div {
+		background-color: rgba(110, 204, 57, 0.6);
+	}
+
+	.marker-cluster-medium {
+		background-color: rgba(241, 211, 87, 0.6);
+	}
+	.marker-cluster-medium div {
+		background-color: rgba(240, 194, 12, 0.6);
+	}
+
+	.marker-cluster-large {
+		background-color: rgba(253, 156, 115, 0.6);
+	}
+	.marker-cluster-large div {
+		background-color: rgba(241, 128, 23, 0.6);
+	}
+
+	.marker-cluster {
+		background-clip: padding-box;
+		border-radius: 20px;
+	}
+	.marker-cluster div {
+		width: 30px;
+		height: 30px;
+		margin-left: 5px;
+		margin-top: 5px;
+
+		text-align: center;
+		border-radius: 15px;
+		font: 12px "Helvetica Neue", Arial, Helvetica, sans-serif;
+	}
+	.marker-cluster span {
+		line-height: 30px;
+	}
+
+{% endblock %}
+
+
 {% block javascripts %}
 <script src="{{ asset('bundles/cademreporte/js/highcharts.regression.js') }}"></script>
 <script src="{{ asset('bundles/cademreporte/js/highcharts-more.js') }}"></script>
+<script src="http://cdn.leafletjs.com/leaflet-0.6.3/leaflet.js"></script>
+<script src="{{ asset('bundles/cademreporte/js/leaflet.markercluster.js') }}"></script>
+<script src="{{ asset('bundles/cademreporte/js/Control.FullScreen.js') }}"></script>
 <script>
 {% for ev in estudios[0].getEstudiovariables %}
 {{"var i_"~ev.getVariable.getNombre~";"}}
 {{"var evo_"~ev.getVariable.getNombre~";"}}
 {% endfor %}
 
-$(document).ready(function () {		
+$(document).ready(function () {
 	
 	{% for ev in estudios[0].getEstudiovariables %}//COMIENZA FOR
 	
@@ -171,7 +231,7 @@ $(document).ready(function () {
 				},
 				dataLabels: {
 					formatter: function () {
-						return  this.y.toString().replace(".",",");	
+						return  this.y.toString().replace(".",",");
 					}
 				}
 			}],
@@ -296,7 +356,7 @@ $(document).ready(function () {
 	{% endfor %}//TERMINA FOR
 
 	
-	$.get( "{{ path('dashboard_indicadores') }}", $('form#filtros').serialize(), function(data) {			
+	$.get( "{{ path('dashboard_indicadores') }}", $('form#filtros').serialize(), function(data) {
 		
 		{% if "QUIEBRE" in variables or "PRESENCIA" in variables %}
 			{% if "QUIEBRE" in variables %}
@@ -535,6 +595,106 @@ $(document).ready(function () {
         }
 	
 	});
+
+	var query_map = {{ query_map|raw }};
+
+	//MAPA
+	var map = L.map('map',{attributionControl: false, fullscreenControl: true}).setView([-32.24, -70.82], 5);
+	L.tileLayer('http://{s}.tile.cloudmade.com/a0335be631064bc0b5aae85cb6b07490/997/256/{z}/{x}/{y}.png', {
+	    // attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://cloudmade.com">CloudMade</a>',
+	    maxZoom: 17
+	}).addTo(map);
+
+	map.on('mouseover', function(e){
+		$('#map').css('width', '500px').zIndex(10);
+		map.invalidateSize();
+	});
+	map.on('mouseout', function(e){
+		$('#map').css('width', 'auto').zIndex(0);
+		map.invalidateSize();
+	});
+
+	var markers = new L.MarkerClusterGroup({
+		// zoomToBoundsOnClick: false,
+		singleMarkerMode: true,
+
+		iconCreateFunction: function(cluster) {
+	        var childCount = cluster.getChildCount();
+	        var markers = cluster.getAllChildMarkers();
+	        var variable = 0;
+	        var count = 0;
+	        for(i in markers){
+	        	var t = markers[i].options.title;
+	        	variable += parseFloat(t.split('\n')[1]);
+	        	count++;
+	        }
+
+        	variable = variable/count;
+        	variable = variable.toFixed(1);
+
+			var c = ' marker-cluster-';
+			if (variable < 10) {
+				c += 'small';
+			} else if (variable < 30) {
+				c += 'medium';
+			} else {
+				c += 'large';
+			}
+			
+
+			return new L.DivIcon({ html: '<div><span>' + variable + '</span></div>', className: 'marker-cluster' + c, iconSize: new L.Point(40, 40) });
+	    }
+	});
+	for (i in query_map) {
+		if(!isNaN(parseFloat(query_map[i].lat)) && !isNaN(parseFloat(query_map[i].lon))){
+			var title = query_map[i].cadena + ',' + query_map[i].calle + '\n' + parseFloat(query_map[i].quiebre).toFixed(1);
+			var marker = L.marker([parseFloat(query_map[i].lat), parseFloat(query_map[i].lon)], { title: title });
+			// title = title.replace('\n','<br>');
+			// marker.bindPopup(title);
+			markers.addLayer(marker);
+		}
+		
+	}
+
+	map.addLayer(markers);
+
+	markers.on('clustermouseover', function (a) {
+		var visibleOne = markers.getVisibleParent(a.layer);
+		var markers_ = visibleOne.getAllChildMarkers();
+		var variable = 0;
+        var count = 0;
+        var salas = "";
+        for(i in markers_){
+        	var t = markers_[i].options.title;
+        	variable += parseFloat(t.split('\n')[1]);
+        	salas += t.split('\n')[0]+';';
+        	count++;
+        }
+
+    	variable = variable/count;
+    	variable = variable.toFixed(1);
+    	salas = salas.slice(0, -1);
+    	visibleOne._icon.title = salas + '\n' + variable;
+		// visibleOne.bindPopup('AAA').openPopup();
+	});
+
+	function getRandomLatLng(map) {
+		var bounds = map.getBounds(),
+			southWest = bounds.getSouthWest(),
+			northEast = bounds.getNorthEast(),
+			lngSpan = northEast.lng - southWest.lng,
+			latSpan = northEast.lat - southWest.lat;
+
+		return L.latLng(
+				southWest.lat + latSpan * Math.random(),
+				southWest.lng + lngSpan * Math.random());
+	}
+
+
+
+
+
+
 });
  </script>
 {% endblock %}
