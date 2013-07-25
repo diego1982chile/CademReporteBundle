@@ -193,9 +193,9 @@ class PresenciaResumenController extends Controller
 		// CONSTRUIR EL ENCABEZADO DE LA TABLA
 			
 		if($niveles==1)
-			$prefixes=array('SKU/CADENA');
+			$prefixes=array('CATEGORÍA/CADENA');
 		else
-			$prefixes=array('SKU/CADENA','SEGMENTO');
+			$prefixes=array('CATEGORÍA/CADENA','SEGMENTO');
 		
 		$head=array();		
 		
@@ -687,9 +687,9 @@ class PresenciaResumenController extends Controller
 		// CONSTRUIR EL ENCABEZADO DE LA TABLA
 			
 		if($niveles==1)
-			$prefixes=array('SKU/CADENA');
+			$prefixes=array('CATEGORÍA/CADENA');
 		else
-			$prefixes=array('SKU/CADENA','SEGMENTO');
+			$prefixes=array('CATEGORÍA/CADENA','SEGMENTO');
 		
 		$head=array();		
 		$aoColumns=array();

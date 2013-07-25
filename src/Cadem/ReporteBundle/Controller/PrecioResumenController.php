@@ -196,9 +196,9 @@ class PrecioResumenController extends Controller
 		// CONSTRUIR EL ENCABEZADO DE LA TABLA
 			
 		if($niveles==1)
-			$prefixes=array('SKU/CADENA');
+			$prefixes=array('CATEGORÍA/CADENA');
 		else
-			$prefixes=array('SKU/CADENA','SEGMENTO');
+			$prefixes=array('CATEGORÍA/CADENA','SEGMENTO');
 		
 		$head=array();		
 		
@@ -687,9 +687,9 @@ class PrecioResumenController extends Controller
 		// CONSTRUIR EL ENCABEZADO DE LA TABLA
 			
 		if($niveles==1)
-			$prefixes=array('SKU/CADENA');
+			$prefixes=array('CATEGORÍA/CADENA');
 		else
-			$prefixes=array('SKU/CADENA','SEGMENTO');
+			$prefixes=array('CATEGPRÍA/CADENA','SEGMENTO');
 		
 		$head=array();		
 		$aoColumns=array();
@@ -1011,7 +1011,7 @@ class PrecioResumenController extends Controller
 				if($nivel1==$detalle_precio[$cont_regs]['COD_PRODUCTO'])
 				{									
 					$fila[2]=$detalle_precio[$cont_regs]['SEGMENTO'];	
-					$fila[0]=$detalle_precio[$cont_regs]['NOM_PRODUCTO'];//.' ['.$detalle_quiebre[$cont_regs]['COD_PRODUCTO'].']';										
+					$fila[0]=$detalle_precio[$cont_regs]['NOM_PRODUCTO'].' ['.$detalle_precio[$cont_regs]['COD_PRODUCTO'].']';										
 					$fila[1]=$detalle_precio[$cont_regs]['politica'];
 					$fila[$columna_precio+3]=$detalle_precio[$cont_regs]['precio'];//.' ['.$detalle_quiebre[$cont_regs]['COD_PRODUCTO'].']';																														
 					$cont_regs++;						

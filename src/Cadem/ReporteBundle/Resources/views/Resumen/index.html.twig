@@ -730,12 +730,10 @@ function fixedColumnDetQ()
 				nGroup.appendChild( nCell );						 
 			}						
 			nGroup.setAttribute('title',"TOTAL GENERAL");										
-			$(nGroup).insertBefore( $('#tabla_detalle.DTFC_Cloned tbody tr:eq('+(0)+')', right.body)[0] );
-			// Se crea atributo que asocie la fila de agregacion con sus filas hijas
-			var att=document.createAttribute("data-tt-id");
-			att.value="TOTALES";
-			// Se añade fila de agregacion para tabla principal
-			nTrs[0].previousSibling.setAttributeNode(att);				
+			nGroup.setAttribute('data-tt-id',"TOTALES");				
+			// $(nGroup).insertBefore( $('tbody:first tr:eq('+(0)+')', this.right.body)[0] );
+			// nTrs[0].parentNode.insertBefore( nGroup, nTrs[0] );
+			// Se crea atributo que asocie la fila de agregacion con sus filas hijas			
 			
 			// /* Cell to insert into the frozen columns */
 			
@@ -745,7 +743,7 @@ function fixedColumnDetQ()
 			nCell.innerHTML = "TOTAL GENERAL";			
 			nGroup.appendChild( nCell );			
 			// Se añade fila de agregacion para tabla fija			
-			$(nGroup).insertBefore( $('#tabla_detalle.DTFC_Cloned tbody tr:eq('+(0)+')', left.body)[0] );	
+			// $(nGroup).insertBefore( $('tbody:first tr:eq('+(0)+')', left.body)[0] );	
 			matriz_totales_det=[];
 		}
 	});
@@ -843,7 +841,7 @@ function fixedColumnDetP()
 				nGroup.appendChild( nCell );						 
 			}					
 			nGroup.setAttribute('title',"TOTAL GENERAL");										
-			$(nGroup).insertBefore( $('#tabla_detalle.DTFC_Cloned tbody tr:eq('+(0)+')', right.body)[0] );						
+			// $(nGroup).insertBefore( $('#tabla_detalle.DTFC_Cloned tbody tr:eq('+(0)+')', right.body)[0] );						
 			// Se crea atributo que asocie la fila de agregacion con sus filas hijas					
 			// Se añade fila de agregacion para tabla principal
 			nGroup.setAttribute('data-tt-id',"TOTALES");				
@@ -865,7 +863,7 @@ function fixedColumnDetP()
 			nGroup.setAttribute('title',"TOTAL GENERAL");	
 			
 			// Se añade fila de agregacion para tabla fija
-			$(nGroup).insertBefore( $('#tabla_detalle.DTFC_Cloned tbody tr:eq(0)', left.body)[0] );			
+			// $(nGroup).insertBefore( $('#tabla_detalle.DTFC_Cloned tbody tr:eq(0)', left.body)[0] );			
 			$('.DTFC_LeftFootWrapper').hide();
 		}		
 	});		
