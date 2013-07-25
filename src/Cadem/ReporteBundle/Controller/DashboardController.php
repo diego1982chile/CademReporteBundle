@@ -135,7 +135,8 @@ class DashboardController extends Controller
 			'estudios' => $estudios,
 			'variables' => $variables,
 			'noticias' => $noticias,
-			'query_map' => json_encode($query_map)
+			'query_map' => json_encode($query_map),
+			'prefixe_tag_variable' => 'INCUMP.',
 		));
 
 		//CACHE

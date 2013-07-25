@@ -31,7 +31,7 @@
 				<div class="hero-unit" style="padding:15px;margin-bottom:10px">
 					<div id="{% if "QUIEBRE" in variables %}evo_QUIEBRE{% else %}evo_PRESENCIA{% endif %}" style="min-width: 250px; height: 300px; margin: 0 auto"></div>
 				</div>
-				{#% endfor %#}				
+				{#% endfor %#}						
 			</div>												
 			<div class="row-fluid">
 		{% for n in noticias %}
@@ -118,8 +118,7 @@ n.titulo~"
 {{"var evo_"~ev.getVariable.getNombre~";"}}
 {% endfor %}
 
-
-$(document).ready(function () {		
+$(document).ready(function () {
 	
 	{% for ev in estudios[0].getEstudiovariables %}//COMIENZA FOR
 	
@@ -232,7 +231,7 @@ $(document).ready(function () {
 				},
 				dataLabels: {
 					formatter: function () {
-						return  this.y.toString().replace(".",",");	
+						return  this.y.toString().replace(".",",");
 					}
 				}
 			}],
@@ -257,7 +256,7 @@ $(document).ready(function () {
 			},
 			
 			title: {
-				text: '{{ev.getNombrevariable}}'
+				text: '{% if prefixe_tag_variable is defined %} {{prefixe_tag_variable}}{% endif %} {{ev.getNombrevariable}}'
 			},
 			
 			pane: {
@@ -353,18 +352,11 @@ $(document).ready(function () {
 		});
 		
 		{% endif %}
-
-
-
-
-
 		
 	{% endfor %}//TERMINA FOR
 
 	
 	$.get( "{{ path('dashboard_indicadores') }}", $('form#filtros').serialize(), function(data) {
-	
-		
 		
 		{% if "QUIEBRE" in variables or "PRESENCIA" in variables %}
 			{% if "QUIEBRE" in variables %}

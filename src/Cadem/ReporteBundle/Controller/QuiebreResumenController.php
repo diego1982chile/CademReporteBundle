@@ -1121,7 +1121,7 @@ class QuiebreResumenController extends Controller
 				// Mientras el primer nivel de agregación no cambie			
 				if($nivel1==$detalle_quiebre[$cont_regs]['COD_PRODUCTO'])
 				{									
-					$fila[0]=$detalle_quiebre[$cont_regs]['NOM_PRODUCTO'];//.' ['.$detalle_quiebre[$cont_regs]['COD_PRODUCTO'].']';					
+					$fila[0]=$detalle_quiebre[$cont_regs]['NOM_PRODUCTO'].' ['.$detalle_quiebre[$cont_regs]['COD_PRODUCTO'].']';					
 					$fila[1]=$detalle_quiebre[$cont_regs]['SEGMENTO'];	
 					// $fila[$columna_quiebre+2]=$detalle_quiebre[$cont_regs]['quiebre'];
 					switch($detalle_quiebre[$cont_regs]['quiebre'])

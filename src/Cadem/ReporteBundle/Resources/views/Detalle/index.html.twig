@@ -120,7 +120,7 @@
 								</label>
 							</th>
 							<th width='10%' class='ui-widget-content'>
-								<div style='background:red;height:1.9em'>
+								<div style='background:rgb(242, 136, 115);height:1.9em'>
 								</div>
 							</th>
 							<th width='10%'>
@@ -199,7 +199,7 @@ div.DTFC_Blocker {
 }
 
 .fueraRango{
-	background:red;
+	background: rgb(242, 136, 115);
 	color:white;
 }
 
@@ -271,8 +271,8 @@ div.DataTables_sort_wrapper {
 }
 
 .group{
-	border-bottom: 0px !important;
-	border-top: 0px !important;
+	border-bottom: 1px solid #A19B9E !important;
+	border-top: 1px solid #A19B9E !important;
 	font-weight: bold
 }
 
@@ -359,7 +359,7 @@ function construirTabla()
 			"sScrollY": maxHeight+'px',
 			"sScrollX": "100%",
 			"sScrollXInner": maxWidth+'%',
-			"bScrollCollapse": true,
+			"bScrollCollapse": false,
 			"bFilter": false,
 			"bSort": false,
 			"bDeferLoading": false,
@@ -406,7 +406,7 @@ function construirTabla()
 		var filtros="<button id='filtro_sku' title='FILTRO ACTIVO POR SKU' class='btn btn_filtro btn-warning ' type='button'><i class='icon-filter'></i> SKU</button><button id='filtro_sala' class='btn btn_filtro' type='button' title='FILTRO ACTIVO POR SALA'><i class='icon-filter'></i> SALA</button>";
 		$('div.fg-toolbar:first').append("<div align='left' style='float:left;width:30%'><h5 style='float:left;margin:0em'>Tabla Detalle {{tag_variable}}: {% if tag_variable|lower in ['quiebre','presencia'] %} (%) {%else%} ($) {%endif%}</h5><div>");	
 		// $("<div class='dataTables_filter' align='right' style='float:center;width:50%'><label>SALA: <input id='buscarsala' /></label></div>").appendTo('#tabla_resumen_wrapper .fg-toolbar:first');				 		
-		$("<div class='dataTables_filter input-append' align='right' style='float:right;width:70%'>"+filtros+"<input id='filtro' class='span2 input_filtro' /><button id='boton_buscar' class='btn btn_accion' type='button' title='BUSCAR'><i class='icon-search'></i></button><button id='colorear' title='TERMOGRAMA' class='btn btn_accion' type='button'><i class='icon-flag'></i></button></div>").appendTo('#tabla_resumen_wrapper .fg-toolbar:first');				 				
+		$("<div class='dataTables_filter input-append' align='right' style='float:right;width:70%'>"+filtros+"<input id='filtro' class='span2 input_filtro' /><button id='boton_buscar' class='btn btn_accion' type='button' title='BUSCAR'><i class='icon-search'></i></button><button id='colorear' title='TERMOGRAMA' class='btn btn_accion' type='button'><i class='icon-eye-open'></i></button></div>").appendTo('#tabla_resumen_wrapper .fg-toolbar:first');				 				
 		
 		$('#boton_buscar').mousedown(function(){			
 			var e = jQuery.Event("keydown");
@@ -781,7 +781,7 @@ function fixedColumn2()
 										
 					nCell = document.createElement( 'td' );
 					nCell.className = grupo;
-					nCell.innerHTML = "% INC.";
+					nCell.innerHTML = "% INC.";					
 					nGroup.setAttribute('title',sGroup.toUpperCase());	
 					nGroup.appendChild( nCell );
 										
@@ -867,6 +867,7 @@ function colorTotales(){
 				'background-color':color_fondo,
 				'font-weight':'bold'
 			});
+			$('.table:not(.DTFC_Cloned) tbody tr td:last-of-type:not(.group)').addClass(grupo);
 			$('.DTFC_Cloned tbody tr td:first-of-type:not(.group)').css({
 				'font-weight':'bold'
 				// 'background-color':'rgb(238, 236, 255)',
@@ -1109,6 +1110,21 @@ $(document).ready(function () {
 	function recargarTabla()
 	{		
 		$.get("{{ url_header_action }}",DatosAdicionales,function(data){
+			switch('{{tag_variable|lower}}')
+			{
+				case 'quiebre':
+				case 'presencia':
+					var minimo=3;
+					break;
+				case 'precio':
+					var minimo=4;
+					break;
+			}			
+			if(data.head.length<=minimo)
+			{
+				alert('Esta búsqueda no devolvió resultados. Es posible que no existan datos para este cruce en la medición actual.\n\nSi no es este el caso, por favor revise los filtros en la sección izquierda de la página');
+				return false;
+			}	
 			maxWidth=parseInt(data.max_width);			
 			aoColumnDefs=JSON.parse(data.aoColumnDefs);			
 			// Primero destruimos la tabla si existe (la removemos del DOM)	
