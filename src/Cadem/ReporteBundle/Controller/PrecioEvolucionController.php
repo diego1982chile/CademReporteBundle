@@ -276,6 +276,7 @@ class PrecioEvolucionController extends Controller
 		}
 		$fila=array();
 		$fila['aTargets']=array($cont);	
+		$fila['sWidth']="80px";
 		// $fila['bVisible']=false;	
 		// $fila['sClass']="medicion";
 		array_push($aoColumnDefs,$fila);		
@@ -501,54 +502,61 @@ class PrecioEvolucionController extends Controller
 			}			
 			// Calculo de totales
 			$fila=array_fill(0,$num_meds+1,"-");	
-			$num_regs=count($totales_segmento);
 			$cont_regs=0;														
-			$nivel2=$totales_segmento[$cont_regs]['SEGMENTO'];	
-			$cont_totales_horizontales_segmento=0;						
+			// $num_regs=count($totales_segmento);
+			// $nivel2=$totales_segmento[$cont_regs]['SEGMENTO'];	
+			// $cont_totales_horizontales_segmento=0;						
 			
-			while($cont_regs<$num_regs)
-			{
-				$columna_precio=array_search($totales_segmento[$cont_regs]['MEDICION'],$mediciones);					
-				// Mientras no cambie el segmento
-				if($nivel2==$totales_segmento[$cont_regs]['SEGMENTO'])
-				{
-					$fila[$columna_precio]=round($totales_segmento[$cont_regs]['PRECIO'],1);					
-					$cont_regs++;
-				}
-				else
-				{
-					$fila[$num_meds]=round($totales_horizontales_segmento[$cont_totales_horizontales_segmento]['PRECIO'],1);
-					$cont_totales_horizontales_segmento++;
-					array_push($matriz_totales,$fila);
-					$fila=array_fill(0,$num_meds+1,"-");
-					$nivel2=$totales_segmento[$cont_regs]['SEGMENTO'];					
-				}
-				if($cont_regs==$num_regs)		
-				{	
-					$columna_precio=array_search($totales_segmento[$cont_regs-1]['MEDICION'],$mediciones);
-					$fila[$columna_precio]=round($totales_segmento[$cont_regs-1]['PRECIO'],1);	
-					$fila[$num_meds]=round($totales_horizontales_segmento[$cont_totales_horizontales_segmento]['PRECIO'],1);
-					array_push($matriz_totales,$fila);		
-					$cont_regs++;					
-				}				
-			}	
+			// while($cont_regs<$num_regs)
+			// {
+				// $columna_precio=array_search($totales_segmento[$cont_regs]['MEDICION'],$mediciones);					
+				// // Mientras no cambie el segmento
+				// if($nivel2==$totales_segmento[$cont_regs]['SEGMENTO'])
+				// {
+					// $fila[$columna_precio]=round($totales_segmento[$cont_regs]['PRECIO'],1);					
+					// $cont_regs++;
+				// }
+				// else
+				// {
+					// $fila[$num_meds]=round($totales_horizontales_segmento[$cont_totales_horizontales_segmento]['PRECIO'],1);
+					// $cont_totales_horizontales_segmento++;
+					// array_push($matriz_totales,$fila);
+					// $fila=array_fill(0,$num_meds+1,"-");
+					// $nivel2=$totales_segmento[$cont_regs]['SEGMENTO'];					
+				// }
+				// if($cont_regs==$num_regs)		
+				// {	
+					// $columna_precio=array_search($totales_segmento[$cont_regs-1]['MEDICION'],$mediciones);
+					// $fila[$columna_precio]=round($totales_segmento[$cont_regs-1]['PRECIO'],1);	
+					// $fila[$num_meds]=round($totales_horizontales_segmento[$cont_totales_horizontales_segmento]['PRECIO'],1);
+					// array_push($matriz_totales,$fila);		
+					// $cont_regs++;					
+				// }				
+			// }	
+			// $cont_regs=0;
+			// $num_regs=count($totales_verticales_segmento);
+			// $fila=array_fill(0,$num_meds+1,"-");				
+			
+			// while($cont_regs<$num_regs)
+			// {
+				// $columna_precio=array_search($totales_verticales_segmento[$cont_regs]['MEDICION'],$mediciones);					
+				// // Mientras no cambie la cadena  
+				// $fila[$columna_precio]=round($totales_verticales_segmento[$cont_regs]['PRECIO'],1);					
+				// $cont_regs++;
+			// }	
+			
+			// $fila[$num_meds]=round($total[0]['PRECIO'],1);			
+			
+			// array_push($matriz_totales,$fila);						
+			
 			$cont_regs=0;
-			$num_regs=count($totales_verticales_segmento);
-			$fila=array_fill(0,$num_meds+1,"-");				
-			
 			while($cont_regs<$num_regs)
-			{
-				$columna_precio=array_search($totales_verticales_segmento[$cont_regs]['MEDICION'],$mediciones);					
-				// Mientras no cambie la cadena  
-				$fila[$columna_precio]=round($totales_verticales_segmento[$cont_regs]['PRECIO'],1);					
+			{			
+				array_push($matriz_totales,$fila);
 				$cont_regs++;
-			}	
-			
-			$fila[$num_meds]=round($total[0]['PRECIO'],1);			
-			
-			array_push($matriz_totales,$fila);		
-				
+			}
 		}
+				
 		/*
 		 * Output
 		 */
