@@ -13,8 +13,9 @@
 		<label class="radio inline">
 			Variable:
 			<select style="width:auto;margin:0" id="variable_map" name="variable_map" required="required">
-				<option value="quiebre" selected="selected">QUIEBRE</option>
-				<option value="precio">PRECIO</option>
+				{% for v in variables %}
+				    <option value="{{v}}">{{v}}</option>
+				{% endfor %}
 			</select>
 		</label>
 	</form>

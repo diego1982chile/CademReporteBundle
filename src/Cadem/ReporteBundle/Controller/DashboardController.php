@@ -76,6 +76,22 @@ class DashboardController extends Controller
 						$indicadores[$variable] = $porc_quiebre;
 						$rango_quiebre = $this->get('cadem_reporte.helper.cliente')->getRangoQuiebre();
 						$indicadores['rango_quiebre'] = $rango_quiebre;
+
+
+						// OBTENER PORCENTAJE QUIEBRE POR SALA Y SUS COORDENADAS RESPECTIVAS
+						$sql = "SELECT s.ID, s.LATITUD as lat, s.LONGITUD AS lon, c.NOMBRE as cadena, s.CALLE as calle, (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre FROM QUIEBRE q 
+								INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID 
+								INNER JOIN MEDICION m on m.ID = p.MEDICION_ID and m.ID = {$id_ultima_medicion}
+								INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID 
+								INNER JOIN SALA s on s.ID = sc.SALA_ID 
+								INNER JOIN CADENA c on c.ID = s.CADENA_ID
+								GROUP BY s.ID, s.LATITUD, s.LONGITUD, c.NOMBRE, s.CALLE";
+							
+						$query_map = $em->getConnection()->executeQuery($sql)->fetchAll();
+
+
+
+
 						break;
 					case 'PRECIO':
 						//PRECIO INCUMPLIMIENTO ULTIMA MEDICION			
@@ -102,18 +118,7 @@ class DashboardController extends Controller
 			}			
 		}
 		
-		// OBTENER PORCENTAJE QUIEBRE POR SALA Y SUS COORDENADAS RESPECTIVAS
-		$id_ultima_medicion = $this->get('cadem_reporte.helper.medicion')->getIdUltimaMedicionPorVariable('QUIEBRE');
-
-		$sql = "SELECT s.ID, s.LATITUD as lat, s.LONGITUD AS lon, c.NOMBRE as cadena, s.CALLE as calle, (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre FROM QUIEBRE q 
-				INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID 
-				INNER JOIN MEDICION m on m.ID = p.MEDICION_ID and m.ID = {$id_ultima_medicion}
-				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID 
-				INNER JOIN SALA s on s.ID = sc.SALA_ID 
-				INNER JOIN CADENA c on c.ID = s.CADENA_ID
-				GROUP BY s.ID, s.LATITUD, s.LONGITUD, c.NOMBRE, s.CALLE";
-			
-		$query_map = $em->getConnection()->executeQuery($sql)->fetchAll();
+		
 
 						
 		//NOTICIAS
