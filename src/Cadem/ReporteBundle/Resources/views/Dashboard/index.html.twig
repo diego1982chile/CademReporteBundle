@@ -609,6 +609,7 @@ $(document).ready(function () {
 	var query_map = {{ query_map|raw }};
 
 	var bounds = new L.LatLngBounds([-57,-82], [-15,-63]);
+	var bounds_fs = new L.LatLngBounds([-57,-120], [-15,-20]);
 
 	//MAPA
 	var map = L.map('map',{
@@ -621,6 +622,18 @@ $(document).ready(function () {
 	    // attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://cloudmade.com">CloudMade</a>',
 	    maxZoom: 17
 	}).addTo(map);
+
+	var zoom_normal,zoom_fs;
+
+	map.on('enterFullscreen', function(){
+		map.setMaxBounds(bounds_fs, {reset: true});
+	});
+
+	map.on('exitFullscreen', function(){
+		setTimeout(function(){
+			map.setMaxBounds(bounds, {reset: true});
+		},500);
+	});
 
 	// map.on('mouseover', function(e){
 	// 	$('#map').css('width', '500px').zIndex(10);
@@ -739,10 +752,6 @@ $(document).ready(function () {
 		},"json")
 		.fail(function(){alert('ERROR GRAVE AL INTENTAR TRAER LOS DATOS DEL MAPA.')});
 	});
-
-
-
-
 
 });
  </script>
