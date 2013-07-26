@@ -359,7 +359,7 @@ class PresenciaDetalleController extends Controller
 		$session->set("total",$total);	
 
 		// Calcula el ancho máximo de la tabla	
-		$extension=count($head)*13+sqrt(count($head))-100;
+		$extension=count($head)*13+log(count($head),10)-100;
 	
 		if($extension<0)
 			$extension=0;
@@ -475,7 +475,7 @@ class PresenciaDetalleController extends Controller
 				// Mientras el primer nivel de agregación no cambie			
 				if($nivel1==$detalle_quiebre[$cont_regs]['COD_PRODUCTO'])
 				{									
-					$fila[0]=$detalle_quiebre[$cont_regs]['NOM_PRODUCTO'];//.' ['.$detalle_quiebre[$cont_regs]['COD_PRODUCTO'].']';					
+					$fila[0]=$detalle_quiebre[$cont_regs]['NOM_PRODUCTO'].' ['.$detalle_quiebre[$cont_regs]['COD_PRODUCTO'].']';					
 					$fila[1]=$detalle_quiebre[$cont_regs]['SEGMENTO'];	
 					switch($detalle_quiebre[$cont_regs]['quiebre'])
 					{

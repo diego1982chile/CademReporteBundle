@@ -364,7 +364,7 @@ class QuiebreDetalleController extends Controller
 		$session->set("total",$total);	
 
 		// Calcula el ancho máximo de la tabla	
-		$extension=count($head)*(12+log(count($head),10))-100;
+		$extension=count($head)*(13+log(count($head),10))-100;
 	
 		if($extension<0)
 			$extension=0;
