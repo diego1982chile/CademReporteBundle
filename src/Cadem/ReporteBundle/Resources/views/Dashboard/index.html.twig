@@ -705,18 +705,18 @@ $(document).ready(function () {
 					case 'QUIEBRE':
 					case 'PRESENCIA':
 						for(i in data.query_map){
-							if(!isNaN(parseFloat(query_map[i].lat)) && !isNaN(parseFloat(query_map[i].lon))){
-								var title = query_map[i].cadena + ',' + query_map[i].calle + '\n' + parseFloat(query_map[i].quiebre).toFixed(1);
-								var marker = L.marker([parseFloat(query_map[i].lat), parseFloat(query_map[i].lon)], { title: title });
+							if(!isNaN(parseFloat(data.query_map[i].lat)) && !isNaN(parseFloat(data.query_map[i].lon))){
+								var title = data.query_map[i].cadena + ',' + data.query_map[i].calle + '\n' + parseFloat(data.query_map[i].quiebre).toFixed(1);
+								var marker = L.marker([parseFloat(data.query_map[i].lat), parseFloat(data.query_map[i].lon)], { title: title });
 								markers.addLayer(marker);
 							}
 						}
 						break;
 					case 'PRECIO':
 						for(i in data.query_map){
-							if(!isNaN(parseFloat(query_map[i].lat)) && !isNaN(parseFloat(query_map[i].lon))){
-								var title = query_map[i].cadena + ',' + query_map[i].calle + '\n' + parseFloat(query_map[i].porc_incumplimiento).toFixed(1);
-								var marker = L.marker([parseFloat(query_map[i].lat), parseFloat(query_map[i].lon)], { title: title });
+							if(!isNaN(parseFloat(data.query_map[i].lat)) && !isNaN(parseFloat(data.query_map[i].lon))){
+								var title = data.query_map[i].cadena + ',' + data.query_map[i].calle + '\n' + parseFloat(data.query_map[i].porc_incumplimiento).toFixed(1);
+								var marker = L.marker([parseFloat(data.query_map[i].lat), parseFloat(data.query_map[i].lon)], { title: title });
 								markers.addLayer(marker);
 							}
 						}
