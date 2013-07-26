@@ -118,7 +118,7 @@ n.titulo~"
 {% block javascripts %}
 <script src="{{ asset('bundles/cademreporte/js/highcharts.regression.js') }}"></script>
 <script src="{{ asset('bundles/cademreporte/js/highcharts-more.js') }}"></script>
-<script src="http://cdn.leafletjs.com/leaflet-0.6.3/leaflet.js"></script>
+<script src="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.js"></script>
 <script src="{{ asset('bundles/cademreporte/js/leaflet.markercluster.js') }}"></script>
 <script src="{{ asset('bundles/cademreporte/js/Control.FullScreen.js') }}"></script>
 <script>
@@ -607,26 +607,33 @@ $(document).ready(function () {
 
 	var query_map = {{ query_map|raw }};
 
+	var bounds = new L.LatLngBounds([-57,-82], [-15,-63]);
+
 	//MAPA
-	var map = L.map('map',{attributionControl: false, fullscreenControl: true}).setView([-32.24, -70.82], 5);
+	var map = L.map('map',{
+		attributionControl: false
+		,fullscreenControl: true
+		,maxBounds: bounds
+	}).setView([-32.24, -70.82], 5);
+
 	L.tileLayer('http://{s}.tile.cloudmade.com/a0335be631064bc0b5aae85cb6b07490/997/256/{z}/{x}/{y}.png', {
 	    // attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://cloudmade.com">CloudMade</a>',
 	    maxZoom: 17
 	}).addTo(map);
 
-	map.on('mouseover', function(e){
-		$('#map').css('width', '500px').zIndex(10);
-		map.invalidateSize();
-	});
-	map.on('mouseout', function(e){
-		$('#map').css('width', 'auto').zIndex(0);
-		map.invalidateSize();
-	});
+	// map.on('mouseover', function(e){
+	// 	$('#map').css('width', '500px').zIndex(10);
+	// 	map.invalidateSize();
+	// });
+	// map.on('mouseout', function(e){
+	// 	$('#map').css('width', 'auto').zIndex(0);
+	// 	map.invalidateSize();
+	// });
 
 	var markers = new L.MarkerClusterGroup({
 		// zoomToBoundsOnClick: false,
 		singleMarkerMode: true,
-
+		maxClusterRadius: 40,
 		iconCreateFunction: function(cluster) {
 	        var childCount = cluster.getChildCount();
 	        var markers = cluster.getAllChildMarkers();
@@ -655,7 +662,7 @@ $(document).ready(function () {
 	    }
 	});
 	for (i in query_map) {
-		if(!isNaN(parseFloat(query_map[i].lat)) && !isNaN(parseFloat(query_map[i].lon))){
+		if(!isNaN(parseFloat(query_map[i].lat)) && !isNaN(parseFloat(query_map[i].lon)) && bounds.contains([parseFloat(query_map[i].lat), parseFloat(query_map[i].lon)])){
 			var title = query_map[i].cadena + ',' + query_map[i].calle + '\n' + parseFloat(query_map[i].quiebre).toFixed(1);
 			var marker = L.marker([parseFloat(query_map[i].lat), parseFloat(query_map[i].lon)], { title: title });
 			// title = title.replace('\n','<br>');
@@ -685,15 +692,6 @@ $(document).ready(function () {
     	salas = salas.slice(0, -1);
     	visibleOne._icon.title = salas + '\n' + variable;
 		// visibleOne.bindPopup('AAA').openPopup();
-	});
-
-	$('#test').on('click', function(e){
-		alert('test');
-		markers.clearLayers();
-		var marker = L.marker([-32.24, -70.82], { title: 'PRUEBA\n33' });
-		markers.addLayer(marker);
-		var marker = L.marker([-32.3, -70.82], { title: 'PRUEBA\n34' });
-		markers.addLayer(marker);
 	});
 
 	$('#form_variable_map').on('change',function(){
