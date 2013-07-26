@@ -210,7 +210,7 @@ class PrecioDetalleController extends Controller
 		
 		//CONSULTA
 				
-		$sql = "SELECT precio as precio, avg(p.POLITICAPRECIO as politica), ic.CODIGOITEM1 as COD_PRODUCTO,i.NOMBRE as NOM_PRODUCTO,ni.NOMBRE as SEGMENTO, ISNULL(sc.CODIGOSALA, UPPER(cad.NOMBRE+' '+com.NOMBRE+' '+s.CALLE+' '+s.NUMEROCALLE)) as ID_SALA, ISNULL(sc.CODIGOSALA,'-') as COD_SALA, UPPER(cad.NOMBRE+' '+com.NOMBRE+' '+s.CALLE+' '+s.NUMEROCALLE) as NOM_SALA FROM PRECIO pr
+		$sql = "SELECT precio as precio, p.POLITICAPRECIO as politica, ic.CODIGOITEM1 as COD_PRODUCTO,i.NOMBRE as NOM_PRODUCTO,ni.NOMBRE as SEGMENTO, ISNULL(sc.CODIGOSALA, UPPER(cad.NOMBRE+' '+com.NOMBRE+' '+s.CALLE+' '+s.NUMEROCALLE)) as ID_SALA, ISNULL(sc.CODIGOSALA,'-') as COD_SALA, UPPER(cad.NOMBRE+' '+com.NOMBRE+' '+s.CALLE+' '+s.NUMEROCALLE) as NOM_SALA FROM PRECIO pr
 		INNER JOIN PLANOGRAMAP p on p.ID = pr.PLANOGRAMAP_ID and p.MEDICION_ID = {$id_ultima_medicion} and pr.PRECIO is not null and p.POLITICAPRECIO is not null
 		INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
 		INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in ({$comunas})
@@ -231,8 +231,21 @@ class PrecioDetalleController extends Controller
 			$session->set($sha1,$detalle_precio);
 		}
 		else $detalle_precio = $session->get($sha1);
-							
-				
+		
+		// Obtener totales horizontales por producto
+			
+		$sql =	"SELECT i.NOMBRE, ni.NOMBRE, avg(p.POLITICAPRECIO) as politica FROM PRECIO pr
+				INNER JOIN PLANOGRAMAP p on p.ID = pr.PLANOGRAMAP_ID and p.MEDICION_ID = {$id_ultima_medicion} and pr.PRECIO is not null and p.POLITICAPRECIO is not null
+				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
+				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in ({$comunas})
+				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
+				INNER JOIN ITEM i on i.ID = ic.ITEM_ID
+				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID				
+				GROUP BY i.NOMBRE, ni.NOMBRE
+				ORDER BY ni.NOMBRE,i.NOMBRE";						
+									
+		$politicas_producto = $em->getConnection()->executeQuery($sql)->fetchAll();		
+											
 		// Variable para saber cuantos niveles de agregacion define el cliente, esto debe ser parametrizado en una etapa posterior
 		$niveles=2;										
 				
@@ -311,8 +324,8 @@ class PrecioDetalleController extends Controller
 		
 		// Guardamos resultado de consulta en variable de sesión para reusarlas en un action posterior
 		$session->set("salas",$salas);				
-		$session->set("detalle_precio",$detalle_precio);			
-		// $session->set("totales_producto",$totales_producto);		
+		$session->set("detalle_precio",$detalle_precio);					
+		$session->set("politicas_producto",$politicas_producto);		
 		// $session->set("totales_segmento",$totales_segmento);		
 		// $session->set("totales_horizontales_segmento",$totales_horizontales_segmento);	
 		// $session->set("totales_verticales_segmento",$totales_verticales_segmento);	
@@ -390,6 +403,7 @@ class PrecioDetalleController extends Controller
 		// $totales_verticales_segmento=$session->get("totales_verticales_segmento");	
 		// $total=$session->get("total");			
 		$detalle_precio=$session->get("detalle_precio");		
+		$politicas_producto=$session->get("politicas_producto");		
 		
 		// CONSTRUIR EL CUERPO DE LA TABLA						
 		$body=array();									
@@ -405,7 +419,7 @@ class PrecioDetalleController extends Controller
 			// Lleno la fila con vacios, le agrego 1 posiciones, correspondientes al total					
 			$fila=array_fill(0,$num_salas+3," ");								
 			$nivel2=$detalle_precio[$cont_regs]['SEGMENTO'];																								
-			$cont_totales_producto=0;				
+			$cont_politicas_producto=0;				
 		
 			while($cont_regs<$num_regs)
 			{	// Lleno la fila con vacios, le agrego 3 posiciones, correspondientes a los niveles de agregación y al total	
@@ -415,13 +429,14 @@ class PrecioDetalleController extends Controller
 				if($nivel1==$detalle_precio[$cont_regs]['COD_PRODUCTO'])
 				{									
 					$fila[2]=$detalle_precio[$cont_regs]['SEGMENTO'];	
-					$fila[0]=$detalle_precio[$cont_regs]['NOM_PRODUCTO'].' ['.$detalle_precio[$cont_regs]['COD_PRODUCTO'].']';										
-					$fila[1]=$detalle_precio[$cont_regs]['politica'];
+					$fila[0]=$detalle_precio[$cont_regs]['NOM_PRODUCTO'].' ['.$detalle_precio[$cont_regs]['COD_PRODUCTO'].']';															
 					$fila[$columna_precio+3]=$detalle_precio[$cont_regs]['precio'];//.' ['.$detalle_quiebre[$cont_regs]['COD_PRODUCTO'].']';																														
 					$cont_regs++;						
 				}	
 				else
 				{ // Si el primer nivel de agregacion cambió, lo actualizo, agrego la fila al body y reseteo el contador de cadenas												
+					$fila[1]=$politicas_producto[$cont_politicas_producto]['politica'];
+					$cont_politicas_producto++;
 					$fila[$num_salas+3]=0;					
 					// $cont_totales_producto++;																			
 					$nivel1=$detalle_precio[$cont_regs]['COD_PRODUCTO'];
@@ -432,6 +447,8 @@ class PrecioDetalleController extends Controller
 				{						
 					$columna_precio=array_search($detalle_precio[$cont_regs-1]['COD_SALA'],$salas);	
 					$fila[$columna_precio+3]=$detalle_precio[$cont_regs-1]['precio'];														
+					$fila[1]=$politicas_producto[$cont_politicas_producto]['politica'];
+					$cont_politicas_producto++;
 					$fila[$num_salas+3]=0;					
 					// $cont_totales_producto++;								
 					array_push($body,$fila);
@@ -447,7 +464,7 @@ class PrecioDetalleController extends Controller
 			$fila=array_fill(0,$num_salas+3,0);	
 			array_push($matriz_totales,$fila);
 			$cont_regs++;
-		}			
+		}							
 		/*
 		 * Output
 		 */
@@ -489,7 +506,7 @@ class PrecioDetalleController extends Controller
 		//23 SEG
 		$start = microtime(true);		
 
-		$sql = "SELECT precio as precio, avg(p.POLITICAPRECIO) as politica, ic.CODIGOITEM1 as COD_PRODUCTO,i.NOMBRE as NOM_PRODUCTO,ni.NOMBRE as SEGMENTO, ISNULL(sc.CODIGOSALA, UPPER(cad.NOMBRE+' '+com.NOMBRE+' '+s.CALLE+' '+s.NUMEROCALLE)) as ID_SALA, ISNULL(sc.CODIGOSALA,'-') as COD_SALA, UPPER(cad.NOMBRE+' '+com.NOMBRE+' '+s.CALLE+' '+s.NUMEROCALLE) as NOM_SALA FROM PRECIO pr
+		$sql = "SELECT precio as precio, p.POLITICAPRECIO as politica, ic.CODIGOITEM1 as COD_PRODUCTO,i.NOMBRE as NOM_PRODUCTO,ni.NOMBRE as SEGMENTO, ISNULL(sc.CODIGOSALA, UPPER(cad.NOMBRE+' '+com.NOMBRE+' '+s.CALLE+' '+s.NUMEROCALLE)) as ID_SALA, ISNULL(sc.CODIGOSALA,'-') as COD_SALA, UPPER(cad.NOMBRE+' '+com.NOMBRE+' '+s.CALLE+' '+s.NUMEROCALLE) as NOM_SALA FROM PRECIO pr
 		INNER JOIN PLANOGRAMAP p on p.ID = pr.PLANOGRAMAP_ID and p.MEDICION_ID = {$medicion} and pr.PRECIO is not null and p.POLITICAPRECIO is not null
 		INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
 		INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in ({$comunas}) and s.CADENA_ID in ({$cadenas})
@@ -500,9 +517,7 @@ class PrecioDetalleController extends Controller
 		INNER JOIN ITEM i on i.ID = ic.ITEM_ID	
 		INNER JOIN PARAMETRO pa on pa.CLIENTE_ID = {$user->getClienteID()} and pa.NOMBRE='rango_precio'
 		ORDER BY SEGMENTO,NOM_PRODUCTO,COD_PRODUCTO,NOM_SALA";						
-
-		
-		
+				
 		$sha1 = sha1($sql);		
 		
 		if(!$session->has($sha1)){
@@ -512,6 +527,20 @@ class PrecioDetalleController extends Controller
 		else $detalle_precio = $session->get($sha1);
 		$time_taken = microtime(true) - $start;
 		//return $time_taken*1000;			
+		
+		// Obtener totales horizontales por producto
+			
+		$sql =	"SELECT i.NOMBRE, ni.NOMBRE, avg(p.POLITICAPRECIO) as politica FROM PRECIO pr
+				INNER JOIN PLANOGRAMAP p on p.ID = pr.PLANOGRAMAP_ID and p.MEDICION_ID = {$medicion} and pr.PRECIO is not null and p.POLITICAPRECIO is not null
+				INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID and sc.CLIENTE_ID = {$user->getClienteID()}
+				INNER JOIN SALA s on s.ID = sc.SALA_ID and s.COMUNA_ID in ({$comunas}) and s.CADENA_ID in ({$cadenas})
+				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
+				INNER JOIN ITEM i on i.ID = ic.ITEM_ID
+				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID				
+				GROUP BY i.NOMBRE, ni.NOMBRE
+				ORDER BY ni.NOMBRE,i.NOMBRE";					
+						
+		$politicas_producto = $em->getConnection()->executeQuery($sql)->fetchAll();		
 				
 		// Variable para saber cuantos niveles de agregacion define el cliente, esto debe ser parametrizado en una etapa posterior
 		$niveles=2;												
@@ -592,7 +621,7 @@ class PrecioDetalleController extends Controller
 		// Guardamos resultado de consulta en variable de sesión para reusarlas en un action posterior
 		$session->set("salas",$salas);		
 		$session->set("detalle_precio",$detalle_precio);	
-		// $session->set("totales_producto",$totales_producto);		
+		$session->set("politicas_producto",$politicas_producto);		
 		// $session->set("totales_segmento",$totales_segmento);			
 		// $session->set("totales_horizontales_segmento",$totales_horizontales_segmento);	
 		// $session->set("totales_verticales_segmento",$totales_verticales_segmento);	

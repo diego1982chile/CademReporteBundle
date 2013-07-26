@@ -795,6 +795,7 @@ function fixedColumnDetP()
 						nGroup.appendChild( nCell );						 
 					}									
 					nGroup.setAttribute('data-tt-id',sGroup);	
+					nGroup.setAttribute('title',sGroup);	
 					nGroup.setAttribute('class','parent');	
                     ++row;
                     nTrs[i].parentNode.insertBefore( nGroup, nTrs[i] );
@@ -1671,7 +1672,7 @@ function listenerFiltro()
 									else							
 										clase1=matched;
 																							
-									$(this).addClass(clase);
+									$(this).addClass(clase1);
 									
 									$('table.tabla_detalle.DTFC_Cloned tbody').children(':eq('+$(this).index()+')').addClass(clase1);
 									hit=true;							
