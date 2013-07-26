@@ -668,8 +668,10 @@ $(document).ready(function () {
 			// title = title.replace('\n','<br>');
 			// marker.bindPopup(title);
 			markers.addLayer(marker);
+		}else{
+			if(isNaN(parseFloat(query_map[i].lat)) || isNaN(parseFloat(query_map[i].lon))) console.log('LA SALA '+query_map[i].cadena + ',' + query_map[i].calle + '. NO TIENE LATITUD,LONGITUD');
+			if(!isNaN(parseFloat(query_map[i].lat)) && !isNaN(parseFloat(query_map[i].lon)) && !bounds.contains([parseFloat(query_map[i].lat), parseFloat(query_map[i].lon)])) console.log('LA SALA '+query_map[i].cadena + ',' + query_map[i].calle + '. SE SALE DE LAS COORDENADAS DE CHILE');
 		}
-		
 	}
 
 	map.addLayer(markers);
@@ -703,19 +705,25 @@ $(document).ready(function () {
 					case 'QUIEBRE':
 					case 'PRESENCIA':
 						for(i in data.query_map){
-							if(!isNaN(parseFloat(data.query_map[i].lat)) && !isNaN(parseFloat(data.query_map[i].lon))){
+							if(!isNaN(parseFloat(data.query_map[i].lat)) && !isNaN(parseFloat(data.query_map[i].lon)) && bounds.contains([parseFloat(data.query_map[i].lat), parseFloat(data.query_map[i].lon)])){
 								var title = data.query_map[i].cadena + ',' + data.query_map[i].calle + '\n' + parseFloat(data.query_map[i].quiebre).toFixed(1);
 								var marker = L.marker([parseFloat(data.query_map[i].lat), parseFloat(data.query_map[i].lon)], { title: title });
 								markers.addLayer(marker);
+							}else{//INFO DE SALAS
+								if(isNaN(parseFloat(data.query_map[i].lat)) || isNaN(parseFloat(data.query_map[i].lon))) console.log('LA SALA '+data.query_map[i].cadena + ',' + data.query_map[i].calle + '. NO TIENE LATITUD,LONGITUD');
+								if(!isNaN(parseFloat(data.query_map[i].lat)) && !isNaN(parseFloat(data.query_map[i].lon)) && !bounds.contains([parseFloat(data.query_map[i].lat), parseFloat(data.query_map[i].lon)])) console.log('LA SALA '+data.query_map[i].cadena + ',' + data.query_map[i].calle + '. SE SALE DE LAS COORDENADAS DE CHILE');
 							}
 						}
 						break;
 					case 'PRECIO':
 						for(i in data.query_map){
-							if(!isNaN(parseFloat(data.query_map[i].lat)) && !isNaN(parseFloat(data.query_map[i].lon))){
+							if(!isNaN(parseFloat(data.query_map[i].lat)) && !isNaN(parseFloat(data.query_map[i].lon)) && bounds.contains([parseFloat(data.query_map[i].lat), parseFloat(data.query_map[i].lon)])){
 								var title = data.query_map[i].cadena + ',' + data.query_map[i].calle + '\n' + parseFloat(data.query_map[i].porc_incumplimiento).toFixed(1);
 								var marker = L.marker([parseFloat(data.query_map[i].lat), parseFloat(data.query_map[i].lon)], { title: title });
 								markers.addLayer(marker);
+							}else{//INFO DE SALAS
+								if(isNaN(parseFloat(data.query_map[i].lat)) || isNaN(parseFloat(data.query_map[i].lon))) console.log('LA SALA '+data.query_map[i].cadena + ',' + data.query_map[i].calle + '. NO TIENE LATITUD,LONGITUD');
+								if(!isNaN(parseFloat(data.query_map[i].lat)) && !isNaN(parseFloat(data.query_map[i].lon)) && !bounds.contains([parseFloat(data.query_map[i].lat), parseFloat(data.query_map[i].lon)])) console.log('LA SALA '+data.query_map[i].cadena + ',' + data.query_map[i].calle + '. SE SALE DE LAS COORDENADAS DE CHILE');
 							}
 						}
 						break;
