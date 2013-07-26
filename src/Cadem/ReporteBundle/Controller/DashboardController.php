@@ -241,16 +241,6 @@ class DashboardController extends Controller
 												)
 											);
 		}
-		
-		
-		
-		
-		
-
-		
-		
-		
-
 
 		$time_taken = microtime(true) - $start;
 		
@@ -271,6 +261,65 @@ class DashboardController extends Controller
 		$response->setMaxAge(1);
 
 
+		return $response;
+    }
+
+    public function mapAction(Request $request){
+    	$start = microtime(true);
+    	$data = $request->query->all();
+		$em = $this->getDoctrine()->getManager();
+		$user = $this->getUser();
+		$id_cliente = $user->getClienteID();
+
+		$variable = strtoupper($data['variable_map']);
+
+		// OBTENER PORCENTAJE QUIEBRE POR SALA Y SUS COORDENADAS RESPECTIVAS
+		$id_ultima_medicion = $this->get('cadem_reporte.helper.medicion')->getIdUltimaMedicionPorVariable($variable);
+
+		switch ($variable) {
+			case 'QUIEBRE':
+			case 'PRESENCIA':
+				$sql = "SELECT s.ID, s.LATITUD as lat, s.LONGITUD AS lon, c.NOMBRE as cadena, s.CALLE as calle, (SUM(case when q.hayquiebre = 1 then 1 else 0 END)*100.0)/COUNT(q.id) as quiebre FROM QUIEBRE q 
+						INNER JOIN PLANOGRAMAQ p on p.ID = q.PLANOGRAMAQ_ID 
+						INNER JOIN MEDICION m on m.ID = p.MEDICION_ID and m.ID = {$id_ultima_medicion}
+						INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID 
+						INNER JOIN SALA s on s.ID = sc.SALA_ID 
+						INNER JOIN CADENA c on c.ID = s.CADENA_ID
+						GROUP BY s.ID, s.LATITUD, s.LONGITUD, c.NOMBRE, s.CALLE";
+				break;
+			case 'PRECIO':
+				$sql = "SELECT s.ID, s.LATITUD as lat, s.LONGITUD AS lon, c.NOMBRE as cadena, s.CALLE as calle, (SUM(case when ABS(pr.PRECIO-p.POLITICAPRECIO)>pa.VALOR*p.POLITICAPRECIO/100 then 1 else 0 END)*100.0)/COUNT(pr.ID) as porc_incumplimiento FROM PRECIO pr 
+						INNER JOIN PLANOGRAMAP p on p.ID = pr.PLANOGRAMAP_ID AND pr.PRECIO IS NOT NULL AND p.POLITICAPRECIO IS NOT NULL
+						INNER JOIN MEDICION m on m.ID = p.MEDICION_ID and m.ID = {$id_ultima_medicion}
+						INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID 
+						INNER JOIN SALA s on s.ID = sc.SALA_ID 
+						INNER JOIN CADENA c on c.ID = s.CADENA_ID
+						INNER JOIN PARAMETRO pa on pa.CLIENTE_ID = {$id_cliente} and pa.NOMBRE='rango_precio'
+						GROUP BY s.ID, s.LATITUD, s.LONGITUD, c.NOMBRE, s.CALLE";
+				break;
+			
+			default:
+				return new JsonResponse(array('status' => false, 'mensaje' => 'NO SE ENCONTRO LA VARIABLE'));
+				break;
+		}
+
+		$query_map = $em->getConnection()->executeQuery($sql)->fetchAll();
+
+
+		$time_taken = microtime(true) - $start;
+		$response = array(
+			'status' => true,
+			'query_map' => $query_map,
+			'variable' => $variable,
+			'time_ms' => $time_taken*1000
+		);
+		
+		
+		$response = new JsonResponse($response);
+		
+		//CACHE
+		$response->setPrivate();
+		$response->setMaxAge(1);
 		return $response;
     }
 }

@@ -9,6 +9,15 @@
 		{% endfor %}
 		<input class="btn btn-primary" type="submit" value="Filtrar" />
 	</form> -->
+	<form style="margin:5px" id="form_variable_map">
+		<label class="radio inline">
+			Variable:
+			<select style="width:auto;margin:0" id="variable_map" name="variable_map" required="required">
+				<option value="quiebre" selected="selected">QUIEBRE</option>
+				<option value="precio">PRECIO</option>
+			</select>
+		</label>
+	</form>
 	<div id="map" style="height: 650px"></div>
 {% endblock %}
 
@@ -678,18 +687,51 @@ $(document).ready(function () {
 		// visibleOne.bindPopup('AAA').openPopup();
 	});
 
-	function getRandomLatLng(map) {
-		var bounds = map.getBounds(),
-			southWest = bounds.getSouthWest(),
-			northEast = bounds.getNorthEast(),
-			lngSpan = northEast.lng - southWest.lng,
-			latSpan = northEast.lat - southWest.lat;
+	$('#test').on('click', function(e){
+		alert('test');
+		markers.clearLayers();
+		var marker = L.marker([-32.24, -70.82], { title: 'PRUEBA\n33' });
+		markers.addLayer(marker);
+		var marker = L.marker([-32.3, -70.82], { title: 'PRUEBA\n34' });
+		markers.addLayer(marker);
+	});
 
-		return L.latLng(
-				southWest.lat + latSpan * Math.random(),
-				southWest.lng + lngSpan * Math.random());
-	}
-
+	$('#form_variable_map').on('change',function(){
+		$.get("{{ path('dashboard_map') }}", $(this).serialize(), function(data){
+			if(data.status == true){
+				markers.clearLayers();
+				
+				switch(data.variable){
+					case 'QUIEBRE':
+					case 'PRESENCIA':
+						for(i in data.query_map){
+							if(!isNaN(parseFloat(query_map[i].lat)) && !isNaN(parseFloat(query_map[i].lon))){
+								var title = query_map[i].cadena + ',' + query_map[i].calle + '\n' + parseFloat(query_map[i].quiebre).toFixed(1);
+								var marker = L.marker([parseFloat(query_map[i].lat), parseFloat(query_map[i].lon)], { title: title });
+								markers.addLayer(marker);
+							}
+						}
+						break;
+					case 'PRECIO':
+						for(i in data.query_map){
+							if(!isNaN(parseFloat(query_map[i].lat)) && !isNaN(parseFloat(query_map[i].lon))){
+								var title = query_map[i].cadena + ',' + query_map[i].calle + '\n' + parseFloat(query_map[i].porc_incumplimiento).toFixed(1);
+								var marker = L.marker([parseFloat(query_map[i].lat), parseFloat(query_map[i].lon)], { title: title });
+								markers.addLayer(marker);
+							}
+						}
+						break;
+					default:
+						alert('ERROR, VARIABLE NO SOPORTADA');
+				}
+			}
+			else{
+				if(data.mensaje != undefined) alert('ERROR: '+data.mensaje);
+				else alert('ERROR GRAVE.')
+			}
+		},"json")
+		.fail(function(){alert('ERROR GRAVE AL INTENTAR TRAER LOS DATOS DEL MAPA.')});
+	});
 
 
 
