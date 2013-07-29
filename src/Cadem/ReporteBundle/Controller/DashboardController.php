@@ -31,7 +31,7 @@ class DashboardController extends Controller
 		foreach($estudios as $e)
 		{
 			$choices_estudio[$e->getId()] = strtoupper($e->getNombre());
-		}
+		}				
 		
 		$defaultData = array();
 		$form_estudio = $this->createFormBuilder($defaultData)
@@ -136,7 +136,7 @@ class DashboardController extends Controller
 			'variables' => $variables,
 			'noticias' => $noticias,
 			'query_map' => json_encode($query_map),
-			'prefixe_tag_variable' => 'INCUMP.',
+			'prefixe_tag_variable' => 'Incump.',
 		));
 
 		//CACHE

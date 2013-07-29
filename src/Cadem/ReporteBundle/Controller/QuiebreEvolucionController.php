@@ -28,7 +28,16 @@ class QuiebreEvolucionController extends Controller
 			->setParameter('id', $user->getId());
 		$clientes = $query->getResult();
 		$cliente = $clientes[0];
-		$estudios = $cliente->getEstudios();
+		$estudios = $cliente->getEstudios();			
+				
+		$tag_variable_cliente=$this->get('cadem_reporte.helper.cliente')->getTagVariable($variable);										
+		
+		// Obtener id de la variable
+		$estudio_variable=$estudios[0]->getEstudiovariables();	
+		
+		$id_variable=$estudio_variable[0]->getVariable()->getId();				
+				
+		$session->set("variable",$id_variable);			
 		
 		$choices_estudio = array('0' => 'TODOS');
 		foreach($estudios as $e)
@@ -407,8 +416,9 @@ class QuiebreEvolucionController extends Controller
 			'body_action' => 'quiebre_evolucion_body',	
 			'aoColumnDefs' => json_encode($aoColumnDefs),
 			'columnas_reservadas' => 2,			
-			'tag_variable' => ucwords($variable),
+			'tag_variable' => ucwords($variable),			
 			'tag_cliente' => $cliente->getNombrefantasia(),
+			'tag_variable_cliente' => $tag_variable_cliente,
 			'mediciones_data' => json_encode($mediciones_data)
 			)
 		);

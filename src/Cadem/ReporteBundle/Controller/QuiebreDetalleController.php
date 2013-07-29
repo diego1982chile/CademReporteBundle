@@ -29,6 +29,15 @@ class QuiebreDetalleController extends Controller
 		$cliente = $clientes[0];
 		$estudios = $cliente->getEstudios();
 		
+		$tag_variable_cliente=$this->get('cadem_reporte.helper.cliente')->getTagVariable($variable);
+		
+		// Obtener id de la variable
+		$estudio_variable=$estudios[0]->getEstudiovariables();	
+		
+		$id_variable=$estudio_variable[0]->getVariable()->getId();				
+				
+		$session->set("variable",$id_variable);							
+		
 		$choices_estudio = array('0' => 'TODOS');
 		foreach($estudios as $e)
 		{
@@ -186,14 +195,7 @@ class QuiebreDetalleController extends Controller
 				'multiple'  => true,
 				'data' => array_keys($choices_comunas)
 			))
-			->getForm();
-		
-		// Obtener id de la variable
-		$estudio_variable=$estudios[0]->getEstudiovariables();	
-		
-		$id_variable=$estudio_variable[0]->getVariable()->getId();				
-				
-		$session->set("variable",$id_variable);					
+			->getForm();				
 		
 		//ULTIMA MEDICION
 		$id_ultima_medicion = $this->get('cadem_reporte.helper.medicion')->getIdUltimaMedicion();
@@ -393,7 +395,8 @@ class QuiebreDetalleController extends Controller
 			'aoColumnDefs' => json_encode($aoColumnDefs),
 			'columnas_reservadas' => 2,
 			'tag_variable' => $variable,
-			'tag_cliente' => $cliente->getNombrefantasia()
+			'tag_cliente' => $cliente->getNombrefantasia(),
+			'tag_variable_cliente' => $tag_variable_cliente
 			)
 		);
 		$time_taken = microtime(true) - $start;

@@ -29,6 +29,15 @@ class PresenciaDetalleController extends Controller
 		$cliente = $clientes[0];
 		$estudios = $cliente->getEstudios();
 		
+		$tag_variable_cliente=$this->get('cadem_reporte.helper.cliente')->getTagVariable($variable);
+		
+		// Obtener id de la variable
+		$estudio_variable=$estudios[0]->getEstudiovariables();	
+		
+		$id_variable=$estudio_variable[0]->getVariable()->getId();				
+				
+		$session->set("variable",$id_variable);							
+		
 		$choices_estudio = array('0' => 'TODOS');
 		foreach($estudios as $e)
 		{
@@ -364,14 +373,7 @@ class PresenciaDetalleController extends Controller
 		if($extension<0)
 			$extension=0;
 			
-		$max_width=100+$extension;	
-
-		// Obtener id de la variable
-		$estudio_variable=$estudios[0]->getEstudiovariables();	
-		
-		$id_variable=$estudio_variable[0]->getVariable()->getId();				
-				
-		$session->set("variable",$id_variable);			
+		$max_width=100+$extension;			
 				
 		//RESPONSE
 		$response = $this->render('CademReporteBundle:Detalle:index.html.twig',
@@ -395,7 +397,8 @@ class PresenciaDetalleController extends Controller
 			'aoColumnDefs' => json_encode($aoColumnDefs),
 			'columnas_reservadas' => 2,
 			'tag_variable' => $variable,
-			'tag_cliente' => $cliente->getNombrefantasia()			
+			'tag_cliente' => $cliente->getNombrefantasia(),
+			'tag_variable_cliente' => $tag_variable_cliente,
 			)
 		);
 		$time_taken = microtime(true) - $start;

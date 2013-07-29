@@ -26,7 +26,7 @@
 {% block body %}
     <div class="span9">
 		<div class="container-fluid well" style="padding-top:0">
-			<h4>Resumen {% if prefixe_tag_variable is defined %} {{prefixe_tag_variable}}{% endif %} {{tag_variable}} {{tag_cliente}} </h4>
+			<h4>Resumen {% if prefixe_tag_variable is defined %} {{prefixe_tag_variable}}{% endif %} {{tag_variable_cliente}} </h4>
 				<div class="hero-unit" style="padding:15px;margin-bottom:10px">
 					<div id='container_tabla_resumen' class="row-fluid">
 							<table id="tabla_resumen" class="table table-bordered display" cellpadding="0" cellspacing="0" border="0" width='100%'>                      
@@ -408,7 +408,7 @@ function construirTabla()
 		//	"sDom": '<"H"Cfr>t<"F"ip>',					
 		});
 		
-		$('div.fg-toolbar:first').append("<h5 style='float:left;margin:0em'>Tabla Resumen {% if prefixe_tag_variable is defined %} {{prefixe_tag_variable}}{% endif %} {{tag_variable}}: (%)</h5>");
+		$('div.fg-toolbar:first').append("<h5 style='float:left;margin:0em'>Tabla Resumen {% if prefixe_tag_variable is defined %} {{prefixe_tag_variable}}{% endif %} {{tag_variable_cliente}}: (%)</h5>");
 		$("<div class='dataTables_filter input-append' align='right' style='float:right;width:60%'><button id='detalle' class='btn btn_accion' type='button'><i class='icon-zoom-in' title='VER DETALLE'></i></button><button id='colorear_resumen' class='btn btn_accion' type='button'><i class='icon-eye-open' title='TERMOGRAMA'></i></button></div>").appendTo('#tabla_resumen_wrapper .fg-toolbar:first');				 				
 		$('#colorear_resumen').mousedown(function(){
 			if($(this).hasClass('btn-warning'))
@@ -502,7 +502,7 @@ function construirTablaDetalle()
 		//	"sDom": '<"H"Cfr>t<"F"ip>',					
 		});
 		
-		$('#tabla_detalle_wrapper div.fg-toolbar:first').append("<h5 style='float:left;margin:0em'>Tabla Detalle {{tag_variable}} (%)</h5>");
+		$('#tabla_detalle_wrapper div.fg-toolbar:first').append("<h5 style='float:left;margin:0em'>Tabla Detalle {{tag_variable_cliente}} (%)</h5>");
 		var filtros="<button id='filtro_sku' title='FILTRO ACTIVO POR SKU' class='btn btn_filtro btn-warning ' type='button'><i class='icon-filter'></i> SKU</button><button id='filtro_sala' class='btn btn_filtro' type='button' title='FILTRO ACTIVO POR SALA'><i class='icon-filter'></i> SALA</button>";
 		$("<div class='dataTables_filter input-append' align='right' style='float:right;width:60%'>"+filtros+"<input id='filtro' class='span2 input_filtro' /><button id='boton_buscar' class='btn btn_accion' type='button' title='BUSCAR'><i class='icon-search'></i></button><button id='colorear_detalle' class='btn btn_accion' type='button'><i class='icon-eye-open' title='TERMOGRAMA'></i></button></div>").appendTo('#tabla_detalle_wrapper .fg-toolbar:first');				 				
 		
@@ -968,7 +968,7 @@ $(document).ready(function () {
 			// height: 350
 		},
 		title: {
-			text: 'Gráfico Evolución {% if prefixe_tag_variable is defined %} {{prefixe_tag_variable}}{% endif %} {{tag_variable|lower}}'
+			text: 'Gráfico Evolución {% if prefixe_tag_variable is defined %} {{prefixe_tag_variable}}{% endif %} {{tag_variable_cliente}}'
 		},
 		tooltip: {
 			pointFormat: ' <span style="color:{series.color}">{series.name}</span>: <b>{point.y}%</b><br/>',
@@ -987,11 +987,11 @@ $(document).ready(function () {
 			// min: 0,
             //categories: [0,100],
 			title: {
-                    text: 'Promedio {{tag_variable}} (%)'
+                    text: 'Promedio {{tag_variable_cliente|split(' ')|first}} (%)'
             }
 		},		
 		series: [{
-                    name: '% {{tag_variable}}',
+                    name: '% Total {{tag_variable_cliente|split(' ')|first}}',
                     data: {{ evolutivo }}
                 }],
 		legend: {
@@ -1665,8 +1665,9 @@ function listenerFiltro()
 							$('td.'+matched).removeClass(matched);	
 							$('td.'+matched_active).removeClass(matched_active);	
 							$('#tabla_detalle tbody tr').each(function(){						
-								var haystack=$(this).attr('title').toString().toUpperCase();													
-								if (haystack.indexOf(needle)!=-1) {															
+								var haystack=$(this).attr('title').toString().toUpperCase();																
+								var delta=$('table.DTFC_Cloned tbody tr:first').height();								
+								if (haystack.indexOf(needle)!=-1) {
 									if(!hit)							
 										clase1=matched_active;														
 									else							
@@ -1732,7 +1733,8 @@ function listenerFiltro()
 							$('th.btn-success').removeClass('btn-success');	
 							$('.DataTables_sort_wrapper').slice(2,$('.DataTables_sort_wrapper').length-1).each(function(){							
 								var haystack=$(this).parent().attr('title').toString().toUpperCase();					
-								if (haystack.indexOf(needle)!=-1) {																																										
+								var haystack2=$('th[rowspan=1]:eq('+$(this).parent().index()+')').attr('title').toString().toUpperCase();								
+								if (haystack.indexOf(needle)!=-1 || haystack2.indexOf(needle)!=-1) {																																										
 									if(!hit)							
 										clase1='btn-success';														
 									else							
