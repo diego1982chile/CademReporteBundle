@@ -1577,16 +1577,31 @@ class AdminController extends Controller
                         foreach ($query as $v) $folioean_encontrados[] = $v['folioean'];
 
                         //PRECIO PROMEDIO
-                        $sql = "SELECT i.CODIGO as codigo, s.FOLIOCADEM as folio, SUM(pr.PRECIO) as suma, COUNT(pr.ID) as count FROM PLANOGRAMAP p
-                                INNER JOIN PRECIO pr on p.ID = pr.PLANOGRAMAP_ID AND pr.PRECIO IS NOT NULL AND p.MEDICION_ID IN ( ? )
-                                INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID AND ic.CLIENTE_ID = ?
-                                INNER JOIN ITEM i on i.ID = ic.ITEM_ID AND i.CODIGO IN ( ? )
-                                INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
-                                INNER JOIN SALA s on s.ID = sc.SALA_ID
-                                GROUP BY i.CODIGO, s.FOLIOCADEM";
-                        $param = array($id_mediciones, $id_cliente, $ean[$k]);
-                        $tipo_param = array(\Doctrine\DBAL\Connection::PARAM_INT_ARRAY, \PDO::PARAM_INT,\Doctrine\DBAL\Connection::PARAM_STR_ARRAY);
-                        $query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
+                        if(count($id_mediciones) === 0){
+                            $sql = "SELECT i.CODIGO as codigo, s.FOLIOCADEM as folio, SUM(pr.PRECIO) as suma, COUNT(pr.ID) as count FROM PLANOGRAMAP p
+                                    INNER JOIN PRECIO pr on p.ID = pr.PLANOGRAMAP_ID AND pr.PRECIO IS NOT NULL
+                                    INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID AND ic.CLIENTE_ID = ?
+                                    INNER JOIN ITEM i on i.ID = ic.ITEM_ID AND i.CODIGO IN ( ? )
+                                    INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
+                                    INNER JOIN SALA s on s.ID = sc.SALA_ID
+                                    GROUP BY i.CODIGO, s.FOLIOCADEM";
+                            $param = array($id_cliente, $ean[$k]);
+                            $tipo_param = array(\Doctrine\DBAL\Connection::PARAM_INT_ARRAY, \PDO::PARAM_INT,\Doctrine\DBAL\Connection::PARAM_STR_ARRAY);
+                            $query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
+                        }
+                        else{
+                            $sql = "SELECT i.CODIGO as codigo, s.FOLIOCADEM as folio, SUM(pr.PRECIO) as suma, COUNT(pr.ID) as count FROM PLANOGRAMAP p
+                                    INNER JOIN PRECIO pr on p.ID = pr.PLANOGRAMAP_ID AND pr.PRECIO IS NOT NULL AND p.MEDICION_ID IN ( ? )
+                                    INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID AND ic.CLIENTE_ID = ?
+                                    INNER JOIN ITEM i on i.ID = ic.ITEM_ID AND i.CODIGO IN ( ? )
+                                    INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
+                                    INNER JOIN SALA s on s.ID = sc.SALA_ID
+                                    GROUP BY i.CODIGO, s.FOLIOCADEM";
+                            $param = array($id_mediciones, $id_cliente, $ean[$k]);
+                            $tipo_param = array(\Doctrine\DBAL\Connection::PARAM_INT_ARRAY, \PDO::PARAM_INT,\Doctrine\DBAL\Connection::PARAM_STR_ARRAY);
+                            $query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
+                        }
+
                         foreach ($query as $v){
                             $cad = substr($v['folio'], $cadstart, $cadlenght);
                             if(isset($precio_csv[$v['codigo'].$keycon.$cad]) && $v['suma'] == (string) intval($v['suma'])){
