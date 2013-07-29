@@ -61,10 +61,10 @@ class Medicion
     private $estudiovariable;
 	
 	/**
-     * @ORM\OneToMany(targetEntity="Planograma", mappedBy="medicion")
+     * @ORM\OneToMany(targetEntity="Planogramap", mappedBy="medicion")
      */
 	 
-	protected $planogramas;
+	protected $planogramaps;
 
 	
 	public function __construct()
@@ -198,26 +198,26 @@ class Medicion
     }
 
     /**
-     * Add planograma
+     * Add planogramap
      *
-     * @param \Cadem\ReporteBundle\Entity\Planograma $planograma
+     * @param \Cadem\ReporteBundle\Entity\Planogramap $planogramap
      * @return Medicion
      */
-    public function addPlanograma(\Cadem\ReporteBundle\Entity\Planograma $planograma)
+    public function addPlanograma(\Cadem\ReporteBundle\Entity\Planogramap $planogramap)
     {
-        $this->planogramas[] = $planograma;
+        $this->planogramaps[] = $planogramap;
     
         return $this;
     }
 
     /**
-     * Remove planograma
+     * Remove planogramap
      *
-     * @param \Cadem\ReporteBundle\Entity\Planograma $planograma
+     * @param \Cadem\ReporteBundle\Entity\Planogramap $planogramap
      */
-    public function removePlanograma(\Cadem\ReporteBundle\Entity\Planograma $planograma)
+    public function removePlanogramap(\Cadem\ReporteBundle\Entity\Planogramap $planogramap)
     {
-        $this->planogramas->removeElement($planograma);
+        $this->planogramaps->removeElement($planogramap);
     }
 
     /**
@@ -225,8 +225,8 @@ class Medicion
      *
      * @return \Doctrine\Common\Collections\Collection 
      */
-    public function getPlanogramas()
+    public function getPlanogramaps()
     {
-        return $this->planogramas;
+        return $this->planogramaps;
     }
 }

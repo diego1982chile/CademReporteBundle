@@ -134,15 +134,22 @@ class Itemcliente
     private $tipocodigo;
 
 	/**
-     * @ORM\OneToMany(targetEntity="Planograma", mappedBy="itemcliente")
+     * @ORM\OneToMany(targetEntity="Planogramaq", mappedBy="itemcliente")
      */
 	 
-	protected $planogramas;
+	protected $planogramaqs;
+
+    /**
+     * @ORM\OneToMany(targetEntity="Planogramap", mappedBy="itemcliente")
+     */
+     
+    protected $planogramaps;
 
 	
 	public function __construct()
     {
-        $this->planogramas = new ArrayCollection();
+        $this->planogramaqs = new ArrayCollection();
+        $this->planogramaps = new ArrayCollection();
     }
 
     /**
@@ -432,35 +439,68 @@ class Itemcliente
     }
 	
 	/**
-     * Add planograma
+     * Add planogramaq
      *
-     * @param \Cadem\ReporteBundle\Entity\Planograma $planograma
+     * @param \Cadem\ReporteBundle\Entity\Planogramaq $planogramaq
      * @return Itemcliente
      */
-    public function addPlanograma(\Cadem\ReporteBundle\Entity\Planograma $planograma)
+    public function addPlanogramaq(\Cadem\ReporteBundle\Entity\Planogramaq $planogramaq)
     {
-        $this->planogramas[] = $planograma;
+        $this->planogramaqs[] = $planogramaq;
     
         return $this;
     }
 
     /**
-     * Remove planograma
+     * Remove planogramaq
      *
-     * @param \Cadem\ReporteBundle\Entity\Planograma $planograma
+     * @param \Cadem\ReporteBundle\Entity\Planogramaq $planogramaq
      */
-    public function removePlanograma(\Cadem\ReporteBundle\Entity\Planograma $planograma)
+    public function removePlanograma(\Cadem\ReporteBundle\Entity\Planogramaq $planogramaq)
     {
-        $this->planogramas->removeElement($planograma);
+        $this->planogramaqs->removeElement($planogramaq);
     }
 
     /**
-     * Get planogramas
+     * Get planogramaqs
      *
      * @return \Doctrine\Common\Collections\Collection 
      */
-    public function getPlanogramas()
+    public function getPlanogramaqs()
     {
-        return $this->planogramas;
+        return $this->planogramaqs;
+    }
+
+    /**
+     * Add planogramap
+     *
+     * @param \Cadem\ReporteBundle\Entity\Planogramap $planogramap
+     * @return Itemcliente
+     */
+    public function addPlanogramap(\Cadem\ReporteBundle\Entity\Planogramap $planogramap)
+    {
+        $this->planogramaps[] = $planogramap;
+    
+        return $this;
+    }
+
+    /**
+     * Remove planogramap
+     *
+     * @param \Cadem\ReporteBundle\Entity\Planogramap $planogramap
+     */
+    public function removePlanogramap(\Cadem\ReporteBundle\Entity\Planogramap $planogramap)
+    {
+        $this->planogramaps->removeElement($planogramap);
+    }
+
+    /**
+     * Get planogramaps
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getPlanogramaps()
+    {
+        return $this->planogramaps;
     }
 }

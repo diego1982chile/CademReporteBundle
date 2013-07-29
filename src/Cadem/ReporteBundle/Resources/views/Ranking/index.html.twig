@@ -55,19 +55,19 @@
                               <td>{{rank}}</td>
                               <td>
 	                              {% if row.codigosala == '' %}
-	                                  NO
+	                                  --
 	                              {% else %}
 	                                  {{row.codigosala}}
 	                              {% endif %}
                           	  </td>
                               <td>{{row.cadena|slice(0,6)}}</td>
                               <td title="{{row.calle}} {{row.numerocalle}}">{{row.calle|slice(0,35)}} {{row.numerocalle}}</td>
-                              <td>{% if row.quiebre_anterior is not null %} {{row.quiebre_anterior|number_format(1)}} {% else %} NO {% endif %}</td>
-                              <td>{% if row.quiebre is not null %} {{row.quiebre|number_format(1)}} {% else %} NO {% endif %}</td>
+                              <td>{% if row.quiebre_anterior is not null %} {{row.quiebre_anterior|number_format(1)}} {% else %} -- {% endif %}</td>
+                              <td>{% if row.quiebre is not null %} {{row.quiebre|number_format(1)}} {% else %} -- {% endif %}</td>
                               <td>{% if row.diferencia is not null %}
 							  {{row.diferencia|number_format(1)}}
 							  {% else %}
-							  NO
+							  --
 							  {% endif %}
 							  
 							  </td>
@@ -122,12 +122,12 @@
                               <td>{{rank}}</td>
                               <td>{{row.codigoitem1}}</td>
                               <td title="{{row.nombre}}">{{row.nombre|slice(0,36)}}</td>
-                              <td>{% if row.quiebre_anterior is not null %} {{row.quiebre_anterior|number_format(1)}} {% else %} NO {% endif %}</td>
-                              <td>{% if row.quiebre is not null %} {{row.quiebre|number_format(1)}} {% else %} NO {% endif %}</td>
+                              <td>{% if row.quiebre_anterior is not null %} {{row.quiebre_anterior|number_format(1)}} {% else %} -- {% endif %}</td>
+                              <td>{% if row.quiebre is not null %} {{row.quiebre|number_format(1)}} {% else %} -- {% endif %}</td>
                               <td>{% if row.diferencia is not null %}
 							  {{row.diferencia|number_format(1)}}
 							  {% else %}
-							  NO
+							  --
 							  {% endif %}
 							  
 							  </td>
@@ -181,12 +181,12 @@
                               <td>{{rank}}</td>
                               <td>{{row.nombre}}</td>
                               <td>{{row.cargo}}</td>
-                              <td>{% if row.quiebre_anterior is not null %} {{row.quiebre_anterior|number_format(1)}} {% else %} NO {% endif %}</td>
-                              <td>{% if row.quiebre is not null %} {{row.quiebre|number_format(1)}} {% else %} NO {% endif %}</td>
+                              <td>{% if row.quiebre_anterior is not null %} {{row.quiebre_anterior|number_format(1)}} {% else %} -- {% endif %}</td>
+                              <td>{% if row.quiebre is not null %} {{row.quiebre|number_format(1)}} {% else %} -- {% endif %}</td>
                               <td>{% if row.diferencia is not null %}
 							  {{row.diferencia|number_format(1)}}
 							  {% else %}
-							  NO
+							  --
 							  {% endif %}
 							  
 							  </td>
@@ -390,12 +390,12 @@ $(document).ready(function () {
 				{
 					oTables[0].fnAddData([
 						cont,
-						(row[i].codigosala == null)?"NO":row[i].codigosala,
+						(row[i].codigosala == null)?"--":row[i].codigosala,
 						row[i].cadena.substring(0, 6),
 						row[i].calle.substring(0, 35)+" "+row[i].numerocalle,
-						(row[i].quiebre_anterior != null)?parseFloat(row[i].quiebre_anterior).toFixed(1):"NO",
-						(row[i].quiebre != null)?parseFloat(row[i].quiebre).toFixed(1):"NO",
-						(row[i].diferencia != null)?parseFloat(row[i].diferencia).toFixed(1):"NO",
+						(row[i].quiebre_anterior != null)?parseFloat(row[i].quiebre_anterior).toFixed(1):"--",
+						(row[i].quiebre != null)?parseFloat(row[i].quiebre).toFixed(1):"--",
+						(row[i].diferencia != null)?parseFloat(row[i].diferencia).toFixed(1):"--",
 						(row[i].diferencia != null)?(
 						(parseFloat(row[i].diferencia) > 0)?fechaup:(parseFloat(row[i].diferencia) < 0)?fechadown:""
 						):""
@@ -413,9 +413,9 @@ $(document).ready(function () {
 						cont,
 						row[i].codigoitem1,
 						row[i].nombre.substring(0, 36),
-						(row[i].quiebre_anterior != null)?parseFloat(row[i].quiebre_anterior).toFixed(1):"NO",
-						(row[i].quiebre != null)?parseFloat(row[i].quiebre).toFixed(1):"NO",
-						(row[i].diferencia != null)?parseFloat(row[i].diferencia).toFixed(1):"NO",
+						(row[i].quiebre_anterior != null)?parseFloat(row[i].quiebre_anterior).toFixed(1):"--",
+						(row[i].quiebre != null)?parseFloat(row[i].quiebre).toFixed(1):"--",
+						(row[i].diferencia != null)?parseFloat(row[i].diferencia).toFixed(1):"--",
 						(row[i].diferencia != null)?(
 						(parseFloat(row[i].diferencia) > 0)?fechaup:(parseFloat(row[i].diferencia) < 0)?fechadown:""
 						):""
@@ -433,9 +433,9 @@ $(document).ready(function () {
 						cont,
 						row[i].nombre,
 						row[i].cargo,
-						(row[i].quiebre_anterior != null)?parseFloat(row[i].quiebre_anterior).toFixed(1):"NO",
-						(row[i].quiebre != null)?parseFloat(row[i].quiebre).toFixed(1):"NO",
-						(row[i].diferencia != null)?parseFloat(row[i].diferencia).toFixed(1):"NO",
+						(row[i].quiebre_anterior != null)?parseFloat(row[i].quiebre_anterior).toFixed(1):"--",
+						(row[i].quiebre != null)?parseFloat(row[i].quiebre).toFixed(1):"--",
+						(row[i].diferencia != null)?parseFloat(row[i].diferencia).toFixed(1):"--",
 						(row[i].diferencia != null)?(
 						(parseFloat(row[i].diferencia) > 0)?fechaup:(parseFloat(row[i].diferencia) < 0)?fechadown:""
 						):""

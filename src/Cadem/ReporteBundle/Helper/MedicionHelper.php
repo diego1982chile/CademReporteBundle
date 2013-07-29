@@ -12,6 +12,7 @@ class MedicionHelper {
 	// protected $user;
 	private $container;
 	private $id_ultima_medicion = null;
+	private $id_ultimas_mediciones = null;
 	private $id_medicion_anterior = null;
 	private $nombre_medicion;
 
@@ -76,12 +77,12 @@ class MedicionHelper {
 		return $this->id_ultima_medicion;
     }
 	
-	private function getIdUltimaMedicionPorVariable_($variable) {
+	public function getIdUltimaMedicionPorVariable($variable) {
 		$em = $this->container->get('doctrine.orm.entity_manager');
 		$security = $this->container->get('security.context');
 		if($security->getToken() != null) $user = $security->getToken()->getUser();
 		$id_user = $user->getId();
-		$id_cliente = $user->getClienteID();		
+		$id_cliente = $user->getClienteID();
 		
 		//ULTIMA MEDICION
 		$query = $em->createQuery(
@@ -95,13 +96,49 @@ class MedicionHelper {
 			->setParameter('variable', strtolower($variable));
 		$medicion_q = $query->getArrayResult();
 		if(count($medicion_q) > 0){
-			$id_ultima_medicion = $medicion_q[0]['id'];
+			$id_ultima_medicion = intval($medicion_q[0]['id']);
 		}
 		else $id_ultima_medicion = -1;
 
 		$this->id_ultima_medicion = $id_ultima_medicion;
 		return $this->id_ultima_medicion;
-    }	
+    }
+
+    public function getIdUltimasMedicionesPorVariable($variable, $cantidad, $id_cliente = null) {
+		$em = $this->container->get('doctrine.orm.entity_manager');
+		$security = $this->container->get('security.context');
+		if($security->getToken() != null) $user = $security->getToken()->getUser();
+		if($id_cliente === null){
+			$id_cliente = $user->getClienteID();
+		}
+		
+		
+		//ULTIMA MEDICION
+		$query = $em->createQuery(
+			"SELECT m.id FROM CademReporteBundle:Medicion m
+			JOIN m.estudiovariable ev
+			JOIN ev.estudio e
+			JOIN ev.variable v
+			JOIN m.planogramaps p
+			JOIN p.precios pr
+			WHERE e.clienteid = :idcliente AND v.nombre = :variable
+			GROUP BY m.id, m.fechainicio
+			ORDER BY m.fechainicio DESC")
+			->setParameter('idcliente', $id_cliente)
+			->setParameter('variable', strtolower($variable))
+			->setMaxResults($cantidad);
+
+		$medicion_q = $query->getArrayResult();
+		if(count($medicion_q) > 0){
+			foreach ($medicion_q as $key => $value) {
+				$id_ultimas_mediciones[] = intval($value['id']);
+			}
+		}
+		else $id_ultimas_mediciones = array();
+
+		$this->id_ultimas_mediciones = $id_ultimas_mediciones;
+		return $this->id_ultimas_mediciones;
+    }
 
     private function getIdMedicionAnterior_($id_medicion_actual) {
 		$em = $this->container->get('doctrine.orm.entity_manager');
@@ -148,12 +185,6 @@ class MedicionHelper {
 	public function getIdUltimaMedicion(){
 		if($this->id_ultima_medicion !== null) return $this->id_ultima_medicion;
 		else  return $this->getIdUltimaMedicion_();
-	}
-	
-	public function getIdUltimaMedicionPorVariable($variable){
-		// if($this->id_ultima_medicion !== null) return $this->id_ultima_medicion;
-		// else 
-		return $this->getIdUltimaMedicionPorVariable_($variable);
 	}
 
 	public function getIdMedicionAnterior($id_medicion_actual){
