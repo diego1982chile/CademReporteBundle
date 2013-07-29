@@ -165,7 +165,7 @@ class AdminController extends Controller
                 INNER JOIN ESTUDIOVARIABLE ev on ev.ESTUDIO_ID = e.ID
                 INNER JOIN MEDICION m on m.ESTUDIOVARIABLE_ID = ev.ID
                 INNER JOIN VARIABLE v on v.ID = ev.VARIABLE_ID
-                ORDER BY c.NOMBREFANTASIA, v.NOMBRE, m.NOMBRE";
+                ORDER BY c.NOMBREFANTASIA, v.NOMBRE, m.FECHAINICIO, m.NOMBRE";
         $query = $em->getConnection()->executeQuery($sql)->fetchAll();
         $choices_medicion = array();
         foreach($query as $k => $r)
@@ -219,7 +219,7 @@ class AdminController extends Controller
                 INNER JOIN ESTUDIOVARIABLE ev on ev.ESTUDIO_ID = e.ID
                 INNER JOIN MEDICION m on m.ESTUDIOVARIABLE_ID = ev.ID
                 INNER JOIN VARIABLE v on v.ID = ev.VARIABLE_ID
-                ORDER BY c.NOMBREFANTASIA, v.NOMBRE, m.NOMBRE";
+                ORDER BY c.NOMBREFANTASIA, v.NOMBRE, m.FECHAINICIO, m.NOMBRE";
         $query = $em->getConnection()->executeQuery($sql)->fetchAll();
         $choices_medicion = array();
         foreach($query as $k => $r)
@@ -272,7 +272,7 @@ class AdminController extends Controller
                 INNER JOIN ESTUDIO e on e.CLIENTE_ID = c.ID
                 INNER JOIN ESTUDIOVARIABLE ev on ev.ESTUDIO_ID = e.ID AND ev.VARIABLE_ID IN (1,5)
                 INNER JOIN MEDICION m on m.ESTUDIOVARIABLE_ID = ev.ID
-                ORDER BY c.NOMBREFANTASIA, m.NOMBRE";
+                ORDER BY c.NOMBREFANTASIA, m.FECHAINICIO, m.NOMBRE";
         $query = $em->getConnection()->executeQuery($sql)->fetchAll();
         $choices_medicion = array();
         foreach($query as $k => $r)
@@ -328,7 +328,7 @@ class AdminController extends Controller
                 INNER JOIN ESTUDIO e on e.CLIENTE_ID = c.ID
                 INNER JOIN ESTUDIOVARIABLE ev on ev.ESTUDIO_ID = e.ID AND ev.VARIABLE_ID = 2
                 INNER JOIN MEDICION m on m.ESTUDIOVARIABLE_ID = ev.ID
-                ORDER BY c.NOMBREFANTASIA, m.NOMBRE";
+                ORDER BY c.NOMBREFANTASIA, m.FECHAINICIO, m.NOMBRE";
         $query = $em->getConnection()->executeQuery($sql)->fetchAll();
         $choices_medicion = array();
         foreach($query as $k => $r)
@@ -1533,6 +1533,16 @@ class AdminController extends Controller
                     $keycon = ':';
                     $cadstart = 2;
                     $cadlenght = 3;
+                    //CANTIDAD DE MEDICIONES PARA CALCULO POLITICA
+                    $num_med_politica = 3;
+                    $id_mediciones = $this->get('cadem_reporte.helper.medicion')->getIdUltimasMedicionesPorVariable('PRECIO', $num_med_politica, $id_cliente);
+                    if(count($id_mediciones) > $num_med_politica){
+                        return new JsonResponse(array(
+                            'status' => false,
+                            'mensaje' => 'ERROR EN LAS MEDICIONES TOMADAS '.print_r($id_mediciones,true)
+                        ));
+                    }
+
 
                     //SE VALIDA QUE EL FOLIO-EAN NO ESTE EN LA BD
                     $chunk = 0;
@@ -1568,14 +1578,14 @@ class AdminController extends Controller
 
                         //PRECIO PROMEDIO
                         $sql = "SELECT i.CODIGO as codigo, s.FOLIOCADEM as folio, SUM(pr.PRECIO) as suma, COUNT(pr.ID) as count FROM PLANOGRAMAP p
-                                INNER JOIN PRECIO pr on p.ID = pr.PLANOGRAMAP_ID AND pr.PRECIO IS NOT NULL
+                                INNER JOIN PRECIO pr on p.ID = pr.PLANOGRAMAP_ID AND pr.PRECIO IS NOT NULL AND p.MEDICION_ID IN ( ? )
                                 INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID AND ic.CLIENTE_ID = ?
                                 INNER JOIN ITEM i on i.ID = ic.ITEM_ID AND i.CODIGO IN ( ? )
                                 INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
                                 INNER JOIN SALA s on s.ID = sc.SALA_ID
                                 GROUP BY i.CODIGO, s.FOLIOCADEM";
-                        $param = array($id_cliente, $ean[$k]);
-                        $tipo_param = array(\PDO::PARAM_INT,\Doctrine\DBAL\Connection::PARAM_STR_ARRAY);
+                        $param = array($id_mediciones, $id_cliente, $ean[$k]);
+                        $tipo_param = array(\Doctrine\DBAL\Connection::PARAM_INT_ARRAY, \PDO::PARAM_INT,\Doctrine\DBAL\Connection::PARAM_STR_ARRAY);
                         $query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
                         foreach ($query as $v){
                             $cad = substr($v['folio'], $cadstart, $cadlenght);
