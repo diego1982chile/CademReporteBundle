@@ -1586,7 +1586,7 @@ class AdminController extends Controller
                                     INNER JOIN SALA s on s.ID = sc.SALA_ID
                                     GROUP BY i.CODIGO, s.FOLIOCADEM";
                             $param = array($id_cliente, $ean[$k]);
-                            $tipo_param = array(\Doctrine\DBAL\Connection::PARAM_INT_ARRAY, \PDO::PARAM_INT,\Doctrine\DBAL\Connection::PARAM_STR_ARRAY);
+                            $tipo_param = array(\PDO::PARAM_INT,\Doctrine\DBAL\Connection::PARAM_STR_ARRAY);
                             $query = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
                         }
                         else{
