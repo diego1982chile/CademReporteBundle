@@ -5,12 +5,12 @@ namespace Cadem\ReporteBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * Quiebre
+ * Precio
  *
- * @ORM\Table(name="QUIEBRE")
+ * @ORM\Table(name="Precio")
  * @ORM\Entity
  */
-class Quiebre
+class Precio
 {
     /**
      * @var integer
@@ -22,18 +22,11 @@ class Quiebre
     private $id;
 
     /**
-     * @var boolean
-     *
-     * @ORM\Column(name="HAYQUIEBRE", type="boolean", nullable=false)
-     */
-    private $hayquiebre;
-
-    /**
      * @var integer
      *
-     * @ORM\Column(name="CANTIDAD", type="integer", nullable=true)
+     * @ORM\Column(name="PRECIO", type="integer", nullable=true)
      */
-    private $cantidad;
+    private $precio;
 
     /**
      * @var \DateTime
@@ -52,12 +45,12 @@ class Quiebre
     /**
      * @var \Planograma
      *
-     * @ORM\ManyToOne(targetEntity="Planogramaq", inversedBy="quiebres")
+     * @ORM\ManyToOne(targetEntity="Planogramap", inversedBy="precios")
      * @ORM\JoinColumns({
-     *   @ORM\JoinColumn(name="PLANOGRAMAQ_ID", referencedColumnName="ID")
+     *   @ORM\JoinColumn(name="PLANOGRAMAP_ID", referencedColumnName="ID")
      * })
      */
-    private $planogramaq;
+    private $planogramap;
 	
 
 
@@ -72,56 +65,33 @@ class Quiebre
     }
 
     /**
-     * Set hayquiebre
+     * Set precio
      *
-     * @param boolean $hayquiebre
-     * @return Quiebre
+     * @param integer $precio
+     * @return Precio
      */
-    public function setHayquiebre($hayquiebre)
+    public function setPrecio($precio)
     {
-        $this->hayquiebre = $hayquiebre;
+        $this->precio = $precio;
     
         return $this;
     }
 
     /**
-     * Get hayquiebre
-     *
-     * @return boolean 
-     */
-    public function getHayquiebre()
-    {
-        return $this->hayquiebre;
-    }
-
-    /**
-     * Set cantidad
-     *
-     * @param integer $cantidad
-     * @return Quiebre
-     */
-    public function setCantidad($cantidad)
-    {
-        $this->cantidad = $cantidad;
-    
-        return $this;
-    }
-
-    /**
-     * Get cantidad
+     * Get precio
      *
      * @return integer 
      */
-    public function getCantidad()
+    public function getPrecio()
     {
-        return $this->cantidad;
+        return $this->precio;
     }
 
     /**
      * Set fechahoracaptura
      *
      * @param \DateTime $fechahoracaptura
-     * @return Quiebre
+     * @return Precio
      */
     public function setFechahoracaptura($fechahoracaptura)
     {
@@ -144,7 +114,7 @@ class Quiebre
      * Set activo
      *
      * @param boolean $activo
-     * @return Quiebre
+     * @return Precio
      */
     public function setActivo($activo)
     {
@@ -164,25 +134,25 @@ class Quiebre
     }
 
     /**
-     * Set planogramaq
+     * Set planogramap
      *
-     * @param \Cadem\ReporteBundle\Entity\Planogramaq $planogramaq
-     * @return Quiebre
+     * @param \Cadem\ReporteBundle\Entity\Planogramap $planogramap
+     * @return Precio
      */
-    public function setPlanogramaq(\Cadem\ReporteBundle\Entity\Planogramaq $planogramaq = null)
+    public function setPlanograma(\Cadem\ReporteBundle\Entity\Planogramap $planogramap = null)
     {
-        $this->planogramaq = $planogramaq;
+        $this->planogramap = $planogramap;
     
         return $this;
     }
 
     /**
-     * Get planogramaq
+     * Get planogramap
      *
-     * @return \Cadem\ReporteBundle\Entity\Planogramaq 
+     * @return \Cadem\ReporteBundle\Entity\Planograma p
      */
-    public function getPlanogramaq()
+    public function getPlanogramap()
     {
-        return $this->planogramaq;
+        return $this->planogramap;
     }
 }

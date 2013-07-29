@@ -6,12 +6,12 @@ use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 
 /**
- * Planograma
+ * Planogramaq
  *
- * @ORM\Table(name="PLANOGRAMA")
+ * @ORM\Table(name="PLANOGRAMAQ")
  * @ORM\Entity
  */
-class Planograma
+class Planogramaq
 {
     /**
      * @var integer
@@ -53,7 +53,7 @@ class Planograma
     /**
      * @var \Medicion
      *
-     * @ORM\ManyToOne(targetEntity="Medicion", inversedBy="planogramas")
+     * @ORM\ManyToOne(targetEntity="Medicion", inversedBy="planogramaqs")
      * @ORM\JoinColumns({
      *   @ORM\JoinColumn(name="MEDICION_ID", referencedColumnName="ID")
      * })
@@ -63,7 +63,7 @@ class Planograma
     /**
      * @var \Salacliente
      *
-     * @ORM\ManyToOne(targetEntity="Salacliente", inversedBy="planogramas")
+     * @ORM\ManyToOne(targetEntity="Salacliente", inversedBy="planogramaqs")
      * @ORM\JoinColumns({
      *   @ORM\JoinColumn(name="SALACLIENTE_ID", referencedColumnName="ID")
      * })
@@ -73,7 +73,7 @@ class Planograma
 	/**
      * @var \Itemcliente
      *
-     * @ORM\ManyToOne(targetEntity="Itemcliente", inversedBy="planogramas")
+     * @ORM\ManyToOne(targetEntity="Itemcliente", inversedBy="planogramaqs")
      * @ORM\JoinColumns({
      *   @ORM\JoinColumn(name="ITEMCLIENTE_ID", referencedColumnName="ID")
      * })
@@ -82,7 +82,7 @@ class Planograma
 
 
 	/**
-     * @ORM\OneToMany(targetEntity="Quiebre", mappedBy="planograma")
+     * @ORM\OneToMany(targetEntity="Quiebre", mappedBy="planogramaq")
      */
 	 
 	protected $quiebres;
@@ -138,7 +138,7 @@ class Planograma
      * Set medicionid
      *
 	 * @param integer $medicionid
-     * @return Planograma
+     * @return Planogramaq
      */
     public function SetMedicionId($medicionid)
     {
@@ -151,7 +151,7 @@ class Planograma
      * Set salaclienteid
      *
 	 * @param integer $salaclienteid
-     * @return Planograma
+     * @return Planogramaq
      */
     public function SetSalaclienteId($salaclienteid)
     {
@@ -164,7 +164,7 @@ class Planograma
      * Set itemclienteid
      *
 	 * @param integer $itemclienteid
-     * @return Planograma
+     * @return Planogramaq
      */
     public function SetItemclienteId($itemclienteid)
     {
@@ -177,7 +177,7 @@ class Planograma
      * Set activo
      *
      * @param boolean $activo
-     * @return Planograma
+     * @return Planogramaq
      */
     public function setActivo($activo)
     {
@@ -200,7 +200,7 @@ class Planograma
      * Set medicion
      *
      * @param \Cadem\ReporteBundle\Entity\Medicion $medicion
-     * @return Planograma
+     * @return Planogramaq
      */
     public function setMedicion(\Cadem\ReporteBundle\Entity\Medicion $medicion = null)
     {
@@ -223,7 +223,7 @@ class Planograma
      * Set salacliente
      *
      * @param \Cadem\ReporteBundle\Entity\Salacliente $salacliente
-     * @return Planograma
+     * @return Planogramaq
      */
     public function setSalacliente(\Cadem\ReporteBundle\Entity\Salacliente $salacliente = null)
     {
@@ -246,7 +246,7 @@ class Planograma
      * Set itemcliente
      *
      * @param \Cadem\ReporteBundle\Entity\Itemcliente $itemcliente
-     * @return Planograma
+     * @return Planogramaq
      */
     public function setItemcliente(\Cadem\ReporteBundle\Entity\Itemcliente $itemcliente = null)
     {
@@ -269,7 +269,7 @@ class Planograma
      * Add quiebres
      *
      * @param \Cadem\ReporteBundle\Entity\Quiebre $quiebres
-     * @return Planograma
+     * @return Planogramaq
      */
     public function addQuiebre(\Cadem\ReporteBundle\Entity\Quiebre $quiebres)
     {
