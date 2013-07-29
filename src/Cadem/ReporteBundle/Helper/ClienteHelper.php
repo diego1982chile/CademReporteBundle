@@ -15,6 +15,7 @@ class ClienteHelper {
 	private $rangoquiebre= null;
 	private $muestrarankingempleado = null;
 	private $muestrasalasmedidas = null;
+	private $tagvariable = null;
 
     public function __construct(EntityManager $entityManager, SecurityContext $security) {
         $this->em = $entityManager;
@@ -67,6 +68,27 @@ class ClienteHelper {
 		}
 		return $this->variables;
     }
+	
+	public function getTagVariable($variable) {
+		
+		$em = $this->em;
+		if($this->user == null) $user = $this->security->getToken()->getUser();
+		else $user = $this->user;
+		$id_user = $user->getId();
+		$id_cliente = $user->getClienteID();
+		
+		$query = $em->createQuery(
+			'SELECT e,ev FROM CademReporteBundle:Estudio e
+			JOIN e.estudiovariables ev			
+			JOIN ev.variable v
+			WHERE e.clienteid = :id_cliente AND e.activo = 1 AND v.nombre= :variable')
+			->setParameter('id_cliente', $id_cliente)
+			->setParameter('variable', $variable);
+		$result = $query->getResult();	
+		$estudio_variable=$result[0]->getEstudiovariables();	
+		$this->tagvariable=$estudio_variable[0]->getNombreVariable();						
+		return $this->tagvariable;
+	}
 	
 	//OBTIENE EL RANGO DE TOLERANCIA PARA EL PRECIO Y POLITICA
 	public function getRangoPrecio() {
