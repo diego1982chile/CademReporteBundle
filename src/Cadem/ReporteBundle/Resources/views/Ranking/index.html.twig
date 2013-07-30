@@ -49,10 +49,10 @@
                             </tr>
                           </thead>
                           <tbody>
-							{% set rank = 1 %}
+							
 							{% for row in ranking_sala %}
                             <tr>
-                              <td>{{rank}}</td>
+                              <td>{{row.rank}}</td>
                               <td>
 	                              {% if row.codigosala == '' %}
 	                                  --
@@ -84,7 +84,7 @@
 							  {% endif %}
 							  </td>
                             </tr>
-							{% set rank = rank+1 %}
+							
 							{% endfor %}
                           </tbody>
                         </table>
@@ -116,10 +116,9 @@
                             </tr>
                           </thead>
                           <tbody>
-                            {% set rank = 1 %}
 							{% for row in ranking_item %}
                             <tr>
-                              <td>{{rank}}</td>
+                              <td>{{row.rank}}</td>
                               <td>{{row.codigoitem1}}</td>
                               <td title="{{row.nombre}}">{{row.nombre|slice(0,36)}}</td>
                               <td>{% if row.quiebre_anterior is not null %} {{row.quiebre_anterior|number_format(1)}} {% else %} -- {% endif %}</td>
@@ -144,7 +143,6 @@
 							  {% endif %}
 							  </td>
                             </tr>
-							{% set rank = rank+1 %}
 							{% endfor %}
                           </tbody>
                         </table>
@@ -175,10 +173,9 @@
                             </tr>
                           </thead>
                           <tbody>
-                            {% set rank = 1 %}
 							{% for row in ranking_empleado %}
                             <tr>
-                              <td>{{rank}}</td>
+                              <td>{{row.rank}}</td>
                               <td>{{row.nombre}}</td>
                               <td>{{row.cargo}}</td>
                               <td>{% if row.quiebre_anterior is not null %} {{row.quiebre_anterior|number_format(1)}} {% else %} -- {% endif %}</td>
@@ -203,7 +200,6 @@
 							  {% endif %}
 							  </td>
                             </tr>
-							{% set rank = rank+1 %}
 							{% endfor %}
                           </tbody>
                         </table>
@@ -280,6 +276,40 @@ $(document).ready(function () {
 					"sSortDescending": ": Activar para ordenar la columna de manera descendente"
 				}
 			};
+
+
+
+
+	jQuery.fn.dataTableExt.oApi.fnSetFilteringDelay = function ( oSettings, iDelay ) {
+	    var _that = this;
+	 
+	    if ( iDelay === undefined ) {
+	        iDelay = 800;
+	    }
+	      
+	    this.each( function ( i ) {
+	        $.fn.dataTableExt.iApiIndex = i;
+	        var
+	            $this = this,
+	            oTimerId = null,
+	            sPreviousSearch = null,
+	            anControl = $( 'input', _that.fnSettings().aanFeatures.f );
+	          
+            anControl.unbind( 'keyup' ).bind( 'keyup', function() {
+	            if (sPreviousSearch === null || sPreviousSearch != anControl.val()) {
+	                window.clearTimeout(oTimerId);
+	                sPreviousSearch = anControl.val(); 
+	                oTimerId = window.setTimeout(function() {
+	                    $.fn.dataTableExt.iApiIndex = i;
+	                    procesarform();
+	                }, iDelay);
+	            }
+	        });
+	          
+	        return this;
+	    });
+	    return this;
+	};
 	
 	
 	
@@ -302,7 +332,7 @@ $(document).ready(function () {
 			],
 			"sDom": '<"H"<"toolbar">Cfr>t<"F"ip>',
 			"bAutoWidth": true
-		});
+		}).fnSetFilteringDelay();
 		
 		$this.prev().find('div.toolbar').append(h5.css({'margin':'0', 'float':'left'}));
 		$this.prev().find('div.toolbar').after(form.css({'margin':'0', 'float':'left', 'margin-left':'20px'}));
@@ -378,7 +408,11 @@ $(document).ready(function () {
 		var topbottom_empleado = $('#topbottom_empleado').serialize();
 		var topbottom_producto = $('#topbottom_producto').serialize();
 		var topbottom_sala = $('#topbottom_sala').serialize();
-		var senddata = dataform + "&" + topbottom_empleado + "&" + topbottom_producto + "&" + topbottom_sala;
+		//INFO BUSQUEDA
+		var search_sala = $('#DataTables_Table_0_wrapper .dataTables_filter input:first').val();
+		var search_item = $('#DataTables_Table_1_wrapper .dataTables_filter input:first').val();
+		var search_empleado = $('#DataTables_Table_2_wrapper .dataTables_filter input:first').val();
+		var senddata = dataform + "&" + topbottom_empleado + "&" + topbottom_producto + "&" + topbottom_sala + '&search_sala=' + search_sala + '&search_item=' + search_item + '&search_empleado=' + search_empleado;
 		
 		$('form#filtros input').last().after('<img class="loader" alt="" style="float:right" src="/bundles/cademreporte/images/loader.gif">');
 		$.get( "{{ url_filtros }}", senddata, function(data) {
@@ -389,7 +423,7 @@ $(document).ready(function () {
 				for(var i in row)
 				{
 					oTables[0].fnAddData([
-						cont,
+						row[i].rank,
 						(row[i].codigosala == null)?"--":row[i].codigosala,
 						row[i].cadena.substring(0, 6),
 						row[i].calle.substring(0, 35)+" "+row[i].numerocalle,
@@ -410,7 +444,7 @@ $(document).ready(function () {
 				for(var i in row)
 				{
 					oTables[1].fnAddData([
-						cont,
+						row[i].rank,
 						row[i].codigoitem1,
 						row[i].nombre.substring(0, 36),
 						(row[i].quiebre_anterior != null)?parseFloat(row[i].quiebre_anterior).toFixed(1):"--",
@@ -430,7 +464,7 @@ $(document).ready(function () {
 				for(var i in row)
 				{
 					oTables[2].fnAddData([
-						cont,
+						row[i].rank,
 						row[i].nombre,
 						row[i].cargo,
 						(row[i].quiebre_anterior != null)?parseFloat(row[i].quiebre_anterior).toFixed(1):"--",
