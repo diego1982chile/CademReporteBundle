@@ -75,19 +75,30 @@ class ClienteHelper {
 		if($this->user == null) $user = $this->security->getToken()->getUser();
 		else $user = $this->user;
 		$id_user = $user->getId();
-		$id_cliente = $user->getClienteID();
+		$id_cliente = $user->getClienteID();		
 		
-		$query = $em->createQuery(
-			'SELECT e,ev FROM CademReporteBundle:Estudio e
-			JOIN e.estudiovariables ev			
-			JOIN ev.variable v
-			WHERE e.clienteid = :id_cliente AND e.activo = 1 AND v.nombre= :variable')
-			->setParameter('id_cliente', $id_cliente)
-			->setParameter('variable', $variable);
-		$result = $query->getResult();	
-		$estudio_variable=$result[0]->getEstudiovariables();	
-		$this->tagvariable=$estudio_variable[0]->getNombreVariable();						
-		return $this->tagvariable;
+		// $query = $em->createQuery(
+			// 'SELECT e,ev FROM CademReporteBundle:Estudio e
+			// JOIN e.estudiovariables ev			
+			// JOIN ev.variable v
+			// WHERE e.clienteid = :id_cliente AND e.activo = 1 AND v.nombre= :variable')
+			// ->setParameter('id_cliente', $id_cliente)
+			// ->setParameter('variable', $variable);
+		// $result = $query->getResult();			
+		
+		$sql =	"SELECT NOMBREVARIABLE as tag_variable FROM estudio e
+		INNER JOIN estudiovariable ev on e.ID=ev.ESTUDIO_ID
+		INNER JOIN variable v on ev.VARIABLE_ID=v.ID
+		WHERE e.CLIENTE_ID = {$id_cliente} AND e.activo = 1 AND v.nombre= '{$variable}'";
+			
+		$tag_variable = $em->getConnection()->executeQuery($sql)->fetchAll();				
+		
+		if(count($tag_variable)>0)				
+			$this->tagvariable=$tag_variable[0]['tag_variable'];											
+		else		
+			$this->tagvariable=$variable;
+			
+		return ucwords($this->tagvariable);
 	}
 	
 	//OBTIENE EL RANGO DE TOLERANCIA PARA EL PRECIO Y POLITICA
