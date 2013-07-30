@@ -101,17 +101,17 @@
 				<table id='controls' width='100%'>
 					<thead>
 						<tr >
-							<th width='5%' class='ui-widget-content'>							
-								<label for="amount" style=';color:#2e6e9e' >Índice:</label>
+							<th width='12%' class='ui-widget-content'>							
+								<label style=';color:#2e6e9e' >Rango permitido (%)</label>
 							</th>
 							<th width='5%' class='ui-widget-content'>
-								<input type="text" id="amount" style="font-size:1.5em; color:#2e6e9e; font-weight: bold; width:2.5em; margin-top:.5em" />
+								<input type="text" id="amount" style="font-size:1.5em; color:#2e6e9e; font-weight: bold; width:2.5em; margin-top:.5em" value="{% if rango_precio is defined %}{{rango_precio}}{% endif %}" />
 							</th>  							
-							<th width='20%' class='ui-widget-content'>
-								<div id="slider-range-min"></div>
+							<th width='13%' class='ui-widget-content'>
+								<label style=';color:#2e6e9e' >Incumplimiento (%)</label>
 							</th>
 							<th width='5%' class='ui-widget-content'>
-								<label id='pctje_incumplimiento' style="font-size:1.5em; color:#2e6e9e; font-weight: bold; width:2.5em; margin-top:.5em;color:red" title='PORCENTAJE FUERA DE RANGO'>
+								<label id='pctje_incumplimiento' style="font-size:1.7em; color:#2e6e9e; font-weight: bold; width:2.5em; margin-top:.5em;color:red" title='PORCENTAJE FUERA DE RANGO'>
 								</label>								
 							</th>
 							<th width='10%' class='ui-widget-content'>
@@ -120,7 +120,7 @@
 								</label>
 							</th>
 							<th width='10%' class='ui-widget-content'>
-								<div style='background:rgb(242, 136, 115);height:1.9em'>
+								<div style='background:red;height:1.9em'>
 								</div>
 							</th>
 							<th width='10%'>
@@ -199,7 +199,7 @@ div.DTFC_Blocker {
 }
 
 .fueraRango{
-	background: rgb(242, 136, 115);
+	background: red;
 	color:white;
 }
 
@@ -274,6 +274,12 @@ div.DataTables_sort_wrapper {
 	border-bottom: 1px solid #A19B9E !important;
 	border-top: 1px solid #A19B9E !important;
 	font-weight: bold
+}
+
+#amount{
+	padding: 0em !important;
+	margin-bottom: .1em !important;
+	margin-top: .1em !important;
 }
 
 {% endblock %}
@@ -878,8 +884,8 @@ function colorTotales(){
 }
 
 function calcular_incumplimiento()
-{	
-	var indice=parseInt($( "#slider-range-min" ).slider( "value" ));
+{		
+	var indice=parseInt($( "#amount" ).val());
 	var total=0;
 	var cont=0;
 	var n=$('.DataTables_sort_wrapper').length-3;
@@ -911,7 +917,7 @@ function calcular_incumplimiento()
 		});
 		$(this).children(':eq('+n+')').text((100*cont_producto/total_producto).toFixed(1));		
 	});		
-	$('#pctje_incumplimiento').text((100*cont/total).toFixed(1)+'%');
+	$('#pctje_incumplimiento').text((100*cont/total).toFixed(1));
 	$('#pctje_incumplimiento').attr('valor',(100*cont/total).toFixed(1));
 	calcularTotalesPrecio();
 }
@@ -989,20 +995,15 @@ function calcularTotalesPrecio(){
 }
 
 function construirSlider(rango_precio){
-	
-	$( "#slider-range-min" ).slider({
-		  range: "min",
-		  value: rango_precio,
-		  min: 0,
-		  max: 100,
-		  slide: function( event, ui ) {
-			$( "#amount" ).val( ui.value + '%');	
-		  },
-		  change: function( event, ui ) {			
-			calcular_incumplimiento();			
-		  }
-	});
-	$( "#amount" ).val( $( "#slider-range-min" ).slider( "value" ) + '%');	
+
+	$('#amount').spinner({
+		min: 0,
+		max: 100,
+		incremental: true,
+		stop: function( event, ui ) {			
+			calcular_incumplimiento();	
+		}
+	});	
 }
 
 $(document).ready(function () {		
