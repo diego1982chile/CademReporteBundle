@@ -836,7 +836,7 @@ function construirGrafico()
 				else data[i]=parseFloat(data[i]);
 			}
 			var series= [{
-						name: '% Total Quiebre',
+						name: '% Total {{tag_variable_cliente|split(' ')|first}}',
 						data: data
 						}]
 			var prefijo='%';
@@ -849,21 +849,21 @@ function construirGrafico()
 				else data[i]=parseFloat(data[i]);
 			}
 			var series= [{
-						name: '% Total Presencia',
+						name: '% Total {{tag_variable_cliente|split(' ')|first}}',
 						data: data
 						}]
 			var prefijo='%';
 			break;			
 		case 2:
 			var data=oTable.fnGetData(0);
-			var tag=data[1];
+			var tag=data[0];
 			data= data.slice(2,data.length-1);
 			for(i in data){
 				if(data[i] == '-') data[i]=null;
 				else data[i]=parseFloat(data[i]);
 			}
 			var series=[{
-						name: 'Precio '+tag,
+						name: 'Promedio {{tag_variable_cliente|split(' ')|first}} '+tag,
 						data: data
 						}];	
 			var prefijo='$';						

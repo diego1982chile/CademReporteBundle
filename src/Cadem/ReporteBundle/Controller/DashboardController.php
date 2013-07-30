@@ -194,7 +194,7 @@ class DashboardController extends Controller
 			$evolutivo['mediciones'] = $mediciones_data;
 			$evolutivo['mediciones_tooltip'] = $mediciones_tooltip;
 			$evolutivo[in_array("QUIEBRE", $variables)?'serie_quiebre':'serie_presencia'] = array(
-												'name' => in_array("QUIEBRE", $variables)?'% '.explode(' ',$this->get('cadem_reporte.helper.cliente')->getTagVariable('quiebre'))[0]:'% '.explode(' ',$this->get('cadem_reporte.helper.cliente')->getTagVariable('presencia'))[0],
+												'name' => in_array("QUIEBRE", $variables)?'% '.current(explode(' ',$this->get('cadem_reporte.helper.cliente')->getTagVariable('quiebre'))):'% '.current(explode(' ',$this->get('cadem_reporte.helper.cliente')->getTagVariable('presencia'))),
 												'color' => '#4572A7',
 												'type' => 'spline',
 												'data' => $porc_quiebre,
@@ -235,7 +235,7 @@ class DashboardController extends Controller
 			}
 
 			$evolutivo['serie_precio'] = array(
-												'name' => '% Incumplimiento '.explode(' ',$this->get('cadem_reporte.helper.cliente')->getTagVariable('precio'))[0],
+												'name' => '% Incumplimiento '.current(explode(' ',$this->get('cadem_reporte.helper.cliente')->getTagVariable('precio'))),
 												'color' => 'red',
 												'type' => 'spline',
 												'data' => $porc_incumplimiento,
