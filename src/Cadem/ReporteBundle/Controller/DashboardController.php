@@ -31,7 +31,7 @@ class DashboardController extends Controller
 		foreach($estudios as $e)
 		{
 			$choices_estudio[$e->getId()] = strtoupper($e->getNombre());
-		}
+		}				
 		
 		$defaultData = array();
 		$form_estudio = $this->createFormBuilder($defaultData)
@@ -141,7 +141,7 @@ class DashboardController extends Controller
 			'variables' => $variables,
 			'noticias' => $noticias,
 			'query_map' => json_encode($query_map),
-			'prefixe_tag_variable' => 'INCUMP.',
+			'prefixe_tag_variable' => 'Incump.',
 		));
 
 		//CACHE
@@ -194,7 +194,7 @@ class DashboardController extends Controller
 			$evolutivo['mediciones'] = $mediciones_data;
 			$evolutivo['mediciones_tooltip'] = $mediciones_tooltip;
 			$evolutivo[in_array("QUIEBRE", $variables)?'serie_quiebre':'serie_presencia'] = array(
-												'name' => in_array("QUIEBRE", $variables)?'% Quiebre':'% Presencia',
+												'name' => in_array("QUIEBRE", $variables)?'% '.explode(' ',$this->get('cadem_reporte.helper.cliente')->getTagVariable('quiebre'))[0]:'% '.explode(' ',$this->get('cadem_reporte.helper.cliente')->getTagVariable('presencia'))[0],
 												'color' => '#4572A7',
 												'type' => 'spline',
 												'data' => $porc_quiebre,
@@ -211,8 +211,6 @@ class DashboardController extends Controller
 					INNER JOIN ESTUDIO e on e.ID = ev.ESTUDIO_ID AND e.CLIENTE_ID = :id_cliente
 
 					GROUP BY m.NOMBRE, m.FECHAINICIO, m.FECHAFIN) as A LEFT JOIN
-
-
 
 					(SELECT (SUM(case when ABS(pr.PRECIO-p.POLITICAPRECIO)>pa.VALOR*p.POLITICAPRECIO/100 then 1 else 0 END)*100.0)/COUNT(pr.ID) as porc_incumplimiento, m.NOMBRE as NOMBRE2 FROM PRECIO pr
 					INNER JOIN PLANOGRAMAP p on p.ID = pr.PLANOGRAMAP_ID AND pr.PRECIO IS NOT NULL AND p.POLITICAPRECIO IS NOT NULL
@@ -237,7 +235,7 @@ class DashboardController extends Controller
 			}
 
 			$evolutivo['serie_precio'] = array(
-												'name' => '% Incumplimiento Precio',
+												'name' => '% Incumplimiento '.explode(' ',$this->get('cadem_reporte.helper.cliente')->getTagVariable('precio'))[0],
 												'color' => 'red',
 												'type' => 'spline',
 												'data' => $porc_incumplimiento,

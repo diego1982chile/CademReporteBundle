@@ -31,6 +31,15 @@ class PresenciaResumenController extends Controller
 		$estudios = $cliente->getEstudios();
 		$id_cliente = $user->getClienteID();
 		
+		// Obtener id de la variable
+		$estudio_variable=$estudios[0]->getEstudiovariables();	
+		
+		$id_variable=$estudio_variable[0]->getVariable()->getId();				
+				
+		$session->set("variable",$id_variable);			
+		
+		$tag_variable_cliente=$this->get('cadem_reporte.helper.cliente')->getTagVariable($variable);
+		
 		$choices_estudio = array('0' => 'TODOS');
 		foreach($estudios as $e)
 		{
@@ -379,6 +388,7 @@ class PresenciaResumenController extends Controller
 			'body_detalle_action' => 'presencia_resumen_detalle_body',			
 			'tag_variable' => ucwords($variable),
 			'tag_cliente' => $cliente->getNombrefantasia(),
+			'tag_variable_cliente' => $tag_variable_cliente,
 			'columnas_reservadas' => 2
 			)
 		);		

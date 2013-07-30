@@ -30,6 +30,15 @@ class PrecioResumenController extends Controller
 		$cliente = $clientes[0];
 		$estudios = $cliente->getEstudios();
 		$id_cliente = $user->getClienteID();
+										
+		$tag_variable_cliente=$this->get('cadem_reporte.helper.cliente')->getTagVariable($variable);
+		
+		// Obtener id de la variable
+		$estudio_variable=$estudios[0]->getEstudiovariables();	
+		
+		$id_variable=$estudio_variable[0]->getVariable()->getId();										
+		
+		$session->set("variable",$id_variable);	
 		
 		$choices_estudio = array('0' => 'TODOS');
 		foreach($estudios as $e)
@@ -380,6 +389,7 @@ class PrecioResumenController extends Controller
 			'prefixe_tag_variable' => 'Incumplimiento',
 			'tag_variable' => ucwords($variable),
 			'tag_cliente' => $cliente->getNombrefantasia(),
+			'tag_variable_cliente' => $tag_variable_cliente,
 			'columnas_reservadas' => 3,
 			'rango_precio' => $this->get('cadem_reporte.helper.cliente')->getRangoPrecio()
 			)
@@ -884,8 +894,8 @@ class PrecioResumenController extends Controller
 				INNER JOIN ITEM i on i.ID = ic.ITEM_ID
 				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID {$and_segmento} 
 				INNER JOIN NIVELITEM ni2 on ic.NIVELITEM_ID2 = ni2.ID {$and_categoria}
-				GROUP BY i.NOMBRE, ni.NOMBRE
-				ORDER BY ni.NOMBRE,i.NOMBRE";					
+				GROUP BY i.NOMBRE, ni.NOMBRE, ic.CODIGOITEM1
+				ORDER BY ni.NOMBRE,i.NOMBRE, ic.CODIGOITEM1";					
 				
 		// print_r($sql);
 									
@@ -933,13 +943,14 @@ class PrecioResumenController extends Controller
 		$fila=array();
 		$fila['aTargets']=array(1);
 		// $fila['sClass']="tag";
-		// $fila['sWidth']="260px";
-		$fila['bVisible']=false;	
+		$fila['sWidth']="0px";
+		// $fila['bVisible']=false;	
 		array_push($aoColumnDefs,$fila);		
 
 		$fila=array();
 		$fila['aTargets']=array(2);		
-		$fila['sWidth']="20px";
+		$fila['sWidth']="0px";
+		$fila['bVisible']=false;
 		array_push($aoColumnDefs,$fila);	
 
 		$cont=3;						
