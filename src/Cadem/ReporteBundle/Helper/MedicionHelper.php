@@ -140,7 +140,7 @@ class MedicionHelper {
 		return $this->id_ultimas_mediciones;
     }
 
-    private function getIdMedicionAnterior_($id_medicion_actual) {
+    private function getIdMedicionAnterior_($id_medicion_actual, $variable = 'QUIEBRE') {
 		$em = $this->container->get('doctrine.orm.entity_manager');
 		$security = $this->container->get('security.context');
 		if($security->getToken() != null) $user = $security->getToken()->getUser();
@@ -152,10 +152,11 @@ class MedicionHelper {
 			'SELECT m.id FROM CademReporteBundle:Medicion m
 			JOIN m.estudiovariable ev
 			JOIN ev.estudio e
-			JOIN e.cliente c
-			WHERE c.id = :idc
+			JOIN ev.variable v
+			WHERE e.clienteid = :idc AND v.nombre = :variable
 			ORDER BY m.fechainicio DESC')
-			->setParameter('idc', $id_cliente);
+			->setParameter('idc', $id_cliente)
+			->setParameter('variable', $variable);
 		$mediciones = $query->getArrayResult();
 		$listo = false;
 		if(count($mediciones) > 1){
