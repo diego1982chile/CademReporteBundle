@@ -42,8 +42,8 @@
                               <th>Cod.</th>
                               <th>Cad.</th>
                               <th>Sala</th>
-                              <th>%{{variable}} ant</th>
-                              <th>%{{variable}} act</th>
+                              <th>{{variable|capitalize}} Ant(%)</th>
+                              <th>{{variable|capitalize}} Act(%)</th>
                               <th>Ptos Dif</th>
                               <th></th>
                             </tr>
@@ -61,7 +61,7 @@
 	                              {% endif %}
                           	  </td>
                               <td>{{row.cadena|slice(0,8)}}</td>
-                              <td title="{{row.calle}} {{row.numerocalle}}">{{row.calle|slice(0,35)}} {{row.numerocalle}}</td>
+                              <td title="{{row.calle}} {{row.numerocalle}}">{{row.calle|slice(0,30)}} {{row.numerocalle}}</td>
                               <td>{% if row.quiebre_anterior is not null %} {{row.quiebre_anterior|number_format(1)}} {% else %} -- {% endif %}</td>
                               <td>{% if row.quiebre is not null %} {{row.quiebre|number_format(1)}} {% else %} -- {% endif %}</td>
                               <td>{% if row.diferencia is not null %}
@@ -109,8 +109,8 @@
                               <th>#</th>
                               <th>Cod.</th>
                               <th>Producto</th>
-                              <th>%{{variable}} ant</th>
-                              <th>%{{variable}} act</th>
+                              <th>{{variable|capitalize}} Ant(%)</th>
+                              <th>{{variable|capitalize}} Act(%)</th>
                               <th>Ptos Dif</th>
                               <th></th>
                             </tr>
@@ -166,8 +166,8 @@
                               <th>#</th>
                               <th>Empleado</th>
                               <th>Cargo</th>
-							  <th>%{{variable}} ant</th>
-                              <th>%{{variable}} act</th>
+							  <th>{{variable|capitalize}} Ant(%)</th>
+                              <th>{{variable|capitalize}} Act(%)</th>
                               <th>Ptos Dif</th>
                               <th></th>
                             </tr>
@@ -426,7 +426,7 @@ $(document).ready(function () {
 						row[i].rank,
 						(row[i].codigosala == null)?"--":row[i].codigosala,
 						row[i].cadena.substring(0, 8),
-						row[i].calle.substring(0, 35)+" "+row[i].numerocalle,
+						row[i].calle.substring(0, 30)+" "+row[i].numerocalle,
 						(row[i].quiebre_anterior != null)?parseFloat(row[i].quiebre_anterior).toFixed(1):"--",
 						(row[i].quiebre != null)?parseFloat(row[i].quiebre).toFixed(1):"--",
 						(row[i].diferencia != null)?parseFloat(row[i].diferencia).toFixed(1):"--",
