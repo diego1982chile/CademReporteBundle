@@ -60,7 +60,7 @@
 	                                  {{row.codigosala}}
 	                              {% endif %}
                           	  </td>
-                              <td>{{row.cadena|slice(0,6)}}</td>
+                              <td>{{row.cadena|slice(0,8)}}</td>
                               <td title="{{row.calle}} {{row.numerocalle}}">{{row.calle|slice(0,35)}} {{row.numerocalle}}</td>
                               <td>{% if row.quiebre_anterior is not null %} {{row.quiebre_anterior|number_format(1)}} {% else %} -- {% endif %}</td>
                               <td>{% if row.quiebre is not null %} {{row.quiebre|number_format(1)}} {% else %} -- {% endif %}</td>
@@ -425,7 +425,7 @@ $(document).ready(function () {
 					oTables[0].fnAddData([
 						row[i].rank,
 						(row[i].codigosala == null)?"--":row[i].codigosala,
-						row[i].cadena.substring(0, 6),
+						row[i].cadena.substring(0, 8),
 						row[i].calle.substring(0, 35)+" "+row[i].numerocalle,
 						(row[i].quiebre_anterior != null)?parseFloat(row[i].quiebre_anterior).toFixed(1):"--",
 						(row[i].quiebre != null)?parseFloat(row[i].quiebre).toFixed(1):"--",
