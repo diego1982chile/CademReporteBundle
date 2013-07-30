@@ -87,14 +87,15 @@
 
 
 							{% set variables=service_variablescliente.getVariables %}
-							{% if 'QUIEBRE' in variables %}
+							{% set tag_variable_quiebre=service_variablescliente.getTagVariable('Quiebre') %}
+							{% if 'QUIEBRE' in variables %}							
 							{% set disponible='true' %}
 							{% else %}
 							{% set disponible='false' %}
 							{% endif %}						
 							{% if 'QUIEBRE' in variables %}							
 							<li class="dropdown {{active_quiebre}}">								
-				                <a href="#" disponible={{disponible}} class="dropdown-toggle variable" data-toggle="dropdown">Quiebre <b class="caret"></b></a>
+				                <a href="#" disponible={{disponible}} class="dropdown-toggle variable" data-toggle="dropdown">{{tag_variable_quiebre|split(' ')|first}} <b class="caret"></b></a>
 				                <ul class="dropdown-menu">
 				                  <li><a href="{{ path('quiebre_resumen_index')}}">Resumen</a></li>
 				                  <li><a href="{{ path('quiebre_ranking_index')}}">Ranking</a></li>
@@ -108,22 +109,21 @@
 			                </li>
 							{% endif %}
 
-
 							{% if app.request.attributes.get('variable')|lower == 'presencia' %}
 							{% set active_presencia = 'active' %}
 							{% else %}
 							{% set active_presencia = '' %}
 							{% endif %}
 
-
-							{% if 'PRESENCIA' in variables %}
+							{% set tag_variable_presencia=service_variablescliente.getTagVariable('Presencia') %}
+							{% if 'PRESENCIA' in variables %}							
 							{% set disponible='true' %}
 							{% else %}
 							{% set disponible='false' %}
 							{% endif %}							
 							{% if 'PRESENCIA' in variables %}
 							<li class="dropdown {{active_presencia}}">								
-				                <a href="#" disponible={{disponible}} class="dropdown-toggle variable" data-toggle="dropdown">Presencia <b class="caret"></b></a>
+				                <a href="#" disponible={{disponible}} class="dropdown-toggle variable" data-toggle="dropdown">{{tag_variable_presencia|split(' ')|first}} <b class="caret"></b></a>
 				                <ul class="dropdown-menu">
 				                  <li><a href="{{ path('presencia_resumen_index')}}">Resumen</a></li>
 				                  <li><a href="{{ path('presencia_ranking_index')}}">Ranking</a></li>
@@ -133,20 +133,20 @@
 			                </li>							
 							{% endif %}
 
-
 							{% if app.request.attributes.get('variable')|lower == 'precio' %}
 							{% set active_precio = 'active' %}
 							{% else %}
 							{% set active_precio = '' %}
 							{% endif %}
 
-							{% if 'PRECIO' in variables %}
+							{% set tag_variable_precio=service_variablescliente.getTagVariable('Precio') %}							
+							{% if 'PRECIO' in variables %}							
 							{% set disponible='true' %}
 							{% else %}
 							{% set disponible='false' %}
 							{% endif %}
 							<li class="dropdown {{active_precio}}">
-				                <a href="#" disponible={{disponible}} class="dropdown-toggle variable" data-toggle="dropdown">Precio <b class="caret"></b></a>
+				                <a href="#" disponible={{disponible}} class="dropdown-toggle variable" data-toggle="dropdown">{{tag_variable_precio|split(' ')|first}} <b class="caret"></b></a>
 				                <ul class="dropdown-menu">
 								  <li><a href="{{ path('precio_resumen_index')}}">Resumen</a></li>
 				                  <li><a href="{{ path('precio_evolucion_index')}}">Evolución</a></li>
@@ -156,54 +156,54 @@
 			                <li class="divider-vertical"></li>
 			                <li>
 			                	<ul class="breadcrumb" style="margin:0;margin-top:3px;background-color:transparent">
-			                		<li>Estas en: </li>
+			                		<li>Estás en: </li>
 			                	{% if app.request.attributes.get('_route') == 'dashboard_index' %}
 			                		<li class="active">Dashboard</li>
 			                	{% elseif app.request.attributes.get('_route') == 'quiebre_resumen_index' %}
 			                		<li><a href="{{ path('dashboard_index')}}">Dashboard</a> <span class="divider">/</span></li>
-								    <li><a href="{{ path('quiebre_resumen_index')}}">Quiebre</a> <span class="divider">/</span></li>
+								    <li><a href="{{ path('quiebre_resumen_index')}}">{{tag_variable_quiebre|split(' ')|first}}</a> <span class="divider">/</span></li>
 								    <li class="active">Resumen</li>
 								{% elseif app.request.attributes.get('_route') == 'quiebre_ranking_index' %}
 			                		<li><a href="{{ path('dashboard_index')}}">Dashboard</a> <span class="divider">/</span></li>
-								    <li><a href="{{ path('quiebre_resumen_index')}}">Quiebre</a> <span class="divider">/</span></li>
+								    <li><a href="{{ path('quiebre_resumen_index')}}">{{tag_variable_quiebre|split(' ')|first}}</a> <span class="divider">/</span></li>
 								    <li class="active">Ranking</li>
 								{% elseif app.request.attributes.get('_route') == 'quiebre_evolucion_index' %}
 			                		<li><a href="{{ path('dashboard_index')}}">Dashboard</a> <span class="divider">/</span></li>
-								    <li><a href="{{ path('quiebre_resumen_index')}}">Quiebre</a> <span class="divider">/</span></li>
+								    <li><a href="{{ path('quiebre_resumen_index')}}">{{tag_variable_quiebre|split(' ')|first}}</a> <span class="divider">/</span></li>
 								    <li class="active">Evolución</li>
 								{% elseif app.request.attributes.get('_route') == 'quiebre_detalle_index' %}
 			                		<li><a href="{{ path('dashboard_index')}}">Dashboard</a> <span class="divider">/</span></li>
-								    <li><a href="{{ path('quiebre_resumen_index')}}">Quiebre</a> <span class="divider">/</span></li>
+								    <li><a href="{{ path('quiebre_resumen_index')}}">{{tag_variable_quiebre|split(' ')|first}}</a> <span class="divider">/</span></li>
 								    <li class="active">Detalle</li>
 								<!-- PRECIO -->
 								{% elseif app.request.attributes.get('_route') == 'precio_resumen_index' %}
 			                		<li><a href="{{ path('dashboard_index')}}">Dashboard</a> <span class="divider">/</span></li>
-								    <li><a href="{{ path('precio_resumen_index')}}">Precio</a> <span class="divider">/</span></li>
+								    <li><a href="{{ path('precio_resumen_index')}}">{{tag_variable_precio|split(' ')|first}}</a> <span class="divider">/</span></li>
 								    <li class="active">Resumen</li>
 								{% elseif app.request.attributes.get('_route') == 'precio_evolucion_index' %}
 			                		<li><a href="{{ path('dashboard_index')}}">Dashboard</a> <span class="divider">/</span></li>
-								    <li><a href="{{ path('precio_evolucion_index')}}">Precio</a> <span class="divider">/</span></li>
+								    <li><a href="{{ path('precio_evolucion_index')}}">{{tag_variable_precio|split(' ')|first}}</a> <span class="divider">/</span></li>
 								    <li class="active">Evolución</li>
 								{% elseif app.request.attributes.get('_route') == 'precio_detalle_index' %}
 			                		<li><a href="{{ path('dashboard_index')}}">Dashboard</a> <span class="divider">/</span></li>
-								    <li><a href="{{ path('precio_detalle_index')}}">Precio</a> <span class="divider">/</span></li>
+								    <li><a href="{{ path('precio_detalle_index')}}">{{tag_variable_precio|split(' ')|first}}</a> <span class="divider">/</span></li>
 								    <li class="active">Detalle</li>
 								<!-- PRESENCIA -->
 								{% elseif app.request.attributes.get('_route') == 'presencia_resumen_index' %}
 			                		<li><a href="{{ path('dashboard_index')}}">Dashboard</a> <span class="divider">/</span></li>
-								    <li><a href="{{ path('presencia_resumen_index')}}">Presencia</a> <span class="divider">/</span></li>
+								    <li><a href="{{ path('presencia_resumen_index')}}">{{tag_variable_presencia|split(' ')|first}}</a> <span class="divider">/</span></li>
 								    <li class="active">Resumen</li>
 								{% elseif app.request.attributes.get('_route') == 'presencia_ranking_index' %}
 			                		<li><a href="{{ path('dashboard_index')}}">Dashboard</a> <span class="divider">/</span></li>
-								    <li><a href="{{ path('presencia_resumen_index')}}">Presencia</a> <span class="divider">/</span></li>
+								    <li><a href="{{ path('presencia_resumen_index')}}">{{tag_variable_presencia|split(' ')|first}}</a> <span class="divider">/</span></li>
 								    <li class="active">Ranking</li>
 								{% elseif app.request.attributes.get('_route') == 'presencia_evolucion_index' %}
 			                		<li><a href="{{ path('dashboard_index')}}">Dashboard</a> <span class="divider">/</span></li>
-								    <li><a href="{{ path('presencia_resumen_index')}}">Presencia</a> <span class="divider">/</span></li>
+								    <li><a href="{{ path('presencia_resumen_index')}}">{{tag_variable_presencia|split(' ')|first}}</a> <span class="divider">/</span></li>
 								    <li class="active">Evolución</li>
 								{% elseif app.request.attributes.get('_route') == 'presencia_detalle_index' %}
 			                		<li><a href="{{ path('dashboard_index')}}">Dashboard</a> <span class="divider">/</span></li>
-								    <li><a href="{{ path('presencia_resumen_index')}}">Presencia</a> <span class="divider">/</span></li>
+								    <li><a href="{{ path('presencia_resumen_index')}}">{{tag_variable_presencia|split(' ')|first}}</a> <span class="divider">/</span></li>
 								    <li class="active">Detalle</li>
 			                	{% endif %}
 								  

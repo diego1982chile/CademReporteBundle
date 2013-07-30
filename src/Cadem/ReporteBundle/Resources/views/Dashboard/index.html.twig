@@ -367,12 +367,13 @@ $(document).ready(function () {
 
 	
 	$.get( "{{ path('dashboard_indicadores') }}", $('form#filtros').serialize(), function(data) {
-		
-		{% if "QUIEBRE" in variables or "PRESENCIA" in variables %}
+			
 			{% if "QUIEBRE" in variables %}
 				{% set nombrevar =  "QUIEBRE" %}
-			{% else %}
+			{% elseif "PRESENCIA" in variables %}
 			    {% set nombrevar = "PRESENCIA" %}
+			{% elseif "PRECIO" in variables %}	
+				{% set nombrevar = "PRECIO" %}
 			{% endif %}
 									
 			{{"evo_"~nombrevar}} = new Highcharts.Chart({
@@ -388,17 +389,17 @@ $(document).ready(function () {
 				},
 				yAxis: [{
 					title: {
-						text: 'Promedio {{nombrevar|lower}}',
+						text: 'Promedio {{service_variablescliente.getTagVariable(nombrevar)|split(' ')|first}}',
 						style: {
 							color: '#4572A7'
 						}
 					}
 				}
-				{% if "PRECIO" in variables %}
+				{% if "PRECIO" in variables %}				
 				,
 				{
 					title: {
-						text: 'Incumplimiento Precio',
+						text: 'Promedio {%if prefixe_tag_variable is defined %} {{prefixe_tag_variable}}{% endif %} {{service_variablescliente.getTagVariable("precio")|split(' ')|first}}',
 						style: {
 							color: 'red'
 						}
@@ -410,16 +411,16 @@ $(document).ready(function () {
 				tooltip: {
 					// shared: true,
 					formatter: function() {
-						return 'Medición: <b>'+ this.x +
-							'</b> <br/> Valor: <b>'+ this.y +'%</b>';
+						return '<span style="color:#2f7ed8">Medición</span>: <b>'+ this.x +
+							'</b> <br/><span style="color:#2f7ed8">Valor</span>: <b>'+ this.y +'%</b>';
 					}
 				},
 				legend: {
 					layout: 'vertical',
 					align: 'center',
-					x: 100,
+					x: 300,
 					verticalAlign: 'top',
-					y: 30,
+					y: 0,
 					floating: true,
 					backgroundColor: '#FFFFFF'
 				},
@@ -432,11 +433,7 @@ $(document).ready(function () {
 				credits: {
 					enabled: false
 				}
-			});
-			
-			
-			
-		{% endif %}
+			});					
 		
 		
 		// evo_quiebre_precio = new Highcharts.Chart({

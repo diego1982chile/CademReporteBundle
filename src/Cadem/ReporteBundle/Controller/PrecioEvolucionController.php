@@ -29,6 +29,15 @@ class PrecioEvolucionController extends Controller
 		$clientes = $query->getResult();
 		$cliente = $clientes[0];
 		$estudios = $cliente->getEstudios();
+							
+		$tag_variable_cliente=$this->get('cadem_reporte.helper.cliente')->getTagVariable($variable);														
+		
+		// Obtener id de la variable
+		$estudio_variable=$estudios[0]->getEstudiovariables();	
+		
+		$id_variable=$estudio_variable[0]->getVariable()->getId();				
+				
+		$session->set("variable",$id_variable);			
 		
 		$choices_estudio = array('0' => 'TODOS');
 		foreach($estudios as $e)
@@ -170,12 +179,12 @@ class PrecioEvolucionController extends Controller
 			}
 		}				
 		
-		//CONSULTA
-		
+		//CONSULTA SACAR ULTIMAS 12 MEDICIONES
 		$sql = "SELECT TOP(12) m2.ID as ID, m2.NOMBRE as NOMBRE, m2.FECHAINICIO as FECHAINICIO, m2.FECHAFIN as FECHAFIN FROM MEDICION m2 
-		INNER JOIN ESTUDIOVARIABLE ev on m2.ESTUDIOVARIABLE_ID=ev.ID AND ev.VARIABLE_ID={$id_variable}
+		INNER JOIN ESTUDIOVARIABLE ev on m2.ESTUDIOVARIABLE_ID=ev.ID
+		INNER JOIN VARIABLE v on v.ID=ev.VARIABLE_ID and v.NOMBRE='{$variable}'
 		INNER JOIN ESTUDIO e on ev.ESTUDIO_ID=e.ID and e.CLIENTE_ID={$user->getClienteID()} 
-		ORDER BY m2.FECHAINICIO DESC";											
+		ORDER BY m2.FECHAINICIO DESC";																
 		
 		$data_mediciones = $em->getConnection()->executeQuery($sql)->fetchAll();	
 		
@@ -421,6 +430,7 @@ class PrecioEvolucionController extends Controller
 			'columnas_reservadas' => 2,
 			'tag_variable' => ucwords($variable),
 			'tag_cliente' => $cliente->getNombrefantasia(),
+			'tag_variable_cliente' => $tag_variable_cliente,
 			'mediciones_data' => json_encode($mediciones_data)						
 			)
 		);

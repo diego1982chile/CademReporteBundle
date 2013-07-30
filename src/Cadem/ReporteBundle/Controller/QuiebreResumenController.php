@@ -23,13 +23,22 @@ class QuiebreResumenController extends Controller
 		$query = $em->createQuery(
 			'SELECT c,e FROM CademReporteBundle:Cliente c
 			JOIN c.estudios e
-			JOIN c.usuarios u
+			JOIN c.usuarios u			
 			WHERE u.id = :id AND c.activo = 1 AND e.activo = 1')
 			->setParameter('id', $user->getId());
 		$clientes = $query->getResult();
 		$cliente = $clientes[0];
 		$estudios = $cliente->getEstudios();
-		$id_cliente = $user->getClienteID();
+		$id_cliente = $user->getClienteID();				
+				
+		$tag_variable_cliente=$this->get('cadem_reporte.helper.cliente')->getTagVariable($variable);										
+		
+		// Obtener id de la variable
+		$estudio_variable=$estudios[0]->getEstudiovariables();	
+		
+		$id_variable=$estudio_variable[0]->getVariable()->getId();				
+				
+		$session->set("variable",$id_variable);			
 		
 		$choices_estudio = array('0' => 'TODOS');
 		foreach($estudios as $e)
@@ -340,13 +349,7 @@ class QuiebreResumenController extends Controller
 			'data' => $mediciones_data,
 		);
 		$evolutivo= $porc_quiebre;				
-		
-		// Obtener id de la variable
-		$estudio_variable=$estudios[0]->getEstudiovariables();	
-		
-		$id_variable=$estudio_variable[0]->getVariable()->getId();				
-				
-		$session->set("variable",$id_variable);					
+					
 			
 		//RESPONSE
 		$response = $this->render('CademReporteBundle:Resumen:index.html.twig',
@@ -372,6 +375,7 @@ class QuiebreResumenController extends Controller
 			'body_detalle_action' => 'quiebre_resumen_detalle_body',
 			'tag_variable' => ucwords($variable),
 			'tag_cliente' => $cliente->getNombrefantasia(),
+			'tag_variable_cliente' => $tag_variable_cliente,
 			'columnas_reservadas' => 2
 			)
 		);		

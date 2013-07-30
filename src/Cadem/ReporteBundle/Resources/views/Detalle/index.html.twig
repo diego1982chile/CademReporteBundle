@@ -28,7 +28,7 @@
 {% block body %}
     <div class="span9">
 		<div class="container-fluid well" style="padding-top:0">
-			<h4>Detalle {{tag_variable}} {{tag_cliente}}</h4>
+			<h4>Detalle {{tag_variable_cliente}}</h4>
 			<div class="hero-unit" style="padding:15px;margin-bottom:20px">												
 				<div id="container" class="row-fluid">
 					<table id="tabla_resumen" class="tabla_resumen table table-bordered display">                      
@@ -101,17 +101,17 @@
 				<table id='controls' width='100%'>
 					<thead>
 						<tr >
-							<th width='5%' class='ui-widget-content'>							
-								<label for="amount" style=';color:#2e6e9e' >Índice:</label>
+							<th width='12%' class='ui-widget-content'>							
+								<label style=';color:#2e6e9e' >Rango permitido (%)</label>
 							</th>
 							<th width='5%' class='ui-widget-content'>
-								<input type="text" id="amount" style="font-size:1.5em; color:#2e6e9e; font-weight: bold; width:2.5em; margin-top:.5em" />
+								<input type="text" id="amount" style="font-size:1.5em; color:#2e6e9e; font-weight: bold; width:2.5em; margin-top:.5em" value="{% if rango_precio is defined %}{{rango_precio}}{% endif %}" />
 							</th>  							
-							<th width='20%' class='ui-widget-content'>
-								<div id="slider-range-min"></div>
+							<th width='13%' class='ui-widget-content'>
+								<label style=';color:#2e6e9e' >Incumplimiento (%)</label>
 							</th>
 							<th width='5%' class='ui-widget-content'>
-								<label id='pctje_incumplimiento' style="font-size:1.5em; color:#2e6e9e; font-weight: bold; width:2.5em; margin-top:.5em;color:red" title='PORCENTAJE FUERA DE RANGO'>
+								<label id='pctje_incumplimiento' style="font-size:1.7em; color:#2e6e9e; font-weight: bold; width:2.5em; margin-top:.5em;color:red" title='PORCENTAJE FUERA DE RANGO'>
 								</label>								
 							</th>
 							<th width='10%' class='ui-widget-content'>
@@ -120,7 +120,7 @@
 								</label>
 							</th>
 							<th width='10%' class='ui-widget-content'>
-								<div style='background:rgb(242, 136, 115);height:1.9em'>
+								<div style='background:red;height:1.9em'>
 								</div>
 							</th>
 							<th width='10%'>
@@ -199,7 +199,7 @@ div.DTFC_Blocker {
 }
 
 .fueraRango{
-	background: rgb(242, 136, 115);
+	background: red;
 	color:white;
 }
 
@@ -274,6 +274,12 @@ div.DataTables_sort_wrapper {
 	border-bottom: 1px solid #A19B9E !important;
 	border-top: 1px solid #A19B9E !important;
 	font-weight: bold
+}
+
+#amount{
+	padding: 0em !important;
+	margin-bottom: .1em !important;
+	margin-top: .1em !important;
 }
 
 {% endblock %}
@@ -404,7 +410,7 @@ function construirTabla()
 		});
 		// var filtros='<label class="radio inline"><input type="radio" name="filtro" id="filtro_sku" class="btn_filtro" checked>SKU</label><label class="radio inline"><input type="radio" name="filtro" id="filtro_sala" class="btn_filtro">Sala</label>';
 		var filtros="<button id='filtro_sku' title='FILTRO ACTIVO POR SKU' class='btn btn_filtro btn-warning ' type='button'><i class='icon-filter'></i> SKU</button><button id='filtro_sala' class='btn btn_filtro' type='button' title='FILTRO ACTIVO POR SALA'><i class='icon-filter'></i> SALA</button>";
-		$('div.fg-toolbar:first').append("<div align='left' style='float:left;width:30%'><h5 style='float:left;margin:0em'>Tabla Detalle {{tag_variable}}: {% if tag_variable|lower in ['quiebre','presencia'] %} (%) {%else%} ($) {%endif%}</h5><div>");	
+		$('div.fg-toolbar:first').append("<div align='left' style='float:left;width:30%'><h5 style='float:left;margin:0em'>Tabla Detalle {{tag_variable_cliente}}: {% if tag_variable|lower in ['quiebre','presencia'] %} (%) {%else%} ($) {%endif%}</h5><div>");	
 		// $("<div class='dataTables_filter' align='right' style='float:center;width:50%'><label>SALA: <input id='buscarsala' /></label></div>").appendTo('#tabla_resumen_wrapper .fg-toolbar:first');				 		
 		$("<div class='dataTables_filter input-append' align='right' style='float:right;width:70%'>"+filtros+"<input id='filtro' class='span2 input_filtro' /><button id='boton_buscar' class='btn btn_accion' type='button' title='BUSCAR'><i class='icon-search'></i></button><button id='colorear' title='TERMOGRAMA' class='btn btn_accion' type='button'><i class='icon-eye-open'></i></button></div>").appendTo('#tabla_resumen_wrapper .fg-toolbar:first');				 				
 		
@@ -544,7 +550,7 @@ function listenerFiltro()
 					case 'sala':
 						var needle=$('#filtro').val().toUpperCase();					
 						var delta=$('#tabla_resumen tbody tr:first td').eq(-2).width();
-						delta = delta*0.92;										
+						delta = delta*0.95;										
 						var oSettings = oTable.fnSettings();
 						var ventana= 1000;									
 						var posicion;
@@ -878,8 +884,8 @@ function colorTotales(){
 }
 
 function calcular_incumplimiento()
-{	
-	var indice=parseInt($( "#slider-range-min" ).slider( "value" ));
+{		
+	var indice=parseInt($( "#amount" ).val());
 	var total=0;
 	var cont=0;
 	var n=$('.DataTables_sort_wrapper').length-3;
@@ -911,7 +917,7 @@ function calcular_incumplimiento()
 		});
 		$(this).children(':eq('+n+')').text((100*cont_producto/total_producto).toFixed(1));		
 	});		
-	$('#pctje_incumplimiento').text((100*cont/total).toFixed(1)+'%');
+	$('#pctje_incumplimiento').text((100*cont/total).toFixed(1));
 	$('#pctje_incumplimiento').attr('valor',(100*cont/total).toFixed(1));
 	calcularTotalesPrecio();
 }
@@ -989,20 +995,15 @@ function calcularTotalesPrecio(){
 }
 
 function construirSlider(rango_precio){
-	
-	$( "#slider-range-min" ).slider({
-		  range: "min",
-		  value: rango_precio,
-		  min: 0,
-		  max: 100,
-		  slide: function( event, ui ) {
-			$( "#amount" ).val( ui.value + '%');	
-		  },
-		  change: function( event, ui ) {			
-			calcular_incumplimiento();			
-		  }
-	});
-	$( "#amount" ).val( $( "#slider-range-min" ).slider( "value" ) + '%');	
+
+	$('#amount').spinner({
+		min: 0,
+		max: 100,
+		incremental: true,
+		stop: function( event, ui ) {			
+			calcular_incumplimiento();	
+		}
+	});	
 }
 
 $(document).ready(function () {		

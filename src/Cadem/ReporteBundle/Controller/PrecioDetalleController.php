@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\Session;
 
 class PrecioDetalleController extends Controller
 {    	
-	public function indexAction()
+	public function indexAction($variable)
     {
 		$start = microtime(true);
 		$session = $this->get("session");
@@ -28,6 +28,15 @@ class PrecioDetalleController extends Controller
 		$clientes = $query->getResult();
 		$cliente = $clientes[0];
 		$estudios = $cliente->getEstudios();
+		
+		$tag_variable_cliente=$this->get('cadem_reporte.helper.cliente')->getTagVariable($variable);
+		
+		// Obtener id de la variable
+		$estudio_variable=$estudios[0]->getEstudiovariables();	
+		
+		$id_variable=$estudio_variable[0]->getVariable()->getId();				
+				
+		$session->set("variable",$id_variable);						
 		
 		$choices_estudio = array('0' => 'TODOS');
 		foreach($estudios as $e)
@@ -241,8 +250,10 @@ class PrecioDetalleController extends Controller
 				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
 				INNER JOIN ITEM i on i.ID = ic.ITEM_ID
 				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID				
-				GROUP BY i.NOMBRE, ni.NOMBRE
-				ORDER BY ni.NOMBRE,i.NOMBRE";						
+				GROUP BY i.NOMBRE, ni.NOMBRE, ic.CODIGOITEM1
+				ORDER BY ni.NOMBRE,i.NOMBRE, ic.CODIGOITEM1";		
+
+		// print_r($sql);
 									
 		$politicas_producto = $em->getConnection()->executeQuery($sql)->fetchAll();		
 											
@@ -362,7 +373,8 @@ class PrecioDetalleController extends Controller
 			'columnas_reservadas' => 3,
 			'tag_variable' => 'Precio',
 			'rango_precio' => $rango_precio,
-			'tag_cliente' => $cliente->getNombrefantasia()
+			'tag_cliente' => $cliente->getNombrefantasia(),
+			'tag_variable_cliente' => $tag_variable_cliente
 			)
 		);
 		$time_taken = microtime(true) - $start;
@@ -537,8 +549,8 @@ class PrecioDetalleController extends Controller
 				INNER JOIN ITEMCLIENTE ic on ic.ID = p.ITEMCLIENTE_ID
 				INNER JOIN ITEM i on i.ID = ic.ITEM_ID
 				INNER JOIN NIVELITEM ni on ni.ID = ic.NIVELITEM_ID				
-				GROUP BY i.NOMBRE, ni.NOMBRE
-				ORDER BY ni.NOMBRE,i.NOMBRE";					
+				GROUP BY i.NOMBRE, ni.NOMBRE, ic.CODIGOITEM1
+				ORDER BY ni.NOMBRE,i.NOMBRE, ic.CODIGOITEM1";					
 						
 		$politicas_producto = $em->getConnection()->executeQuery($sql)->fetchAll();		
 				
