@@ -35,12 +35,12 @@ class PHPExcelHelper {
 		$user = $this->user;
 		$id_user = $user->getId();
 		$id_cliente = $user->getClienteId();
-		$id_ultima_medicion = $this->medicion->getIdUltimaMedicion();
-		$nombre_medicion = $this->medicion->getNombreMedicion($id_ultima_medicion);
 		$session = $this->session;
 		$request = $this->request;
 		$variable = $request->attributes->get('variable');
 		$variable = strtoupper($variable);
+		$id_ultima_medicion = $this->medicion->getIdUltimaMedicionPorVariable($variable);
+		$nombre_medicion = $this->medicion->getNombreMedicion($id_ultima_medicion);
 
 		switch ($variable) {
 			case 'QUIEBRE':
@@ -95,7 +95,6 @@ class PHPExcelHelper {
 
 
 
-
     	$objPHPExcel = $this->objPHPExcel;
     	$objPHPExcel->getProperties()->setCreator("Cadem")
 							 // ->setLastModifiedBy("Maarten Balliauw")
@@ -131,7 +130,7 @@ class PHPExcelHelper {
 
 		//ORDENAR LAS SALAS SI HAY DATOS, SI NO RETORNAR ERROR
 		if(isset($header) && is_array($header)) asort($header);
-		else return 'NO HAY DATOS o FALLO EL PROCESO';
+		else return 'NO HAY DATOS o FALLO EL PROCESO.';
 
 
 		switch ($variable) {
@@ -142,19 +141,24 @@ class PHPExcelHelper {
 				//LLENAR PRODUCTO/SEGMENTO
 				$objPHPExcel->setActiveSheetIndex(0)->setCellValue('A1', 'PRODUCTO');
 				$objPHPExcel->getActiveSheet()->getColumnDimension('A')->setWidth(50);
-				$objPHPExcel->setActiveSheetIndex(0)->setCellValue('B1', 'SEGMENTO');
+				$objPHPExcel->setActiveSheetIndex(0)->setCellValue('B1', 'CODIGO');
 				$objPHPExcel->getActiveSheet()->getColumnDimension('B')->setAutoSize(true);
+				$objPHPExcel->setActiveSheetIndex(0)->setCellValue('C1', 'SEGMENTO');
+				$objPHPExcel->getActiveSheet()->getColumnDimension('C')->setAutoSize(true);
 
 				$col = 'A';
 				$fil = 2;
 				foreach ($producto as $kp => $vp) {
 					$objPHPExcel->setActiveSheetIndex(0)->setCellValue('A'.$fil, $vp[0]);
-					$objPHPExcel->setActiveSheetIndex(0)->setCellValue('B'.$fil, $vp[1]);
+					$objPHPExcel->setActiveSheetIndex(0)->setCellValue('B'.$fil, $kp);
+					$objPHPExcel->setActiveSheetIndex(0)->setCellValue('C'.$fil, $vp[1]);
 					$fil++;
 				}
 
+				$objPHPExcel->getActiveSheet()->getStyle('B2:B'.$fil)->getNumberFormat()->setFormatCode('0000000000000');
+
 				//LLENAR QUIEBRES/SALAS
-				$col = 'C';
+				$col = 'D';
 				$fil = 2;
 				foreach ($header as $kh => $vh) {
 					$objPHPExcel->setActiveSheetIndex(0)->setCellValue($col.'1', $vh);
@@ -170,9 +174,11 @@ class PHPExcelHelper {
 					$fil = 2;
 				}
 
-				$objPHPExcel->getActiveSheet()->getStyle('C1:'.$col.'1')->getAlignment()->setWrapText(true);
-				$objPHPExcel->getActiveSheet()->getStyle('C1:'.$col.'1')->getFont()->setSize(8);
+				$objPHPExcel->getActiveSheet()->getStyle('D1:'.$col.'1')->getAlignment()->setWrapText(true);
+				$objPHPExcel->getActiveSheet()->getStyle('D1:'.$col.'1')->getFont()->setSize(8);
 				$objPHPExcel->getActiveSheet()->getStyle('A1:'.$col.'1')->getFont()->setBold(true);
+				
+
 
 
 
@@ -191,22 +197,27 @@ class PHPExcelHelper {
 				//LLENAR PRODUCTO/SEGMENTO
 				$objPHPExcel->setActiveSheetIndex(0)->setCellValue('A1', 'PRODUCTO');
 				$objPHPExcel->getActiveSheet()->getColumnDimension('A')->setWidth(50);
-				$objPHPExcel->setActiveSheetIndex(0)->setCellValue('B1', 'SEGMENTO');
+				$objPHPExcel->setActiveSheetIndex(0)->setCellValue('B1', 'CODIGO');
 				$objPHPExcel->getActiveSheet()->getColumnDimension('B')->setAutoSize(true);
-				$objPHPExcel->setActiveSheetIndex(0)->setCellValue('C1', 'POLITICA');
+				$objPHPExcel->setActiveSheetIndex(0)->setCellValue('C1', 'SEGMENTO');
 				$objPHPExcel->getActiveSheet()->getColumnDimension('C')->setAutoSize(true);
+				$objPHPExcel->setActiveSheetIndex(0)->setCellValue('D1', 'POLITICA');
+				$objPHPExcel->getActiveSheet()->getColumnDimension('D')->setAutoSize(true);
 
 				$col = 'A';
 				$fil = 2;
 				foreach ($producto as $kp => $vp) {
 					$objPHPExcel->setActiveSheetIndex(0)->setCellValue('A'.$fil, $vp[0]);
-					$objPHPExcel->setActiveSheetIndex(0)->setCellValue('B'.$fil, $vp[1]);
-					$objPHPExcel->setActiveSheetIndex(0)->setCellValue('C'.$fil, $vp[2]);
+					$objPHPExcel->setActiveSheetIndex(0)->setCellValue('B'.$fil, $kp);
+					$objPHPExcel->setActiveSheetIndex(0)->setCellValue('C'.$fil, $vp[1]);
+					$objPHPExcel->setActiveSheetIndex(0)->setCellValue('D'.$fil, $vp[2]);
 					$fil++;
 				}
 
+				$objPHPExcel->getActiveSheet()->getStyle('B2:B'.$fil)->getNumberFormat()->setFormatCode('0000000000000');
+
 				//LLENAR PRECIOS/SALAS
-				$col = 'D';
+				$col = 'E';
 				$fil = 2;
 				foreach ($header as $kh => $vh) {
 					$objPHPExcel->setActiveSheetIndex(0)->setCellValue($col.'1', $vh);
@@ -222,8 +233,8 @@ class PHPExcelHelper {
 					$fil = 2;
 				}
 
-				$objPHPExcel->getActiveSheet()->getStyle('D1:'.$col.'1')->getAlignment()->setWrapText(true);
-				$objPHPExcel->getActiveSheet()->getStyle('D1:'.$col.'1')->getFont()->setSize(8);
+				$objPHPExcel->getActiveSheet()->getStyle('E1:'.$col.'1')->getAlignment()->setWrapText(true);
+				$objPHPExcel->getActiveSheet()->getStyle('E1:'.$col.'1')->getFont()->setSize(8);
 				$objPHPExcel->getActiveSheet()->getStyle('A1:'.$col.'1')->getFont()->setBold(true);
 
 
