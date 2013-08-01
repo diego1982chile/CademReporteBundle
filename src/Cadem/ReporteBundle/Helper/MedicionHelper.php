@@ -188,8 +188,8 @@ class MedicionHelper {
 		else  return $this->getIdUltimaMedicion_();
 	}
 
-	public function getIdMedicionAnterior($id_medicion_actual){
+	public function getIdMedicionAnterior($id_medicion_actual, $variable){
 		if($this->id_medicion_anterior !== null) return $this->id_medicion_anterior;
-		else  return $this->getIdMedicionAnterior_($id_medicion_actual);
+		else  return $this->getIdMedicionAnterior_($id_medicion_actual, $variable);
 	}
 }
