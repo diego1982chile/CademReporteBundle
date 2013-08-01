@@ -333,21 +333,57 @@ class PresenciaRankingController extends Controller
 		switch($variable)
 		{
 			case 1: // Si el tag de la variable es quiebre ordenamos por % de quiebre ascendente
-				if($data['tb_sala'] === 't') $orderby_sala = "ASC";
-				else $orderby_sala = "DESC";
-				if($data['tb_producto'] === 't') $orderby_producto = "ASC";
-				else $orderby_producto = "DESC";
-				if($data['tb_empleado'] === 't') $orderby_empleado = "ASC";
-				else $orderby_empleado = "DESC";
+				if($data['tb_sala'] === 't'){
+					$orderby_sala = "ASC";
+					$orderby_sala_rank = "ASC";
+				}
+				else{
+					$orderby_sala = "ASC";
+					$orderby_sala_rank = "DESC";
+				}
+				if($data['tb_producto'] === 't'){
+					$orderby_producto = "ASC";
+					$orderby_producto_rank = "ASC";
+				}
+				else{
+					$orderby_producto = "ASC";
+					$orderby_producto_rank = "DESC";
+				}
+				if($data['tb_empleado'] === 't'){
+					$orderby_empleado = "ASC";
+					$orderby_empleado_rank = "ASC";
+				}
+				else{
+					$orderby_empleado = "ASC";
+					$orderby_empleado_rank = "DESC";
+				}
 				break;
 			case 5: // Si el tag de la variable es presencia ordenamos por % de quiebre descendente
-				if($data['tb_sala'] === 't') $orderby_sala = "DESC";
-				else $orderby_sala = "ASC";
-				if($data['tb_producto'] === 't') $orderby_producto = "DESC";
-				else $orderby_producto = "ASC";
-				if($data['tb_empleado'] === 't') $orderby_empleado = "DESC";
-				else $orderby_empleado = "ASC";
-				break;			
+				if($data['tb_sala'] === 't'){
+					$orderby_sala = "DESC";
+					$orderby_sala_rank = "ASC";
+				}
+				else{
+					$orderby_sala = "DESC";
+					$orderby_sala_rank = "DESC";
+				}
+				if($data['tb_producto'] === 't'){
+					$orderby_producto = "DESC";
+					$orderby_producto_rank = "ASC";
+				}
+				else{
+					$orderby_producto = "DESC";
+					$orderby_producto_rank = "DESC";
+				}
+				if($data['tb_empleado'] === 't'){
+					$orderby_empleado = "DESC";
+					$orderby_empleado_rank = "ASC";
+				}
+				else{
+					$orderby_empleado = "DESC";
+					$orderby_empleado_rank = "DESC";
+				}
+				break;
 		}
 		
 		
@@ -370,7 +406,7 @@ class PresenciaRankingController extends Controller
 			INNER JOIN QUIEBRE q on q.PLANOGRAMAQ_ID = p.ID
 			GROUP BY sc.id, s.id, s.calle, s.numerocalle, sc.codigosala
 			) AS B on A.ID = B.id2
-			ORDER BY rank)) as t
+			ORDER BY rank {$orderby_sala_rank})) as t
 			WHERE 1=1 AND ( {$where_sala} )";
 		$param = array($search_sala, $id_cliente, $id_medicion_actual, $id_medicion_anterior, $array_comuna);
 		$tipo_param = array(\PDO::PARAM_STR, \PDO::PARAM_INT, \PDO::PARAM_INT, \PDO::PARAM_INT, \Doctrine\DBAL\Connection::PARAM_INT_ARRAY);
@@ -404,7 +440,7 @@ class PresenciaRankingController extends Controller
 			INNER JOIN ITEMCLIENTE ic on p.ITEMCLIENTE_ID = ic.ID AND ic.MEDICION_ID = @id_medicion_anterior
 			GROUP BY ic.id, ic.CODIGOITEM1
 			) AS B on A.ID = B.ID2
-			ORDER BY rank)) as t
+			ORDER BY rank {$orderby_producto_rank})) as t
 			WHERE 1=1 AND ( {$where_item} )";
 		$param = array($search_item, $id_cliente, $id_medicion_actual, $id_medicion_anterior, $array_comuna);
 		$tipo_param = array(\PDO::PARAM_STR, \PDO::PARAM_INT, \PDO::PARAM_INT, \PDO::PARAM_INT, \Doctrine\DBAL\Connection::PARAM_INT_ARRAY);
@@ -438,7 +474,7 @@ class PresenciaRankingController extends Controller
 			INNER JOIN EMPLEADO e on e.ID = sc.EMPLEADO_ID
 			GROUP BY e.ID
 			) AS B on A.ID = B.ID2
-			ORDER BY rank)) as t
+			ORDER BY rank {$orderby_empleado_rank})) as t
 			WHERE 1=1 AND ( {$where_empleado} )";
 			
 		$param = array($search_empleado, $id_cliente, $id_medicion_actual, $id_medicion_anterior, $array_comuna);
