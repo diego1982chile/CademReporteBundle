@@ -42,6 +42,21 @@ admin_carga_borrarregistros:
     defaults: { _controller: CademReporteBundle:Admin:cargaborrarregistro }
     requirements:
         variable:  planoquiebre|planoprecio|itemcliente|salacliente
+admin_mediciones_index:
+    pattern:  /admin/mediciones
+    defaults: { _controller: CademReporteBundle:AdminMedicion:index }    
+admin_mediciones_cargarmediciones:
+    pattern:  /admin/mediciones/cargarmediciones
+    defaults: { _controller: CademReporteBundle:AdminMedicion:cargarmediciones }    	
+admin_mediciones_crearmedicion:
+    pattern:  /admin/mediciones/crearmedicion
+    defaults: { _controller: CademReporteBundle:AdminMedicion:crearmedicion }    		
+admin_mediciones_actualizarmedicion:
+    pattern:  /admin/mediciones/actualizarmedicion
+    defaults: { _controller: CademReporteBundle:AdminMedicion:actualizarmedicion }    			
+admin_mediciones_eliminarmedicion:
+    pattern:  /admin/mediciones/eliminarmedicion
+    defaults: { _controller: CademReporteBundle:AdminMedicion:eliminarmedicion }    				
 #DASHBOARD
 dashboard_index:
     pattern:  /dashboard
