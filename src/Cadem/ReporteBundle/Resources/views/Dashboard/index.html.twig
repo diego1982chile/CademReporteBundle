@@ -659,14 +659,26 @@ $(document).ready(function () {
         	variable = variable/count;
         	variable = variable.toFixed(1);
 
-			var c = ' marker-cluster-';
-			if (variable < 10) {
-				c += 'small';
-			} else if (variable < 30) {
-				c += 'medium';
-			} else {
-				c += 'large';
-			}
+        	{% if "QUIEBRE" in variables %}
+	        	var c = ' marker-cluster-';
+				if (variable < 10) {
+					c += 'small';
+				} else if (variable < 30) {
+					c += 'medium';
+				} else {
+					c += 'large';
+				}
+        	{% else %}
+        		var c = ' marker-cluster-';
+				if (variable < 10) {
+					c += 'large';
+				} else if (variable < 70) {
+					c += 'medium';
+				} else {
+					c += 'small';
+				}
+        	{% endif %}
+			
 			
 
 			return new L.DivIcon({ html: '<div><span>' + variable + '</span></div>', className: 'marker-cluster' + c, iconSize: new L.Point(40, 40) });
