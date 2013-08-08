@@ -97,7 +97,7 @@ class AdminMedicionController extends Controller
 			$fila[1]=$medicion['tipo'];
 			$fila[2]=date('d/m/Y',strtotime($medicion['fecha_inicio']));			
 			$fila[3]=date('d/m/Y',strtotime($medicion['fecha_fin']));						
-			$fila[4]="<button class='btn eliminar' type='button'><i class='icon-trash'></i></button><button class='btn editar' type='button'><i class='icon-pencil'></i></button><button class='btn planograma' type='button'><i class='icon-plus-sign'></i></button>";
+			$fila[4]="<button class='btn eliminar' type='button'><i class='icon-trash'></i></button><button class='btn editar' type='button'><i class='icon-pencil'></i></button>";
 			array_push($aaData,$fila);						
 		}											
 		
