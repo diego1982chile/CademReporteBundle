@@ -1,0 +1,417 @@
+{% extends '::admin.html.twig' %}
+
+{% block body %}		          
+	<div class="hero-unit">
+		<h2>Administrador mediciones</h2>
+		<div class="container-fluid well" style="padding-top:0">			
+			<form id='filtros'>
+				<fieldset>					
+						Cliente: <select id='clientes' name='clientes'>				
+							{% for cliente in clientes %}
+								<option id='{{cliente.id_cliente}}'>{{cliente.nombre_cliente}}</option>
+							{% endfor %}
+						</select>														
+						>
+						Estudio: <select id='estudios' name='estudios'>				
+							<option id='0'>
+								- - - 
+							</option>
+							{% for estudio in estudios %}
+								<option id='{{estudio.id_estudio}}' id_cliente='{{estudio.id_cliente}}'>{{estudio.nombre_estudio}}</option>
+							{% endfor %}
+						</select>														
+						>
+						Variable: <select id='variables' name='variables'>				
+							<option id='0'>
+								- - - 
+							</option>
+							{% for variable in variables %}
+								<option id='{{variable.id_variable}}' id_estudio='{{variable.id_estudio}}'>{{variable.nombre_variable}}</option>
+							{% endfor %}
+						</select>	
+						<button class='btn btn-primary' id='cargar' style='visibility:hidden'>
+							<strong>
+								Cargar
+							</strong>
+						</button>						
+				</fieldset>									
+			</form>			
+		</div>
+		<div id="dialog-medicion" title="Nueva Medición">
+			<form id='medicion'>
+				<fieldset style="text-align:right;">
+					<input id='id' name='id' hidden='hidden' value='' />
+					<input id='estudiovariable' name='estudiovariable' hidden='hidden' value='' />				
+					<label style='margin-right:1.2em'>Nombre: <input id='nombre' name='nombre' class='medicion' /></label>					
+					<label>Inicio: <input id='inicio' name='inicio' class='medicion' /></label>
+					<label>Fin: <input id='fin' name='fin' class='medicion' /></label> 											
+					<label style='margin-right:1.3em'>Tipo: 
+						<select id='tipo' name='tipo' class='medicion' />
+							<option value='0'>
+								- - -
+							</option>
+							<option value='1' tipo='DIARIO'>
+								DIARIO
+							</option>
+							<option value='2' tipo='SEMANAL'>
+								SEMANAL
+							</option>
+							<option value='3' tipo='QUINCENAL'>
+								QUINCENAL
+							</option>
+							<option value='4' tipo='MSNSUAL'>
+								MSNSUAL
+							</option>
+							<option value='5' tipo='BIMENSUAL'>
+								BIMENSUAL
+							</option>
+							<option value='6' tipo='TRIMESTRAL'>
+								TRIMESTRAL
+							</option>
+							<option value='7' tipo='CUATRIMESTRAL'>
+								CUATRIMESTRAL
+							</option>
+							<option value='8' tipo='SEMESTRAL'>
+								SEMESTRAL
+							</option>
+							<option value='9' tipo='ANUAL'>
+								ANUAL
+							</option>
+						</select>
+					</label>					
+				</fieldset>
+			</form>
+		</div>		
+    </div>         
+{% endblock %}
+
+{% block customstyles %}
+td{
+	text-align: center !important;
+}
+
+#filtros select{
+	width: 13em !important;
+	padding: .1em !important;
+	margin-bottom: .5em !important;
+	margin-top: .5em !important;
+	text-align: center !important;
+}
+
+#medicion select{
+	width: 14.8em !important;	
+}
+
+.well{
+	margin-bottom: 0em !important;
+	margin-top: 0em !important;
+}
+
+input{
+	margin-bottom: 2px !important;
+	margin-right: 2px !important;
+	margin-top: 2px !important;
+}
+
+.ui-icon{
+	display: inline-table !important;
+}
+
+h5,h4{
+	margin-top: .4em !important;
+}
+
+.dataTables_filter{
+	float: right !important;
+}
+
+#cargar,#nueva{
+	width: 9em !important;
+}
+
+.ui-dialog-buttonset button{
+	width: 9em !important;
+}
+
+th,td,form#filtros fieldset{
+	font-size: .9em !important;
+	text-align: center !important;
+	font-family: "Arial",Georgia,Serif !important;	
+}
+
+form{
+	vertical-align: middle !important;
+	margin-top: 1.5em !important;	
+}
+
+{% endblock %}
+
+{% block stylesheets %}
+<link href="{{ asset('bundles/cademreporte/css/demo_table.css') }}" rel="stylesheet">			
+<link href="{{ asset('bundles/cademreporte/css/jquery.dataTables_themeroller.css') }}" rel="stylesheet">
+<link href="{{ asset('bundles/cademreporte/css/redmond/jquery-ui.min.css') }}" rel="stylesheet">
+<link href="{{ asset('bundles/cademreporte/css/bootstrap-select.min.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block javascripts %}
+
+<script src="{{ asset('bundles/cademreporte/js/jquery.dataTables.min.js') }}"></script>
+<script src="{{ asset('bundles/cademreporte/js/dataTables.fixedColumns.js') }}"></script>
+<script src="{{ asset('bundles/cademreporte/js/jquery.heatcolor.0.0.1.js') }}"></script>
+<script src="{{ asset('bundles/cademreporte/js/jquery.ui.datepicker-es.js') }}"></script>
+<script src="{{ asset('bundles/cademreporte/js/bootstrap-select.min.js') }}"></script>
+<script>
+
+function filtrar_estudios(id)
+{	
+	$('#estudios option').hide();
+	$('#estudios option[id_cliente='+id+']').show();	
+	if($('#estudios option[id_cliente='+id+']').length>0)		
+	{
+		$('#estudios option[id_cliente='+id+']:first').prop('selected',true);	
+		$('#cargar').css('visibility','visible');
+	}
+	else	
+	{
+		$('#estudios').children(':eq('+0+')').prop('selected',true);	
+		$('#cargar').css('visibility','hidden');
+	}
+}
+
+function filtrar_variables(id)
+{	
+	$('#variables option').hide();
+	$('#variables option[id_estudio='+id+']').show();	
+	if($('#variables option[id_estudio='+id+']').length>0)		
+		$('#variables option[id_estudio='+id+']:first').prop('selected',true);	
+	else	
+		$('#variables').children(':eq('+0+')').prop('selected',true);	
+	$('#estudiovariable').attr('value',$('#variables option:selected').attr('id'));	
+}
+
+function quitarloader(){
+		if($('.loader').length > 0) $('.loader').remove();
+	}
+	
+$.extend(jQuery.fn.dataTableExt.oSort, {
+            "date-uk-pre": function (a) {
+                var x;
+                try {
+                    var dateA = a.replace(/ /g, '').split("/");
+                    var day = parseInt(dateA[0], 10);
+                    var month = parseInt(dateA[1], 10);
+                    var year = parseInt(dateA[2], 10);
+                    var date = new Date(year, month - 1, day)
+                    x = date.getTime();
+                }
+                catch (err) {
+                    x = new Date().getTime();
+                }
+ 
+                return x;
+            },
+ 
+            "date-uk-asc": function (a, b) {
+                return a - b;
+            },
+ 
+            "date-uk-desc": function (a, b) {
+                return b - a;
+            }
+        });
+
+$(document).ready(function () {
+
+	var oTable;
+  
+	// $('select').selectpicker();
+  
+	filtrar_estudios($('#clientes option:selected').attr('id'));
+	filtrar_variables($('#estudios option:selected').attr('id'));
+
+	$('#clientes,#estudios').change(function(){	
+		filtrar_estudios($('#clientes').children(':selected').attr('id'));
+		filtrar_variables($('#estudios').children(':selected').attr('id'));		
+	});
+	
+	$( "#dialog-medicion" ).dialog({
+		  autoOpen: false,
+		  modal: true,
+		  width: 350,
+		  buttons: {
+			Ok: function() {
+			  $( this ).dialog( "close" );
+			}
+		},
+		buttons: [ { text: "Enviar", 
+					 click: function() { 
+						var valido=true;
+						$('.medicion').each(function(){							
+							if($(this).val()=='' || $(this).val()=='0')
+							{
+								$(this).focus();
+								alert('Debe llenar este campo');
+								valido=false;
+								return false;
+							}
+						});
+						if(!valido)
+							return false;
+							var confirmacion=confirm("Se enviarán los datos de esta medición para el estudio: '"+$('#estudios').val()+"' y variable: '"+$('#variables').val()+"'. ¿Confirma esta acción?");								
+							if(confirmacion)
+							{
+								$('.ui-dialog-buttonset button').append('<img class="loader" alt="" style="float:right;margin:0px;padding:0em" src="/bundles/cademreporte/images/loader-minitrans.gif">');	
+								
+								$('form#medicion').trigger('submit');															
+							}
+				} } ]
+	});
+	
+	$('.ui-dialog-buttonset button').addClass('btn btn-primary');
+	
+	$( "#inicio,#fin" ).datepicker({
+      showOn: "button",
+      buttonImage: "{{ asset('bundles/cademreporte/images/calendar.gif') }}",
+      buttonImageOnly: true
+    });
+	
+	$('#inicio').change(function(){		
+		$( "#fin" ).datepicker( "option", "minDate", $('#inicio').val() );
+	});
+	
+	$('form#medicion').submit(function() {
+		
+		var dataform = $(this).serializeArray();			
+
+		switch($( "#dialog-medicion" ).dialog( "option", "title"))
+		{
+			case "Crear medición":				
+				$.post("{{ path('admin_mediciones_crearmedicion') }}",dataform,function(data){																									
+					quitarloader();			
+					if(data.status)
+					{
+						alert("La medición se ha creado exitosamente.");
+						$('form#filtros').trigger('submit');
+						$( "#dialog-medicion" ).dialog( "close" );				
+					}
+					else
+					{
+						alert(data.mensaje);
+					}									
+				});
+				break;
+				
+			case "Modificar medición":
+				$.post("{{ path('admin_mediciones_actualizarmedicion') }}",dataform,function(data){																									
+					quitarloader();			
+					if(data.status)
+					{
+						alert("La medición se ha actualizado exitosamente.");
+						$('form#filtros').trigger('submit');
+						$( "#dialog-medicion" ).dialog( "close" );				
+					}
+					else
+					{
+						alert(data.mensaje);
+					}									
+				});
+				break;				
+				
+			case "Eliminar medición":
+				$.post("{{ path('admin_mediciones_eliminarmedicion') }}",dataform,function(data){																									
+					quitarloader();			
+					if(data.status)
+					{
+						alert("La medición se ha eliminado exitosamente.");
+						$('form#filtros').trigger('submit');
+						$( "#dialog-medicion" ).dialog( "close" );				
+					}
+					else
+					{
+						alert(data.mensaje);
+					}									
+				});
+				break;								
+		}
+		return false;
+	});
+			
+	//LOGICA DEL SUBMIT DEL FORMULARIO, SE DEBERIA OCUPAR AJAX
+	$('form#filtros').submit(function() {
+	
+		$('#cargar').append('<img class="loader" alt="" style="float:right;margin:0px;padding:0em" src="/bundles/cademreporte/images/loader-minitrans.gif">');	
+		
+		var dataform = $(this).serializeArray();		
+		
+		$.get("{{ path('admin_mediciones_cargarmediciones') }}",dataform,function(data){									
+				var ex = document.getElementById('example');
+				if ( $.fn.DataTable.fnIsDataTable( ex ) ) {
+				  oTable.fnDestroy(true);
+				  $('#nueva').remove();
+				}										
+				$('#filtros').append( '<table cellpadding="0" cellspacing="0" border="0" class="display" id="example" width="100%"></table>' );							
+				oTable= $('#example').dataTable( {
+					"aaData": data.aaData,
+					"aoColumnDefs": [
+						{ "sTitle": "MEDICIÓN", "aTargets": [0] },
+						{ "sTitle": "TIPO", "aTargets": [1] },
+						{ "sTitle": "FECHA INICIO", "aTargets": [2], "sType": "date-uk" },
+						{ "sTitle": "FECHA FIN", "aTargets": [3], "sType": "date-uk" },		
+						{ "sTitle": "ACCIONES", "aTargets": [4] },		
+						
+					],
+					"aaSorting": [[ 2, 'asc' ]],
+					"bFilter": true,
+					"bSort": true,
+					"bInfo": false,
+					"bPaginate": false,			
+					"bJQueryUI": true,
+					"sDom": '<"H"f>t<"F"ip>',			
+					"sScrollY": '370px',					
+					"bScrollCollapse": false,
+					"bRetrieve": false,
+					"bDestroy": false,
+					} );  			
+				$('div.fg-toolbar:first').append("<h4 style='float:left;margin:0em'>Mediciones '"+$(estudios).val()+"' / '"+$(variables).val()+"':</h5>");							
+				$('#filtros').append("<button class='btn btn-warning' id='nueva' style='float:right;margin:0em'><strong>Nueva</strong></button>");	
+				$('#nueva').mousedown(function(){					
+					$( "#dialog-medicion" ).dialog( "open" );				
+					$( ".medicion" ).val( "" );									
+					$( "#dialog-medicion" ).dialog( "option", "title", "Crear medición" );	
+				});
+				$('.editar').mousedown(function(){	
+					var id=$(this).parent().parent().children(':eq(0)').children().attr('id');
+					var nombre=$(this).parent().parent().children(':eq(0)').children().text();
+					var tipo=$(this).parent().parent().children(':eq(1)').text();
+					var inicio=$(this).parent().parent().children(':eq(2)').text();
+					var fin=$(this).parent().parent().children(':eq(3)').text();																			
+					$('#tipo option').each(function(){								
+						if($(this).text().indexOf(tipo)!=-1)
+							$(this).prop('selected',true);																				
+					});										
+					$('#id').attr('value',id);
+					$('#nombre').val(nombre);
+					$('#inicio').val(inicio);
+					$('#fin').val(fin);		
+					$( "#dialog-medicion" ).dialog( "option", "title", "Modificar medición" );					
+					$( "#dialog-medicion" ).dialog( "open" );									
+				});
+				$('.eliminar').mousedown(function(){										
+					var id=$(this).parent().parent().children(':eq(0)').children().attr('id');
+					var nombre=$(this).parent().parent().children(':eq(0)').children().text();
+					$('#id').attr('value',id);
+					$( "#dialog-medicion" ).dialog( "option", "title", "Eliminar medición" );	
+					var confirmacion=confirm("Se eliminará la medición '"+nombre+"'. ¿Confirma esta acción?");								
+					if(confirmacion)
+					{
+						$('.ui-dialog-buttonset button').append('<img class="loader" alt="" style="float:right;margin:0px;padding:0em" src="/bundles/cademreporte/images/loader-minitrans.gif">');							
+						$('form#medicion').trigger('submit');															
+					}					
+				});
+				quitarloader();				
+		});			
+		return false;
+	});
+});
+</script>
+{% endblock %}
