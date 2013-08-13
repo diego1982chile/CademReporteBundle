@@ -234,6 +234,10 @@ $(document).ready(function () {
 		filtrar_variables($('#estudios').children(':selected').attr('id'));		
 	});
 	
+	$('#variables').change(function(){	
+		$('#estudiovariable').attr('value',$('#variables option:selected').attr('id'));	
+	});
+	
 	$( "#dialog-medicion" ).dialog({
 		  autoOpen: false,
 		  modal: true,
