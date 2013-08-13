@@ -118,8 +118,8 @@ class AdminMedicionController extends Controller
 		$estudiovariable_id=$parametros['estudiovariable'];
 		$tipomedicion_id=$parametros['tipo'];
 		$nombremedicion=$parametros['nombre'];
-		$fechainicio=new \DateTime(str_replace('/','-',$parametros['inicio']),$timezone);
-		$fechafin=new \DateTime(str_replace('/','-',$parametros['fin']),$timezone);					
+		$fechainicio=new \DateTime($parametros['inicio'],$timezone);
+		$fechafin=new \DateTime($parametros['fin'],$timezone);					
 		
 		$row_affected = 0;
         $conn = $em->getConnection();
@@ -239,8 +239,8 @@ class AdminMedicionController extends Controller
 		$estudiovariable_id=$parametros['estudiovariable'];
 		$tipomedicion_id=$parametros['tipo'];
 		$nombremedicion=$parametros['nombre'];
-		$fechainicio=new \DateTime(str_replace('/','-',$parametros['inicio']),$timezone);
-		$fechafin=new \DateTime(str_replace('/','-',$parametros['fin']),$timezone);			
+		$fechainicio=new \DateTime($parametros['inicio'],$timezone);
+		$fechafin=new \DateTime($parametros['fin'],$timezone);			
 		
 		$row_affected = 0;
         $conn = $em->getConnection();
