@@ -43,6 +43,8 @@
         margin-bottom: 10px !important;
         line-height: 25px !important;
       }
+	  
+	  {% block customstyles %}{% endblock %}
     </style>
 
     
@@ -92,8 +94,8 @@
               <li class="{% if app.request.attributes.get('_route') == 'admin_carga_salacliente' %}active{% endif %}"><a href="{{ path('admin_carga_salacliente') }}">Sala-Cliente</a></li>
               <li class="{% if app.request.attributes.get('_route') == 'admin_carga_planoquiebre' %}active{% endif %}"><a href="{{ path('admin_carga_planoquiebre') }}">Planograma-Quiebre</a></li>
               <li class="{% if app.request.attributes.get('_route') == 'admin_carga_planoprecio' %}active{% endif %}"><a href="{{ path('admin_carga_planoprecio') }}">Planograma-Precio</a></li>
-              <li class="nav-header">Sidebar</li>
-              <li><a href="#">Link</a></li>
+              <li class="nav-header">Mantenedores</li>
+			  <li class="{% if app.request.attributes.get('_route') == 'admin_mediciones_index' %}active{% endif %}"><a href="{{ path('admin_mediciones_index') }}">Mediciones</a></li>
               <li><a href="#">Link</a></li>
               <li><a href="#">Link</a></li>
               <li><a href="#">Link</a></li>
