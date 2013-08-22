@@ -472,7 +472,7 @@ class PrecioResumenController extends Controller
 		else{
 			$nivel_join = "";
 			$nivel_where = "";
-		}
+		}				
 		
 		//DATOS DEL EJE Y EN EVOLUTIVO
 		$sql = "SELECT TOP(12) (SUM(case when ABS(pr.PRECIO-p.POLITICAPRECIO)>pa.VALOR*p.POLITICAPRECIO/100 then 1 else 0 END)*100.0)/COUNT(pr.ID) as QUIEBRE FROM PRECIO pr
@@ -491,7 +491,7 @@ class PrecioResumenController extends Controller
 		$quiebres_q = $em->getConnection()->executeQuery($sql,$param,$tipo_param)->fetchAll();
 		$quiebres_q = array_reverse($quiebres_q);
 		
-		foreach ($quiebres_q as $q) $porc_quiebre[] = round($q['QUIEBRE']*100,1);
+		foreach ($quiebres_q as $q) $porc_quiebre[] = round($q['QUIEBRE'],1);
 		if(isset($porc_quiebre) === false) $porc_quiebre = -1;//EL FILTRO SELECCIONADO NO TIENE DATOS
 		
 		//RESPONSE
