@@ -410,7 +410,7 @@ class PrecioResumenController extends Controller
     {
 		$user = $this->getUser();
 		$em = $this->getDoctrine()->getManager();
-		$data = $request->query->all();
+		$data = $request->query->all();				
 		
 		//CLIENTE
 		$query = $em->createQuery(
@@ -431,7 +431,7 @@ class PrecioResumenController extends Controller
 		
 		//DATOS DEL EJE X EN EVOLUTIVO
 		$sql = "SELECT TOP(12) m.NOMBRE, m.FECHAINICIO, m.FECHAFIN FROM MEDICION m
-			INNER JOIN PLANOGRAMAQ p on p.MEDICION_ID = m.ID
+			INNER JOIN PLANOGRAMAP p on p.MEDICION_ID = m.ID
 			INNER JOIN SALACLIENTE sc on sc.ID = p.SALACLIENTE_ID
 			INNER JOIN SALA s on s.ID = sc.SALA_ID
 			

@@ -5,11 +5,9 @@
 {% set url_header_action = path(header_action) %}
 {% set url_header_detalle_action = path(header_detalle_action) %}
 {% set url_body_detalle_action = path(body_detalle_action) %}
-{% if tag_variable|lower == "quiebre" %}	
-    {% set url_evolutivo = path('quiebre_resumen_evolutivo') %}    
+{% if tag_variable|lower in ["quiebre","presencia"] %}	    
     {% set url_excel = path('quiebre_detalle_excel') %}
-{% else %}	
-    {% set url_evolutivo = path('presencia_resumen_evolutivo') %}    
+{% else %}	    
     {% set url_excel = path('presencia_detalle_excel') %}
 {% endif %}
 
@@ -1062,7 +1060,9 @@ $(document).ready(function () {
 	var label_fil = "";
 	var cat_fil = "";	
 	//GRAFICAR COLUMNAS
-	$(document).on('click', 'thead th', function(e) {
+	$(document).on('click', 'thead th.ui-state-default', function(e) {		
+		if($(this).parents('div#tabla_resumen_wrapper').length==0)
+			return false;
 		var label= $(this).attr('tag');
 		if (e.ctrlKey){//AGREGAR OTRA LINEA
 			// $(this).addClass("ui-state-active");
@@ -1628,7 +1628,7 @@ function calcularTotalesPrecio(){
 	$('#tabla_detalle tbody tr[data-tt-id=TOTALES]').children(':eq('+cols+')').text($('#pctje_incumplimiento').attr('valor'));
 	if($('#colorear_detalle').hasClass('btn-warning')){		
 		colorearCeldas('tabla_detalle',true,suffix);				
-	}	
+	}		
 }
 
 function listenerFiltro()
